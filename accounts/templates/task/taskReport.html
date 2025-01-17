@@ -1,0 +1,82 @@
+{% extends 'header.html' %}
+{% load static %}
+{% block body %}
+
+<div class="container-fluid">
+  <div class="d-flex justify-content-between align-items-center my-3">
+    <h2 style="color: var(--primary);font-family: dancing script;">My Tasks</h2>
+    <!-- Button for Current Month's Task -->
+    <a href="/currentMonthTaskReport/" class="btn custom-btn-primary">
+      <i class="fa-solid fa-calendar-check"></i> Current Month's Task
+    </a>
+  </div>
+
+  <div class="row mx-3">
+    <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
+      <table id="myTable" class="table table-striped table-bordered table-hover">
+        <thead class="sticky-top bg-light">
+          <tr>
+            <th>#</th>
+            <th scope="col">Priority</th>
+            <th scope="col">Status</th>
+            <th scope="col">Title</th>
+            <th scope="col">Detail</th>
+            <th scope="col">Complete By</th>
+            <th scope="col">Completed On</th>
+            <th scope="col">Updated At</th>
+            <th scope="col" colspan="3">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if taskData %}
+            {% for i in taskData %}
+              <tr>
+                <td scope="row">{{ forloop.counter }}</td>
+                <td>{{ i.priority }}</td>
+
+                {% with i.complete_by_date|date:"Y-m-d" as completed_date %}
+                {% with "now"|date:"Y-m-d" as today %}
+                <td>
+                  <!-- Status Button with Color Coding -->
+                  <button class="btn btn-sm {% if i.is_deleted %}
+                        btn-danger {% elif i.status == 'Pending' %} 
+                        {% if completed_date < today %}btn-danger 
+                        {% else %}btn-warning {% endif %}
+                        {% else %}btn-success {% endif %} rounded-pill px-3 py-1">
+                        {{ i.status.0 }}
+                  </button>
+                </td>
+                {% endwith %}
+                {% endwith %}
+
+                <td><a href="" data-bs-toggle="modal" class="text-decoration-none" style="color: var(--primary-dark-four);" data-bs-target="#taskmodal" onclick="openModalAndGetTask({{ i.id }})">{{ i.name }}</a></td>
+                <td>{{ i.description }}</td>
+                <td>{{ i.complete_by_date }}</td>
+                <td>{{ i.completed_on }}</td>
+                <td>{{ i.updated_at|date:"M. d, Y"}}</td>
+
+                <!-- Action Buttons -->
+                <td><a href="{% url 'taskAction' i.id 'complete' %}"><i class="fa-solid text-success fa-check-circle"></i></a></td>
+                <td><a href="{% url 'taskAction' i.id 'incomplete' %}"><i class="fa-solid text-secondary fa-xmark-circle"></i></a></td>
+                <!-- <td><a href="" data-bs-toggle="modal" data-bs-target="#taskmodal" onclick="openModalAndGetTask({{ i.id }})"><i class="fa-solid text-warning fa-pen"></i></a></td> -->
+                <td><a href="{% url 'taskAction' i.id 'permdeletetask' %}"><i class="fa-solid text-danger fa-trash-alt"></i></a></td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="9" class="text-center">No records found</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% include 'task/taskModal.html' %}
+
+{% endblock body %}
+
+{% block script %}
+<script src="../static/js/updateTask.js"></script>
+{% endblock script %}
