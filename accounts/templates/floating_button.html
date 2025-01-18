@@ -1,0 +1,45 @@
+{% load static %}
+    {% block body %}
+    
+    {% block style %}
+    <link rel="stylesheet" href="{% static 'css/floatingButton.css' %}">
+    {% endblock style %}
+
+
+  <!-- Floating button -->
+  <button class="floating-button" id="floatingBtn" onclick="toggleActivityList()"><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
+
+  <!-- Activity list -->
+  <div class="activity-list" id="activityList">
+    <ul>
+      <a data-bs-toggle="modal" data-bs-target="#expensemodal" ><li>Transaction</li></a>
+      <a data-bs-toggle="modal" data-bs-target="#financeModal" ><li>Financial Entry</li></a>
+      <a data-bs-toggle="modal" data-bs-target="#taskmodal" ><li>Task</li></a>
+      <a data-bs-toggle="modal" data-bs-target="#ledgerModal" ><li>Ledger Entry</li></a>
+      <a data-bs-toggle="modal" data-bs-target="#reminderModal" ><li>Reminder</li></a>
+    </ul>
+  </div>
+
+  {% include 'transaction/transactionModal.html' %}
+  {% include 'financial_instrument/addFinanceModal.html' %}
+  {% include 'task/taskModal.html' %}
+  {% include 'ledger_transaction/ledgerTransactionModal.html' with counterparties=counterparties %} 
+  {% include 'reminder/createReminderModal.html' with counterparties=counterparties %} 
+  {% endblock body %}
+
+  {% block script %}
+  <script src='{% static "js/addTransaction.js" %}'></script>
+
+  <script>
+    // Function to toggle the activity list visibility
+    function toggleActivityList() {
+      var activityList = document.getElementById('activityList');
+      if (activityList.style.display === 'none' || activityList.style.display === '') {
+        activityList.style.display = 'block';
+      } else {
+        activityList.style.display = 'none';
+      }
+    }
+  </script>
+    {% endblock script %}
+

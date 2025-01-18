@@ -1,0 +1,92 @@
+{% extends 'index.html' %} {% load static %} 
+{% block mainbody %}
+<div style="min-height: 90vh">
+
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-10 col-sm-10 col-md-8 col-lg-4">
+      <form
+        method="post"
+        action="/signup/"
+        style="margin-top: 30%;"
+      >
+        {% csrf_token %}
+        <h2 class="text-center" ><a class="text-decoration-none" style="color:var(--primary);font-family:Rubik Vinyl;" href="/">MyHelperBuddy</a></h2>
+        <p class="fs-4 text-center" style="color:var(--primary);">Sign-Up</p>
+
+        <div class="mb-3">
+          <input
+            type="text"
+            placeholder="Name"
+            class="form-control"
+            name="name"
+            id="name"
+            style="line-height:2rem"
+            aria-describedby="emailHelp"
+          />
+        </div>
+        <div class="mb-3">
+          <input
+            type="text"
+            placeholder="Username"
+            class="form-control"
+            name="username"
+            id="username"
+            style="line-height:2rem"
+            aria-describedby="emailHelp"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <input
+            type="email"
+            placeholder="Email"
+            class="form-control"
+            name="email"
+            id="email"
+            style="line-height:2rem"
+            aria-describedby="emailHelp"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <input
+            type="password"
+            placeholder="Password"
+            class="form-control"
+            style="line-height:2rem"
+            name="password"
+            id="password"
+          />
+        </div>
+        <div class="mb-3">
+          <input
+            type="password"
+            placeholder="Re-Enter Password"
+            class="form-control"
+            style="line-height:2rem"
+            name="rpassword"
+            id="rpassword"
+          />
+        </div>
+      <p class="text-danger mb-0">{{msg}}</p>
+        <div class="mb-3">
+         <button
+            type="submit"
+            class="btn btn-primary form-control"
+            style="background-color: var(--primary); border: none; line-height:2.2rem"
+          >
+            SIGN UP
+          </button>
+          <hr>
+        </div>
+
+      </form>
+        <div class="d-flex justify-content-center">
+          <a class="text-secondary text-decoration-none" href="/login">Already have an Account? &nbsp; <b style="color: var(--primary);">SIGN IN</b></a>
+        </div>
+    </div>
+  </div>
+</div>
+</div>
+{% endblock mainbody %}

@@ -1,0 +1,110 @@
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header text-white" style="background-color: var(--primary);">
+        <h5 class="modal-title mx-auto" id="exampleModalLabel">Filter Transactions</h5>
+        <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form action="/transaction-detail/" method="get" class="needs-validation" novalidate>
+          <!-- Type -->
+          <div class="d-flex justify-content-start mb-3">
+            <div class="form-check me-4">
+              <input class="form-check-input" name="type" {% if "Expense" in data.type %} checked {% endif %} type="checkbox" id="inlineCheckbox1" value="Expense">
+              <label class="form-check-label" for="inlineCheckbox1">Expense</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" name="type" {% if "Income" in data.type %} checked {% endif %} type="checkbox" id="inlineCheckbox2" value="Income">
+              <label class="form-check-label" for="inlineCheckbox2">Income</label>
+            </div>
+          </div>
+          <!-- Category and Mode -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <select class="form-select" name="category" aria-label="Default select example">
+                <option {% if data.category == "" %} selected {% endif %} value="">-- Category --</option>
+                {% for category in categories %}
+                  <option {% if data.category == category %} selected {% endif %} value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select class="form-select" name="mode" aria-label="Default select example">
+                <option {% if data.mode == "" %} selected {% endif %} value="">-- Mode --</option>
+                <option {% if data.mode == "CreditCard" %} selected {% endif %} value="CreditCard">CreditCard</option>
+                <option {% if data.mode == "Online" %} selected {% endif %} value="Online">Online</option>
+                <option {% if data.mode == "Cash" %} selected {% endif %} value="Cash">Cash</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <select class="form-select" name="status" aria-label="Default select example">
+                <option {% if data.status == "" %} selected {% endif %} value="">-- Status --</option>
+                <option {% if data.status == "Completed" %} selected {% endif %} value="Completed">Completed</option>
+                <option {% if data.status == "Pending" %} selected {% endif %} value="Pending">Pending</option>
+              </select>
+            </div>
+          </div>
+          <!-- Beneficiary and Date -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <input type="text" class="form-control" id="beneficiary" name="beneficiary" placeholder="Beneficiary" value="{{ data.beneficiary }}">
+            </div>
+            <div class="col-md-6">
+              <input type="text" class="form-control" id="daterange" name="daterange" value="{{ data.daterange }}">
+            </div>
+          </div>
+          <button type="submit" class="btn custom-btn-primary w-100">Filter <i class="fa-solid fa-filter ms-1"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  if ($("#daterange").val()) {
+    datee = $("#daterange").val().split("-");
+    var start = datee[0];
+    var end = datee[1];
+  } else {
+    var start = moment().startOf("month");
+    var end = moment().endOf("month");
+  }
+  function cb(start, end) {
+    $("#daterange").html(
+      start.format("DD/MM/YYYY") + " - " + end.format("DD/MM/YYYY")
+    );
+  }
+
+  $("#daterange").daterangepicker(
+    {
+      startDate: start,
+      endDate: end,
+      locale: {
+        format: "DD/MM/YYYY",
+      },
+      autoApply: true,
+      showDropdowns: true,
+      linkedCalendars: false,
+      opens: "right",
+      drops: "down",
+      ranges: {
+        Today: [moment(), moment()],
+        "This Month": [moment().startOf("month"), moment().endOf("month")],
+        YTD: [moment().startOf("year"), moment()],
+        "Last Month": [
+          moment().subtract(1, "month").startOf("month"),
+          moment().subtract(1, "month").endOf("month"),
+        ],
+        "Last Year": [
+          moment().subtract(1, "year").startOf("year"),
+          moment().subtract(1, "year").endOf("year"),
+        ],
+      },
+    },
+    cb
+  );
+  if ($("#daterange").val() == "") {
+    cb(start, end);
+  }
+
+</script>
