@@ -18,7 +18,8 @@ urlpatterns = [
     path("about/",about,name="about"),
 
 # ..........................................User Management..................................................
-    path("",login,name="login"),
+    path("",index,name="index"),
+    path("login",login,name="login"),
     path("signup/",signup,name="signup"),
     path("logout/",logout,name="logout"),
     path("forgotPassword/",forgotPassword,name="forgotPassword"),

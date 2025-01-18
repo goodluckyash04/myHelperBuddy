@@ -16,6 +16,15 @@ from decimal import Decimal
 from django.utils import timezone
 
 
+
+
+# ...........................................Index..................................................
+
+def index(request):
+    print(request.session.get('username'))
+    if request.session.get('username'):
+        return redirect('dashboard')
+    return render(request,"landing_page.html")
 # ...........................................About..................................................
 
 @auth_user
@@ -203,7 +212,7 @@ def utilities(request,user):
             },
              {
                 "title": "REMINDER",
-                "description": "Never Miss a Moment, Let the Reminders Handle All",
+                "description": "Never Miss a Moment, Let the Reminders Handle it All!",
                 "url": "/view-today-reminder/",
 
             },
@@ -281,7 +290,7 @@ def logout(request):
     except KeyError:
         pass  # 'username' key may not be present in the session
 
-    return redirect('login')
+    return redirect('index')
 
 
 def forgotPassword(request):

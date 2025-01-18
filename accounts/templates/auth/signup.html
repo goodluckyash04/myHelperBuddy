@@ -1,4 +1,7 @@
-{% extends 'index.html' %} {% load static %} {% block body %}
+{% extends 'index.html' %} {% load static %} 
+{% block mainbody %}
+<div style="min-height: 90vh">
+
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-10 col-sm-10 col-md-8 col-lg-4">
@@ -8,7 +11,7 @@
         style="margin-top: 30%;"
       >
         {% csrf_token %}
-        <h2 class="text-center" style="color:var(--primary);font-family:Rubik Vinyl;">MyHelperBuddy</h2>
+        <h2 class="text-center" ><a class="text-decoration-none" style="color:var(--primary);font-family:Rubik Vinyl;" href="/">MyHelperBuddy</a></h2>
         <p class="fs-4 text-center" style="color:var(--primary);">Sign-Up</p>
 
         <div class="mb-3">
@@ -80,9 +83,10 @@
 
       </form>
         <div class="d-flex justify-content-center">
-          <a class="text-secondary text-decoration-none" href="/">Already have an Account? &nbsp; <b style="color: var(--primary);">SIGN IN</b></a>
+          <a class="text-secondary text-decoration-none" href="/login">Already have an Account? &nbsp; <b style="color: var(--primary);">SIGN IN</b></a>
         </div>
     </div>
   </div>
 </div>
-{% endblock body %}
+</div>
+{% endblock mainbody %}

@@ -1,0 +1,85 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block mainbody %}
+
+<style>
+  h3, h4 {
+    color: var(--primary) ;
+  }
+  h2 {
+    font-family: "dancing script";
+    color: var(--primary)
+  }
+  i{
+    color: #8f8868;
+  }
+ 
+</style>
+
+<section class="hero text-center py-5" style="background-color: #b0a36f; color: white;">
+  <div class="container">
+    <h1 class="display-4 mb-3">Welcome to myHelperBuddy</h1>
+    <p class="lead mb-4">The all-in-one tool to manage your finances, tasks, and everything in between, seamlessly.</p>
+    <a href="/dashboard/" class="btn custom-btn-primary btn-lg">Get Started</a>
+  </div>
+</section>
+
+<section class="features py-5">
+  <div class="container text-center">
+    <h2 class="mb-4">What We Offer</h2>
+    <div class="row justify-content-center">
+      <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-0 rounded h-100 p-2">
+          <i class="fas fa-credit-card fa-3x mb-3"></i>
+          <h3>Smart Transaction Management</h3>
+          <p>Track your daily expenses and income with a simple, intuitive system that automatically categorizes each transaction.</p>
+        </div>
+      </div>
+      <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-0 rounded h-100 p-2">
+          <i class="fas fa-wallet fa-3x mb-3"></i>
+          <h3>Easy Finance Tracking</h3>
+          <p>Stay on top of your loans and investments, with reminders for payment dates and detailed records.</p>
+        </div>
+      </div>
+      <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-0 rounded h-100 p-2">
+          <i class="fas fa-check-circle fa-3x mb-3"></i>
+          <h3>Efficient Task Management</h3>
+          <p>Organize your tasks, set reminders, and keep track of what matters most, all in one place.</p>
+        </div>
+      </div>
+      <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-0 rounded h-100 p-2">
+          <i class="fas fa-book fa-3x mb-3"></i>
+          <h3>Comprehensive Ledger</h3>
+          <p>Keep your financial records well-organized. Maintain accurate accounting with ease.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="why-choose py-5" style="background-color: #f7f7f7;">
+  <div class="container text-center">
+    <h2 class="mb-4">Why Choose myHelperBuddy?</h2>
+    <p class="lead">Effortlessly track your finances, tasks, and more with a simple, intuitive tool that adapts to your needs.</p>
+    <div class="row justify-content-center">
+      <div class="col-md-4 mb-4">
+        <h4 class="mb-3">Centralized Platform</h4>
+        <p>All your daily activities—financial records, task management, and more—are organized in one easy-to-use platform.</p>
+      </div>
+      <div class="col-md-4 mb-4">
+        <h4 class="mb-3">Seamless Integration</h4>
+        <p>Track everything in real-time. With automated updates, you won’t miss important deadlines or payments.</p>
+      </div>
+      <div class="col-md-4 mb-4">
+        <h4 class="mb-3">Secure & Private</h4>
+        <p>Your data is stored securely with us. We take your privacy seriously and ensure your financial details stay protected.</p>
+      </div>
+    </div>
+    <a href="/dashboard/" class="btn custom-btn-primary btn-lg mt-4">Start Managing Today</a>
+  </div>
+</section>
+
+{% endblock mainbody %}
