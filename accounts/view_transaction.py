@@ -245,7 +245,6 @@ def fetch_deleted_transaction(request, user):
         messages.error(request, f"An error occurred: will get back soon")
         return redirect('utilities')
 
-
 @auth_user
 def delete_transaction(request,user, id = None):
     try:
@@ -259,10 +258,6 @@ def delete_transaction(request,user, id = None):
             entry.is_deleted = True
             entry.deleted_at = datetime.now()
             entry.save()
-
-    # in case of emi source is not null
-
-
 
         messages.success(request, f'Transaction deleted')
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))

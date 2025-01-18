@@ -23,7 +23,6 @@ def about(request,user):
     return render(request,"about.html",{"user":user})
 
 
-
 # ...........................................Dashboard..................................................
 
 
@@ -184,66 +183,35 @@ def utilities(request,user):
         items = [
             {
                 "title": "TRANSACTION",
-                "description": "Maintain Your Day to Day Transaction",
-                "modal_target": "#expensemodal",
-                "modal_button_icon": 'fa-plus',
-                "report_url": "/transaction-detail/",
-                "report_button_icon":  datetime.today().strftime("%b'%y").upper(),
-                "delete_url": "/deleted-transaction-detail/",
-                "delete_button_icon": 'fa-trash-can',
-                "class_suffix": " mb-3 mb-sm-0"
-
+                "description": "Manage Your Money Moves, One Day at a Time!",
+                "url": "/transaction-detail/",
             },
             {
                 "title": "TASK",
-                "description": "Don't Stress Your Brain Add Your Todos",
-                "modal_target": "#taskmodal",
-                "modal_button_icon": 'fa-plus',
-                "report_url": "/currentMonthTaskReport/",
-                "report_button_icon": datetime.today().strftime("%b'%y").upper(),
-                "delete_url": "/taskReports/",
-                "delete_button_icon": 'fa-square-poll-horizontal',
-                "class_suffix": " mb-3"
+                "description": "Give Your Brain a Break, We've Got Your To-Dos Covered!",
+                "url": "/currentMonthTaskReport/",
             },
             {
                 "title": "FINANCE",
-                "description": "Keep track of Your Virtual Loan/Sip ",
-                "modal_target": "#financeModal",
-                "modal_button_icon": 'fa-plus',
-                "report_url": "/finance-details/",
-                "report_button_icon": 'fa-square-poll-horizontal',
-                # "delete_url": "/deletedEntries/",
-                # "delete_button_icon": 'fa-trash-can',
-                # "class_suffix": ""
+                "description": "Track Your Loans and Sips, No Slips!",
+                "url": "/finance-details/",
             },
             {
                 "title": "LEDGER",
-                "description": "Keep track of your Payable and Receivables",
-                "modal_target": "#ledgerModal",
-                "modal_button_icon": 'fa-plus',
-                "report_url": "/ledger-transaction-details/",
-                "report_button_icon": 'fa-square-poll-horizontal',
-                "delete_url": "/deleted-ledger-transaction/",
-                "delete_button_icon": 'fa-trash-can',
-                "class_suffix": ""
+                "description": "Balance Your Payables and Receivables with Ease!",
+                "url": "/ledger-transaction-details/",
             },
              {
                 "title": "REMINDER",
-                "description": "Stop worrying! about special days, Let the reminders handle it",
-                "modal_target": "#taskmodal",
-                "modal_button_icon": 'fa-plus',
-                "report_url": "/view-today-reminder/",
-                "report_button_icon": datetime.today().strftime("%b'%y").upper(),
-                "delete_url": "/taskReports/",
-                "delete_button_icon": 'fa-square-poll-horizontal',
-                "class_suffix": ""
+                "description": "Never Miss a Moment, Let the Reminders Handle All",
+                "url": "/view-today-reminder/",
+
             },
         ]
         counterparties = LedgerTransaction.objects.filter(created_by=user).values_list('counterparty', flat=True).distinct()
         return render(request,"utiltities.html",{"user":user,'items': items, "counterparties":counterparties})
     except Exception as e:
         messages.error(request, "An unexpected error occurred.")
-        # Log the error for debugging purposes
         print(str(e))
         return HttpResponseServerError()
 
@@ -304,7 +272,6 @@ def signup(request):
             traceback.print_exc()
             messages.error(request, str(e))
             # Log the error for debugging purposes
-            print()
             return render(request, "auth/signup.html",{"msg":str(e)})
 
 
