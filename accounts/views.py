@@ -8,13 +8,14 @@ from django.contrib.auth.hashers import make_password, check_password
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib import messages
-from django.http import HttpResponseServerError
+from django.http import HttpResponseServerError,JsonResponse
 from django.utils.crypto import get_random_string
 from .models import User, LedgerTransaction, Transaction
 from .decorators import auth_user
 from decimal import Decimal
 from django.utils import timezone
-
+from .view_reminder import calculate_reminder
+import random
 
 
 
@@ -24,7 +25,29 @@ def index(request):
     print(request.session.get('username'))
     if request.session.get('username'):
         return redirect('dashboard')
-    return render(request,"landing_page.html")
+    data = [
+        {
+            "icon":"fa-credit-card",
+            "title":"Smart Transaction Management",
+            "description":"Track your daily expenses and income with a simple, intuitive system that automatically categorizes each transaction."
+        },
+        {
+            "icon":"fa-wallet",
+            "title":"Easy Finance Tracking",
+            "description":"Stay on top of your loans and investments, with reminders for payment dates and detailed records."
+        },
+        {
+            "icon":"fa-check-circle",
+            "title":"Efficient Task Management",
+            "description":"Organize your tasks, set reminders, and keep track of what matters most, all in one place."
+        },
+        {
+            "icon":"fa-book",
+            "title":"Comprehensive Ledger",
+            "description":"Keep your financial records well-organized. Maintain accurate accounting with ease."
+        }
+    ]
+    return render(request,"landing_page.html",{"data":data})
 # ...........................................About..................................................
 
 @auth_user
@@ -189,36 +212,41 @@ def dashboard(request,user):
 @auth_user
 def utilities(request,user):
     try:
-        items = [
-            {
+        items = []
+        if user.username.lower() in settings.TRANSACTION_USER_ACCESS.split(",") or settings.TRANSACTION_USER_ACCESS == "*" :
+            items.append({
                 "title": "TRANSACTION",
                 "description": "Manage Your Money Moves, One Day at a Time!",
                 "url": "/transaction-detail/",
-            },
-            {
+            })
+        if user.username.lower() in settings.TASK_USER_ACCESS.split(",") or settings.TASK_USER_ACCESS == "*" :
+            items.append({
                 "title": "TASK",
                 "description": "Give Your Brain a Break, We've Got Your To-Dos Covered!",
                 "url": "/currentMonthTaskReport/",
-            },
-            {
+            })
+        if user.username.lower() in settings.FINANCE_USER_ACCESS.split(",") or settings.FINANCE_USER_ACCESS == "*" :
+            items.append({
                 "title": "FINANCE",
                 "description": "Track Your Loans and Sips, No Slips!",
                 "url": "/finance-details/",
-            },
-            {
+            })
+        if user.username.lower() in settings.LEDGER_USER_ACCESS.split(",") or settings.LEDGER_USER_ACCESS == "*" :
+            items.append({
                 "title": "LEDGER",
                 "description": "Balance Your Payables and Receivables with Ease!",
                 "url": "/ledger-transaction-details/",
-            },
-             {
+            })
+        if user.username.lower() in settings.REMINDER_USER_ACCESS.split(",") or settings.REMINDER_USER_ACCESS == "*" :
+            items.append({
                 "title": "REMINDER",
                 "description": "Never Miss a Moment, Let the Reminders Handle it All!",
                 "url": "/view-today-reminder/",
-
-            },
-        ]
+            })
+            
+        reminder_count = len(calculate_reminder(user))
         counterparties = LedgerTransaction.objects.filter(created_by=user).values_list('counterparty', flat=True).distinct()
-        return render(request,"utiltities.html",{"user":user,'items': items, "counterparties":counterparties})
+        return render(request,"utiltities.html",{"user":user,'items': items, "counterparties":counterparties,"badge":reminder_count})
     except Exception as e:
         messages.error(request, "An unexpected error occurred.")
         print(str(e))
@@ -247,7 +275,6 @@ def login(request):
 
     request.session["username"] = user.username
     return redirect("dashboard")
-
 
 def signup(request):
     if request.method == "GET":

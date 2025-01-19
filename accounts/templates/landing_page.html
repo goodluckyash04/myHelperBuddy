@@ -28,34 +28,15 @@
   <div class="container text-center">
     <h2 class="mb-4">What We Offer</h2>
     <div class="row justify-content-center">
-      <div class="col-md-3 mb-4">
+      {% for item in data %}
+      <div class="col-md-6 mb-4">
         <div class="card shadow-sm border-0 rounded h-100 p-2">
-          <i class="fas fa-credit-card fa-3x mb-3"></i>
-          <h3>Smart Transaction Management</h3>
-          <p>Track your daily expenses and income with a simple, intuitive system that automatically categorizes each transaction.</p>
+          <i class="fas {{item.icon}} fa-3x mb-3"></i>
+          <h3>{{item.title}}</h3>
+          <p>{{item.description}}</p>
         </div>
       </div>
-      <div class="col-md-3 mb-4">
-        <div class="card shadow-sm border-0 rounded h-100 p-2">
-          <i class="fas fa-wallet fa-3x mb-3"></i>
-          <h3>Easy Finance Tracking</h3>
-          <p>Stay on top of your loans and investments, with reminders for payment dates and detailed records.</p>
-        </div>
-      </div>
-      <div class="col-md-3 mb-4">
-        <div class="card shadow-sm border-0 rounded h-100 p-2">
-          <i class="fas fa-check-circle fa-3x mb-3"></i>
-          <h3>Efficient Task Management</h3>
-          <p>Organize your tasks, set reminders, and keep track of what matters most, all in one place.</p>
-        </div>
-      </div>
-      <div class="col-md-3 mb-4">
-        <div class="card shadow-sm border-0 rounded h-100 p-2">
-          <i class="fas fa-book fa-3x mb-3"></i>
-          <h3>Comprehensive Ledger</h3>
-          <p>Keep your financial records well-organized. Maintain accurate accounting with ease.</p>
-        </div>
-      </div>
+      {% endfor %}
     </div>
   </div>
 </section>
