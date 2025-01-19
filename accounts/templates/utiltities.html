@@ -27,7 +27,11 @@
 
     <div class="card h-100 border-0 shadow-sm rounded-3">
       <div class="card-body">
-        <h5 class="card-title fw-semibold" style="color: var(--primary);font-family: Cardo;">{{ item.title }}</h5>
+        <h5 class="card-title fw-semibold" style="color: var(--primary);font-family: Cardo;">{{ item.title }} 
+          {% if item.title == 'REMINDER' and badge > 0  %}
+          <span class="position-absolute top-20 start-100 translate-middle badge " style="background-color: var(--primary);">{{badge}}</span>
+          {% endif %}
+        </h5>
         <p class="card-text text-muted">{{ item.description }}</p>
       </div>
     </div>

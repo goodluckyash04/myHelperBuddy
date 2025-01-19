@@ -49,6 +49,35 @@ def add_reminder(request,user):
 
 @auth_user
 def todays_reminder(request, user):
+    return render(request, 'reminder/viewReminder.html', {"user": user, 'reminders': calculate_reminder(user),'key':"today"})
+
+@auth_user
+def reminder_list(request, user):
+
+    # List to store reminders for this month based on frequency
+    reminders = Reminder.objects.filter(created_by=user, is_deleted=False)
+
+    return render(request, 'reminder/viewReminder.html', {"user": user, 'reminders': reminders, 'key':"all"})
+
+
+@auth_user
+def cancel_reminder(request, user,id):
+
+    # List to store reminders for this month based on frequency
+    reminder = Reminder.objects.filter(created_by=user, id=id).first()
+
+    if not reminder:
+        # If a duplicate reminder exists, add an error message
+        messages.error(request, "A reminder with this id does not exists.")
+    reminder.is_deleted = True
+    reminder.save()
+    messages.success(request, "Reminder Canceled !")
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+
+def calculate_reminder(user):
+    
     # Get current month, year, and day
     current_month = date.today().month
     current_year = date.today().year
@@ -86,29 +115,4 @@ def todays_reminder(request, user):
                 # Check if delta_days is a multiple of the custom interval
                 if delta_days >= 0 and delta_days % reminder.custom_repeat_days == 0:
                     all_reminders.append(reminder)
-
-    return render(request, 'reminder/viewReminder.html', {"user": user, 'reminders': all_reminders,'key':"today"})
-
-@auth_user
-def reminder_list(request, user):
-
-    # List to store reminders for this month based on frequency
-    reminders = Reminder.objects.filter(created_by=user, is_deleted=False)
-
-    return render(request, 'reminder/viewReminder.html', {"user": user, 'reminders': reminders, 'key':"all"})
-
-
-@auth_user
-def cancel_reminder(request, user,id):
-
-    # List to store reminders for this month based on frequency
-    reminder = Reminder.objects.filter(created_by=user, id=id).first()
-
-    if not reminder:
-        # If a duplicate reminder exists, add an error message
-        messages.error(request, "A reminder with this id does not exists.")
-    reminder.is_deleted = True
-    reminder.save()
-    messages.success(request, "Reminder Canceled !")
-
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    return all_reminders

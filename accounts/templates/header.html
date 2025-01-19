@@ -30,8 +30,10 @@
             {{ user.name }}
           </a>
           <ul class="dropdown-menu dropdown-menu-end profile" aria-labelledby="userDropdown">
-            <li><a class="dropdown-item" href="/changePassword/"><i class="fa-solid fa-key"></i> Change Password</a></li>
-            <li><a class="dropdown-item" href="/logout/"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+            <li><a class="dropdown-item"  href="#"><i class="fa-solid fa-user" style="color:var(--primary-dark)"></i> {{user.username}}</a></li>
+            <li><a class="dropdown-item" href="#"><i class="fa-solid fa-envelope" style="color:var(--primary-dark)"></i> {{user.email}}</a></li>
+            <li><a class="dropdown-item" href="/changePassword/"><i class="fa-solid fa-key" style="color:var(--primary-dark)"></i> Change Password</a></li>
+            <li><a class="dropdown-item" href="/logout/"><i class="fa-solid fa-right-from-bracket" style="color:var(--primary-dark)"></i> Logout</a></li>
           </ul>
         </li>
       </ul>
