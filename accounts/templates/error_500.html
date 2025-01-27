@@ -1,0 +1,45 @@
+{% extends 'header.html' %}
+{% load static %}
+{% block body %}
+<style>
+    .error-container {
+        text-align: center;
+        padding-top: 100px;
+    }
+    .error-code {
+        font-size: 120px;
+        font-weight: bold;
+        color: #ff6f61;
+    }
+    .error-message {
+        font-size: 24px;
+        color: #333;
+    }
+    .emoji {
+        font-size: 80px;
+    }
+    .btn-home {
+        font-size: 18px;
+        padding: 12px 30px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+    .btn-home:hover {
+        background-color: #0056b3;
+    }
+</style>
+<div class="container">
+    <div class="error-container">
+        <div class="emoji">😵</div>
+        <div class="error-code">500</div>
+        <div class="error-message">
+            Oops! Something went wrong on our end.<br>
+            But don't worry, we're fixing it! Please Try again later.
+        </div>
+        <br>
+        <a href="{{prev}}" class="btn custom-btn-primary"><i class="fa-solid fa-arrow-left"></i> Go Back</a>
+    </div>
+</div>
+{% endblock body %}

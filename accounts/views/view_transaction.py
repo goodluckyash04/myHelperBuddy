@@ -9,8 +9,8 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.http import HttpResponseRedirect, HttpResponseServerError, JsonResponse
 from django.utils import timezone
 
-from .decorators import auth_user
-from .models import Transaction, FinancialProduct
+from ..decorators import auth_user
+from ..models import Transaction, FinancialProduct
 
 
 # ..........................................Transaction Management.............................................

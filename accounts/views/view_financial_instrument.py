@@ -6,8 +6,8 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.http import HttpResponseServerError, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import F, Sum, Q
-from .models import FinancialProduct, Transaction
-from .decorators import auth_user
+from ..models import FinancialProduct, Transaction
+from ..decorators import auth_user
 # import math
 
 

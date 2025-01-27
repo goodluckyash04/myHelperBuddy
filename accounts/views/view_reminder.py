@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from .models import Reminder
+from ..models import Reminder
 from django.utils import timezone
 from django.contrib import messages
-from .decorators import auth_user
+from ..decorators import auth_user
 from datetime import date
 from django.http import JsonResponse, HttpResponseRedirect
 

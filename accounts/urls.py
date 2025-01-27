@@ -1,32 +1,35 @@
 from django.urls import path
 
-from .view_ledger_transaction import add_ledger_transaction, ledger_transaction_details, ledger_transaction, \
+from .views.views import utilities,dashboard,index,about,error_500
+from .views.view_auth import login,logout,forgotPassword,changePassword,signup 
+from .views.view_ledger_transaction import add_ledger_transaction, ledger_transaction_details, ledger_transaction, \
     update_ledger_transaction_status, delete_ledger_transaction, update_ledger_transaction, update_counterparty_name, \
     undo_ledger_transaction, fetch_deleted_ledger_transaction
-from .views import *
-from .view_transaction import create_transaction, transaction_detail, update_transaction, delete_transaction, \
+from .views.view_transaction import create_transaction, transaction_detail, update_transaction, delete_transaction, \
     fetch_deleted_transaction, undo_transaction, update_transaction_status
-from .view_financial_instrument import create_finance, finance_details, fetch_financial_transaction, \
+from .views.view_financial_instrument import create_finance, finance_details, fetch_financial_transaction, \
     update_instrument_status, update_finance_detail, remove_instrument
-from .view_task import *
-from .view_reminder import *
+from .views.view_task import addTask,currentMonthTaskReport,taskAction,editTask,taskReports
+from .views.view_reminder import add_reminder,todays_reminder,reminder_list,cancel_reminder
+
+
 urlpatterns = [
 
-# ..........................................Home Page..................................................
+# ..........................................Home Page........................................................
+    path("",index,name="index"),
     path("utilities/",utilities,name="utilities"),
     path("dashboard/",dashboard,name="dashboard"),
     path("about/",about,name="about"),
+    path("error/",error_500,name="error_500"),
 
 # ..........................................User Management..................................................
-    path("",index,name="index"),
     path("login",login,name="login"),
     path("signup/",signup,name="signup"),
     path("logout/",logout,name="logout"),
     path("forgotPassword/",forgotPassword,name="forgotPassword"),
     path("changePassword/",changePassword,name="changePassword"),
 
-# ..........................................Transaction Management...............................................
-
+# ..........................................Transaction Management...........................................
     path("create-transaction/", create_transaction, name="create-transaction"),
     path("transaction-detail/", transaction_detail, name="transaction-detail"),
     path("deleted-transaction-detail/", fetch_deleted_transaction, name="deleted-transaction-detail"),
@@ -39,7 +42,6 @@ urlpatterns = [
 
 
 # ..........................................Task Management..................................................
-
     path("addTask/",addTask,name="addTask"),
     path("currentMonthTaskReport/",currentMonthTaskReport,name="currentMonthTaskReport"),
     path("taskReports/",taskReports,name="taskReports"),
@@ -48,7 +50,6 @@ urlpatterns = [
 
 
 # ..........................................Loan Management..................................................
-
     path("create-finance/",create_finance,name="create-finance"),
     path("finance-details/",finance_details,name="finance-details"),
     path("update-finance-detail/<int:id>",update_finance_detail,name="update-finance-detail"),
@@ -57,7 +58,6 @@ urlpatterns = [
     path("remove-instrument/<int:id>",remove_instrument,name="remove-instrument"),
 
 # ..........................................Ledger Management..................................................
-
     path("create-ledger-transaction/", add_ledger_transaction, name="create-ledger-transaction"),
     path("ledger-transaction-details/", ledger_transaction_details, name="ledger-transaction-details"),
     path("ledger-transaction/<str:id>", ledger_transaction, name="ledger-transaction"),
@@ -71,8 +71,6 @@ urlpatterns = [
     path("undo-ledger-transaction/<int:id>", undo_ledger_transaction, name="undo-ledger-transaction"),
 
 # ..........................................Reminder Management..................................................
-
-
     path('create-reminder/', add_reminder, name='add_reminder'),
     path('view-today-reminder/', todays_reminder, name='todays-reminder'),
     path('view-reminder/', reminder_list, name='view-reminders'),

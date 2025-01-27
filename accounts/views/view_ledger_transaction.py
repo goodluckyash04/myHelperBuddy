@@ -11,9 +11,9 @@ from django.db.models.functions import Coalesce
 from django.http import HttpResponseServerError, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 
-from accounts.decorators import auth_user
-from accounts.models import LedgerTransaction
-from accounts.view_financial_instrument import desired_date
+from ..decorators import auth_user
+from ..models import LedgerTransaction
+from .view_financial_instrument import desired_date
 
 
 
