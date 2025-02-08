@@ -6,8 +6,8 @@ from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.http import HttpResponseServerError, JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import F, Sum, Q
-from .models import FinancialProduct, Transaction
-from .decorators import auth_user
+from ..models import FinancialProduct, Transaction
+from ..decorators import auth_user
 # import math
 
 
@@ -79,14 +79,14 @@ def create_finance(request, user):
                 )
 
         messages.success(request, f'{type}  Added')
-        return redirect('utilities')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))    
     except ValidationError as e:
         messages.error(request, str(e))
-        return redirect('utilities')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))    
     except ValueError as e:
         print(traceback.print_exc())
         messages.error(request, str(e))
-        return redirect('utilities')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))    
     except Exception as e:
         messages.error(request, "An unexpected error occurred.")
         print(traceback.print_exc())

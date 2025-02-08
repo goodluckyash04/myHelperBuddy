@@ -1,4 +1,5 @@
 <!-- Add Ledger Transaction Modal -->
+ {% load static %}
 <div
   class="modal fade"
   id="ledgerModal"
@@ -28,7 +29,7 @@
               <div class="col-6 col-sm-3">
                 <div class="form-check form-check-inline">
                   <input
-                    class="form-check-input"
+                    class="form-check-input shadow-sm"
                     type="radio"
                     name="transaction_type"
                     id="receivable"
@@ -41,7 +42,7 @@
               <div class="col-6 col-sm-3">
                 <div class="form-check form-check-inline">
                   <input
-                    class="form-check-input"
+                    class="form-check-input shadow-sm"
                     type="radio"
                     name="transaction_type"
                     id="payable"
@@ -53,7 +54,7 @@
               <div class="col-6 col-sm-3">
                 <div class="form-check form-check-inline">
                   <input
-                    class="form-check-input"
+                    class="form-check-input shadow-sm"
                     type="radio"
                     name="transaction_type"
                     id="received"
@@ -66,7 +67,7 @@
               <div class="col-6 col-sm-3">
                 <div class="form-check form-check-inline">
                   <input
-                    class="form-check-input"
+                    class="form-check-input shadow-sm"
                     type="radio"
                     name="transaction_type"
                     id="paid"
@@ -82,7 +83,7 @@
           <!-- Counterparty -->
           <div class="mb-3">
             <select
-              class="form-select"
+              class="form-select shadow-sm"
               name="counterparty"
               id="counterparty"
               aria-label="Counterparty"
@@ -101,7 +102,7 @@
           <div class="mb-3">
             <input
               type="text"
-              class="form-control"
+              class="form-control shadow-sm"
               id="counterparty_txt"
               style="display:none;"
               placeholder="Enter Counterparty"
@@ -113,7 +114,7 @@
           <div class="mb-3">
             <input
               type="date"
-              class="form-control"
+              class="form-control shadow-sm"
               name="transaction_date"
               id="transaction_date"
               aria-describedby="transaction_date"
@@ -125,7 +126,7 @@
           <div class="mb-3">
             <input
               type="number"
-              class="form-control"
+              class="form-control shadow-sm"
               name="amount"
               placeholder="Amount"
               id="amount"
@@ -137,7 +138,7 @@
           <div class="mb-3">
             <input
               type="number"
-              class="form-control"
+              class="form-control shadow-sm"
               name="no_of_installments"
               placeholder="No of Installments"
               id="no_of_installments"
@@ -148,7 +149,7 @@
           <!-- Description -->
           <div class="mb-3">
             <textarea
-              class="form-control"
+              class="form-control shadow-sm"
               name="description"
               placeholder="Description"
               id="description"
@@ -172,21 +173,7 @@
   </div>
 </div>
 
+<script src="{% static 'js/ledger.js' %}"></script>
 <script>
   document.getElementById('transaction_date').value = new Date().toISOString().split('T')[0]
-
-  function counterpartyChange() {
-    const cParty = document.getElementById('counterparty');
-    const cParty_txt = document.getElementById('counterparty_txt');
-
-    if (cParty.value === 'other') {
-      cParty.removeAttribute('name');
-      cParty_txt.setAttribute('name', 'counterparty');
-      cParty_txt.style.display = 'block';
-    } else {
-      cParty_txt.removeAttribute('name');
-      cParty.setAttribute('name', 'counterparty');
-      cParty_txt.style.display = 'none';
-    }
-  }
 </script>

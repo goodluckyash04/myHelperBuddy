@@ -57,56 +57,17 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary border-0" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn custom-btn-primary" onclick="updateCounterpartyInModal()">Save changes</button>
+        <button type="button" class="btn custom-btn-primary" onclick="updateCounterpartyInModal('{{ csrf_token }}')">Save changes</button>
       </div>
     </div>
   </div>
 </div>
 
+{% include 'floating_button_individual.html' with m_type='ledger' %}
+
 {% endblock %}
 
 {% block script %}
-<script>
-let currentRowId;
-
-function openModal(rowId) {
-  currentRowId = rowId;
-  const counterpartyElement = document.getElementById('counterparty-' + rowId);
-  const currentCounterparty = counterpartyElement.getAttribute('data-counterparty');
-  document.getElementById('newCounterparty').value = currentCounterparty;
-  new bootstrap.Modal(document.getElementById('editModal')).show();
-}
-
-function updateCounterpartyInModal() {
-  const newCounterparty = document.getElementById('newCounterparty').value.trim();
-  const oldCounterparty = document.getElementById('counterparty-' + currentRowId).getAttribute('data-counterparty');
-
-  if (newCounterparty && newCounterparty !== oldCounterparty) {
-    fetch(`/update-counterparty-name/${oldCounterparty}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': '{{ csrf_token }}'
-      },
-      body: JSON.stringify({ newCounterparty: newCounterparty })
-    }).then(response => {
-      if (response.ok) {
-        const counterpartyElement = document.getElementById('counterparty-' + currentRowId);
-        counterpartyElement.textContent = newCounterparty;
-        counterpartyElement.setAttribute('data-counterparty', newCounterparty);
-      } else {
-        alert('Failed to update counterparty.');
-      }
-    }).catch(error => {
-      console.error('Error updating counterparty name:', error);
-      alert('Error updating counterparty name.');
-    });
-  }
-
-  // Close the modal
-  const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
-  modal.hide();
-}
-</script>
+<script src="{% static 'js/ledger.js' %}"></script>
 {% endblock %}
 

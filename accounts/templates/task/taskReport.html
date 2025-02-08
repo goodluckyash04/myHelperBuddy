@@ -74,9 +74,11 @@
 </div>
 
 {% include 'task/taskModal.html' %}
+{% include 'floating_button_individual.html' with m_type='task' %}
+
 
 {% endblock body %}
 
 {% block script %}
-<script src="../static/js/updateTask.js"></script>
+<script src="{% static 'js/task.js' %}"></script>
 {% endblock script %}

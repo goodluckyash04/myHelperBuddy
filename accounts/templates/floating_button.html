@@ -12,11 +12,21 @@
   <!-- Activity list -->
   <div class="activity-list" id="activityList">
     <ul>
+      {% if m_type == 'transaction' or m_type == '*'  %}
       <a data-bs-toggle="modal" data-bs-target="#expensemodal" ><li>Transaction</li></a>
+      {% endif %}
+      {% if m_type == 'finance' or m_type == '*'  %}
       <a data-bs-toggle="modal" data-bs-target="#financeModal" ><li>Financial Entry</li></a>
+      {% endif %}
+      {% if m_type == 'task' or m_type == '*'  %}
       <a data-bs-toggle="modal" data-bs-target="#taskmodal" ><li>Task</li></a>
+      {% endif %}
+      {% if m_type == 'ledger' or m_type == '*'  %}
       <a data-bs-toggle="modal" data-bs-target="#ledgerModal" ><li>Ledger Entry</li></a>
+      {% endif %}
+      {% if m_type == 'reminder' or m_type == '*'  %}
       <a data-bs-toggle="modal" data-bs-target="#reminderModal" ><li>Reminder</li></a>
+      {% endif %}
     </ul>
   </div>
 
@@ -24,11 +34,11 @@
   {% include 'financial_instrument/addFinanceModal.html' %}
   {% include 'task/taskModal.html' %}
   {% include 'ledger_transaction/ledgerTransactionModal.html' with counterparties=counterparties %} 
-  {% include 'reminder/createReminderModal.html' with counterparties=counterparties %} 
+  {% include 'reminder/createReminderModal.html' %} 
   {% endblock body %}
 
   {% block script %}
-  <script src='{% static "js/addTransaction.js" %}'></script>
+  <script src='{% static "js/transaction.js" %}'></script>
 
   <script>
     // Function to toggle the activity list visibility

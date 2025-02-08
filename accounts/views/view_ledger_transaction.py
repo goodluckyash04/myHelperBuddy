@@ -11,9 +11,11 @@ from django.db.models.functions import Coalesce
 from django.http import HttpResponseServerError, HttpResponseRedirect, JsonResponse
 from django.shortcuts import redirect, render, get_object_or_404
 
-from accounts.decorators import auth_user
-from accounts.models import LedgerTransaction
-from accounts.view_financial_instrument import desired_date
+from accounts.views.views import get_counter_parties
+
+from ..decorators import auth_user
+from ..models import LedgerTransaction
+from .view_financial_instrument import desired_date
 
 
 
@@ -58,17 +60,17 @@ def add_ledger_transaction(request,user):
                 )
 
             messages.success(request, f'{transaction_type}  Added')
-            return redirect('utilities')
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER'))    
     except ValidationError as e:
         messages.error(request, str(e))
-        return redirect('utilities')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))    
     except ValueError as e:
-        print(traceback.print_exc())
+        traceback.print_exc()
         messages.error(request, str(e))
-        return redirect('utilities')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))    
     except Exception as e:
         messages.error(request, "An unexpected error occurred.")
-        print(traceback.print_exc())
+        traceback.print_exc()
         return HttpResponseServerError()
 
 
@@ -93,8 +95,9 @@ def ledger_transaction_details(request,user):
         output_field=DecimalField()
     )
         )
-        print(receivables_payables)
-        return render(request, 'ledger_transaction/counterparty.html',{'user': user,'receivables_payables':receivables_payables})
+
+        counterparties = get_counter_parties(user)
+        return render(request, 'ledger_transaction/counterparty.html',{'user': user,'receivables_payables':receivables_payables,'counterparties':counterparties })
     except Exception as e:
         print(traceback.print_exc())
         messages.error(request, f"An error occurred: try again after some time")
@@ -132,7 +135,7 @@ def update_ledger_transaction_status(request,user,id=None):
         if request.method == "GET":
             trasaction_list = [id]
         else:
-            trasaction_list = request.POST.getlist('record_ledger_ids', '')
+            trasaction_list = request.POST.getlist('record_ids', '')
             print(trasaction_list)
 
         for id in trasaction_list:
@@ -163,7 +166,7 @@ def delete_ledger_transaction(request, id, user):
         current_product.is_deleted = True
         current_product.deleted_at = datetime.datetime.today()
         current_product.save()
-        messages.success(request, f" deleted successfully")
+        messages.success(request, f" Transaction deleted successfully.")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
     except Exception as e:
         messages.error(request, "An unexpected error occurred.")

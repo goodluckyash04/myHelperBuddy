@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponseRedirect
 from django.utils import timezone
 from django.db.models import F
-from .models import Task
-from .decorators import auth_user
+from ..models import Task
+from ..decorators import auth_user
 
 
 def get_task_data_by_user(user):
@@ -27,7 +27,8 @@ def addTask(request, user):
         created_by=user
     )
     
-    return redirect('utilities')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))    
+
 
 @auth_user
 def currentMonthTaskReport(request, user):
