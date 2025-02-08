@@ -1,4 +1,5 @@
 <!-- Add Reminder Modal -->
+ {% load static %}
 <div
   class="modal fade"
   id="reminderModal"
@@ -26,7 +27,7 @@
             <label for="title" class="form-label">Reminder Title</label>
             <input
               type="text"
-              class="form-control"
+              class="form-control shadow-sm"
               name="title"
               id="title"
               placeholder="Enter reminder title"
@@ -37,7 +38,7 @@
           <!-- Reminder Description -->
           <div class="form-floating mb-3">
             <textarea
-              class="form-control"
+              class="form-control shadow-sm"
               name="description"
               id="description"
               placeholder="Enter reminder details"
@@ -47,12 +48,12 @@
             <label for="description">Reminder Detail</label>
           </div>
 
-          <!-- Reminder Time -->
+          <!-- Reminder Start Date -->
           <div class="mb-3">
             <label for="reminder_date" class="form-label">Reminder Date</label>
             <input
               type="date"
-              class="form-control"
+              class="form-control shadow-sm"
               name="reminder_date"
               id="reminder_date"
               required
@@ -63,7 +64,7 @@
           <div class="mb-3">
             <label for="frequency" class="form-label">Frequency</label>
             <select
-              class="form-select"
+              class="form-select shadow-sm"
               name="frequency"
               id="frequency"
               aria-label="Select reminder frequency"
@@ -113,17 +114,4 @@
 </div>
 
 <!-- Optional: JavaScript for Frequency Selection -->
-<script>
-  document.getElementById("frequency").addEventListener("change", function () {
-    const frequency = this.value;
-    const customRepeatDaysContainer = document.getElementById(
-      "customRepeatDaysContainer"
-    );
-
-    if (frequency === "custom") {
-      customRepeatDaysContainer.style.display = "block"; // Show custom repeat input
-    } else {
-      customRepeatDaysContainer.style.display = "none"; // Hide custom repeat input
-    }
-  });
-</script>
+<script src="{% static 'js/reminder.js' %}"></script>

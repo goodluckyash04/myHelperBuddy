@@ -42,14 +42,27 @@ def signup(request):
         name = request.POST.get('name', '')
         email = request.POST.get('email', '')
 
+        context = {
+            'username' :username,
+            'name' :name,
+            'email' :email
+        }
+
         if not username or not password or not rpassword:
-            return render(request, "auth/signup.html", {"msg": "All fields are required."})
+            context['msg'] = "All fields are required."
+            return render(request, "auth/signup.html", context=context)
 
         if User.objects.filter(username=username).exists():
-            return render(request, "auth/signup.html", {"msg": "Username already exists."})
+            context['msg'] = "Username already exists."
+            return render(request, "auth/signup.html", context=context)
+        
+        if User.objects.filter(email=email).exists():
+            context['msg'] = "Email already exists."
+            return render(request, "auth/signup.html", context=context)
 
         if password != rpassword:
-            return render(request, "auth/signup.html", {"msg": "Passwords do not match."})
+            context['msg'] = "Passwords do not match."
+            return render(request, "auth/signup.html", context=context)
 
         try:
             User.objects.create(

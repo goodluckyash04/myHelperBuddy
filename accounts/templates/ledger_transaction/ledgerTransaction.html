@@ -64,14 +64,14 @@
               <th scope="col">AMOUNT(₹)</th>
               <th scope="col">COMPLETION DATE</th>
               <th scope="col">DESCRIPTION</th>
-              <th scope="col"  class="text-center"><i class="fa-solid fa-trash"></i></th>
+              <th scope="col"  class="text-center">DELETE</th>
             </tr>
           </thead>
           <tbody>
             {% if ledger_trn %}
               {% for i in ledger_trn %}
                 <tr>
-                  <td><input type="checkbox" name="record_ledger_ids" value="{{ i.id }}"></td>
+                  <td><input type="checkbox" name="record_ids" value="{{ i.id }}"></td>
                   <td scope="row">{{ forloop.counter }}</td>
                   <td><a href="#" data-bs-toggle="modal"class="text-decoration-none" style="color: var(--primary-dark-secondary);"  data-bs-target="#ledgerModal" onclick="openModalAndGetLedger({{ i.id }})">{{ i.transaction_type }}</a></td>
                   <td class="text-center">
@@ -87,15 +87,16 @@
                   <td style="color:{% if i.transaction_type == 'Receivable' or i.transaction_type == 'Received' %}#17a2b8{% else %}#fd7e14{% endif %}">{{ i.amount }}</td>
                   <td>{% if i.status == 'Completed' %}{{ i.completion_date }}{% else %}-{% endif %}</td>
                   <td>{{ i.description }}</td>
-                  <!-- <td class="text-center">
-                    <a href="#" data-bs-toggle="modal" data-bs-target="#ledgerModal" onclick="openModalAndGetLedger({{ i.id }})">
-                      <i class="fa-solid fa-pen text-info"></i>
-                    </a>
-                  </td> -->
-                    <td>  
-                    <a href="/delete-ledger-transaction/{{ i.id }}">
-                      <i class="fa-solid fa-trash text-danger"></i>
-                    </a>
+                    <td>
+                    <button 
+                      type="button" 
+                      class="btn custom-btn-danger border-0 btn-sm "
+                      data-bs-toggle="modal" 
+                      data-bs-target="#confirmModal" 
+                      style="background: None;"
+                      data-url="/delete-ledger-transaction/{{ i.id }}">
+                      <i class="fa-solid fa-trash-alt" style="color: #dc3545;"></i> 
+                    </button>
                   </td>
                 </tr>
               {% endfor %}
@@ -111,18 +112,15 @@
   </div>
 
   {% include 'ledger_transaction/ledgerTransactionModal.html' %}
+
+  {% include 'utility/confirmation_modal.html' with title='Confirm Delete' body='Are you sure you want to delete this transaction?' confirmButton='Delete' %}
+
+
 </div>
 
 {% endblock body %}
 
 {% block script %}
-<script src="../static/js/updateLedger.js"></script>
-<script>
-  document.getElementById("select-all-checkbox").addEventListener("change", function() {
-    var checkboxes = document.getElementsByName("record_ledger_ids");
-    for (var i = 0; i < checkboxes.length; i++) {
-      checkboxes[i].checked = this.checked;
-    }
-  });
-</script>
+<script src="{% static 'js/ledger.js' %}"></script>
+<script src="{% static 'js/utilityFunction.js' %}"></script>
 {% endblock script %}

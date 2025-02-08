@@ -1,3 +1,18 @@
+
+ function dateCheck() {
+  var date = document.getElementById("complete_by").value;
+  var submitButton = document.getElementById("submitbutton");
+  var currentDate = new Date();
+  var givenDate = new Date(date);
+
+  if (givenDate <= currentDate) {
+    alert('Complete By date must be in the future.');
+    submitButton.disabled = true;
+  } else {
+    submitButton.disabled = false;
+  }
+}
+
 function openModalAndGetTask(Id) {
   document.getElementById("myTaskForm").action = `/editTask/${Id}`;
   document.getElementById("submitbutton").textContent = "Update Task";

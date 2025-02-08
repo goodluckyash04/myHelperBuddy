@@ -1,0 +1,43 @@
+{% load static %}
+    {% block body %}
+    
+    {% block style %}
+    <link rel="stylesheet" href="{% static 'css/floatingButton.css' %}">
+    {% endblock style %}
+
+    <!-- Floating button -->  
+    {% if m_type == 'transaction' %}
+    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#expensemodal"  ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>      
+    {% elif m_type == 'finance' %}
+    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#financeModal" ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
+    {% elif m_type == 'task' %}
+    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#taskmodal" ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
+    {% elif m_type == 'ledger' %}
+    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#ledgerModal" ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
+    {% elif m_type == 'reminder' %}
+    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#reminderModal" ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
+    {% endif %}
+  
+  {% include 'transaction/transactionModal.html' %}
+  {% include 'financial_instrument/addFinanceModal.html' %}
+  {% include 'task/taskModal.html' %}
+  {% include 'ledger_transaction/ledgerTransactionModal.html' with counterparties=counterparties %} 
+  {% include 'reminder/createReminderModal.html' %} 
+  {% endblock body %}
+
+  {% block script %}
+  <script src='{% static "js/transaction.js" %}'></script>
+
+  <script>
+    // Function to toggle the activity list visibility
+    function toggleActivityList() {
+      var activityList = document.getElementById('activityList');
+      if (activityList.style.display === 'none' || activityList.style.display === '') {
+        activityList.style.display = 'block';
+      } else {
+        activityList.style.display = 'none';
+      }
+    }
+  </script>
+    {% endblock script %}
+

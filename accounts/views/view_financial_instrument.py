@@ -79,14 +79,14 @@ def create_finance(request, user):
                 )
 
         messages.success(request, f'{type}  Added')
-        return redirect('utilities')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))    
     except ValidationError as e:
         messages.error(request, str(e))
-        return redirect('utilities')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))    
     except ValueError as e:
         print(traceback.print_exc())
         messages.error(request, str(e))
-        return redirect('utilities')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))    
     except Exception as e:
         messages.error(request, "An unexpected error occurred.")
         print(traceback.print_exc())

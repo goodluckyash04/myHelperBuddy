@@ -27,7 +27,8 @@ def addTask(request, user):
         created_by=user
     )
     
-    return redirect('utilities')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))    
+
 
 @auth_user
 def currentMonthTaskReport(request, user):

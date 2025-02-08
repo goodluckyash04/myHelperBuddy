@@ -46,23 +46,11 @@
         </table>
     </div>
 </div> 
-{% include 'floating_button.html' %}
+{% include 'floating_button_individual.html' with m_type='task' %}
 {% endblock body %}
 
 {% block script %}
-<script>
-    function dateCheck() {
-        var date = document.getElementById("complete_by").value;
-        var submit = document.getElementById("submitbutton");
-        var current_time = new Date();
-        var given_time = new Date(date);
-        
-        if (!(given_time > current_time)) {
-            alert('Date must be in future');
-            submit.setAttribute('disabled', "true");
-        } else {
-            submit.removeAttribute('disabled');
-        }
-    }
-</script>
+
+<script src="{% static 'js/task.js' %}"></script>
+
 {% endblock script %}

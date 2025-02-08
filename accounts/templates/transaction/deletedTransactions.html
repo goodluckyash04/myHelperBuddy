@@ -52,8 +52,8 @@
                         type="button" 
                         class="btn custom-btn-primary btn-sm" 
                         data-bs-toggle="modal" 
-                        data-bs-target="#confirmUndoModal" 
-                        data-undo-url="/undo-transaction/{{ i.id }}">
+                        data-bs-target="#confirmModal" 
+                        data-url="/undo-transaction/{{ i.id }}">
                         <i class="fa-solid fa-rotate-left"></i> Undo
                       </button>
                     </td>
@@ -77,67 +77,40 @@
     </div>
   </div>
 
+
   <!-- Individual Undo Confirmation Modal -->
-  <div class="modal fade" id="confirmUndoModal" tabindex="-1" aria-labelledby="confirmUndoLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title text-danger" id="confirmUndoLabel">Confirm Undo</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          Are you sure you want to undo this transaction?
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <a href="#" class="btn btn-outline-success" id="confirmUndoButton">Confirm Undo</a>
-        </div>
-      </div>
-    </div>
-  </div>
+  {% include 'utility/confirmation_modal.html' with title='Confirm Undo' body='Are you sure you want to undo this transaction?' confirmButton='Undo' %}
+
 
   <!-- Multi-Select Undo Confirmation Modal -->
-  <div class="modal fade" id="multiUndoModal" tabindex="-1" aria-labelledby="multiUndoLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title text-danger" id="multiUndoLabel">Confirm Undo</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          Are you sure you want to undo the selected transactions?
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-success" onclick="document.getElementById('undo-form').submit();">
-            Confirm Undo
-          </button>
+    <div class="modal fade" id="multiUndoModal" tabindex="-1" aria-labelledby="multiUndoLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" style="color: var(--primary-dark);" id="multiUndoLabel">Confirm Undo</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Are you sure you want to undo the selected transactions?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-outline-success" onclick="document.getElementById('undo-form').submit();">
+              Confirm Undo
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
 </div>
 
 {% endblock body %}
 
 {% block script %}
+<script src="{% static 'js/utilityFunction.js' %}"></script>
 <script>
-  // Select All Checkboxes Logic
-  document.getElementById("select-all-checkbox").addEventListener("change", function() {
-    const checkboxes = document.querySelectorAll('input[name="record_ids"]');
-    checkboxes.forEach(checkbox => checkbox.checked = this.checked);
-  });
-
-  // Dynamically set the undo URL in the individual undo modal
-  document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('confirmUndoModal');
-    modal.addEventListener('show.bs.modal', function (event) {
-      const button = event.relatedTarget; // Button that triggered the modal
-      const undoUrl = button.getAttribute('data-undo-url'); // Extract URL from data attribute
-      const confirmButton = modal.querySelector('#confirmUndoButton');
-      confirmButton.setAttribute('href', undoUrl); // Set the URL on the confirm button
-    });
-  });
+  document.addEventListener('DOMContentLoaded', confirmationModal);
+  document.getElementById("select-all-checkbox").addEventListener("change", selectMultiple);
 </script>
 {% endblock script %}
