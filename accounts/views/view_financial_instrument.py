@@ -31,6 +31,7 @@ def create_finance(request, user):
     try:
         name = request.POST.get("name", "")
         type = request.POST.get("type", "")
+        category = request.POST.get("category", "")
         amount = int(request.POST.get("amount", 0.0))
         no_of_installments = int(request.POST.get("no_of_installments", 1))
         started_on = request.POST.get("started_on", "")
@@ -61,12 +62,18 @@ def create_finance(request, user):
 
             # Add EMI Transaction
             emi_amount = round((amount/no_of_installments),2)
-
+    
             for i in range(0,no_of_installments):
-                sub = 'EMI' if type == 'Loan' else 'SIP'
+                sub = 'EMI' if type == 'Loan' else type
+                if type == 'Loan':
+                    category = "EMI"
+                elif type == "Split":
+                    category = category
+                else:
+                    category = "Investment"
                 Transaction.objects.create(
                     type="Expense",
-                    category="EMI" if type == 'Loan' else 'Investment',
+                    category=category,
                     date=desired_date(started_on,i),
                     amount=emi_amount,
                     beneficiary= 'Self',
@@ -132,11 +139,13 @@ def update_finance_detail(request,id, user):
         started_on = request.POST.get("started_on", "")
         amount = decimal.Decimal(request.POST.get("amount", 0.0))
         no_of_installments = int(request.POST.get("no_of_installments", 1))
+        category = request.POST.get("category", "")
+
 
         if no_of_installments < 1:
             raise ValueError('Installments can not be Zero(0)')
 
-        sub = 'SIP' if i_type == 'SIP' else 'EMI'
+        sub = 'EMI' if i_type == 'Loan' else i_type
         transactions = Transaction.objects.filter(created_by=user, source_id=id, is_deleted=False)
 
         # name update
@@ -148,8 +157,14 @@ def update_finance_detail(request,id, user):
         # type update
         if i_type != details.type:
             details.type = i_type
+            if i_type == 'Loan':
+                category = "EMI"
+            elif i_type == "Split":
+                category = category
+            else:
+                category = "Investment"
             for index,trn in enumerate(transactions,1):
-                trn.category = "EMI" if i_type == 'Loan' else 'Investment'
+                trn.category = category
                 trn.mode_detail = i_type
                 trn.description = f'{name} {sub} {index}'
                 trn.save()

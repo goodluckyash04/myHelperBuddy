@@ -17,6 +17,9 @@ function openModalAndGetInstrument(Id) {
       // type
       if (data.type == "Loan") {
         document.getElementById("loan").checked = true;
+      }
+      else if (data.type == "Split") {  
+        document.getElementById("split").checked = true;
       } else {
         document.getElementById("sip").checked = true;
       }

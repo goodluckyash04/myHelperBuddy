@@ -1,233 +1,176 @@
 import traceback
-
+import base64
+import json
+import datetime
 from cryptography.fernet import Fernet
-from django.core.mail import EmailMessage
+
 from django.core.management.base import BaseCommand
 from django.conf import settings
-import base64
-import datetime
-import os
-
 from django.db.models import Q
 
-from accounts.models import Task, Transaction, LedgerTransaction, FinancialProduct
+from accounts.services.email_services import EmailService
+from accounts.models import (
+    Reminder,
+    Task,
+    Transaction,
+    LedgerTransaction,
+    FinancialProduct,
+    User,
+)
+from accounts.views.view_reminder import calculate_reminder
 
 
 class Command(BaseCommand):
-    help = 'Backup and send the encrypted database via email'
+    """
+    Django management command to:
+    - Check for task reminders
+    - Detect database updates
+    - Backup and send encrypted database via email
+    """
+
+    help = "Backup and send the encrypted database via email"
+
+    def __init__(self):
+        super().__init__()
+        self.utc_today = datetime.datetime.now(datetime.timezone.utc).astimezone(
+            datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+        )
+        self.email_service = EmailService()
 
     def handle(self, *args, **options):
+        """
+        Main function executed when the command is run.
+        """
         try:
-            print("Starting the backup and encryption process...")
-            today = datetime.datetime.now(datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=5, minutes=30)))
-            models_to_check = [
-                (Transaction, Q(updated_at__date=today)),
-                (LedgerTransaction, Q(updated_at__date=today)),
-                (FinancialProduct, Q(updated_at__date=today)),
-                (Task, Q(updated_at__date=today))
-            ]
+            print("--------------------------------------------------")
+            print(f"{self.utc_today.strftime('%Y-%m-%d %H:%M:%S')} : Starting the scheduler...")
 
-            changes_detected = False
+            self.send_todays_task_reminder()
 
-            for model, query in models_to_check:
-                if model.objects.filter(query).exists():
-                    changes_detected = True
-                    break
-            print("changes_detected",changes_detected)
-            due_tasks = Task.objects.filter(complete_by_date__lte=today.date(),status = 'Pending')
+            with open(settings.JSON_DB) as file:
+                last_backup = json.loads(file.read()).get("last_backup")
 
-            task_list = []
-            for task in due_tasks:
-                task_list.append(task.name+'-'+task.description)
-            list_string = "\n".join(task_list)
-            task_email = EmailMessage(
-                'Task Reminder',
-                f'Reminder for task:\n {list_string}',
-                settings.EMAIL_HOST_USER,
-                [settings.RECIEPINT_EMAIL]
+            last_backup = (
+                datetime.datetime.strptime(last_backup, "%Y-%m-%d %H:%M:%S")
+                if last_backup
+                else None
             )
-            print(today.date())
-            if task_list:
-                task_email.send()
-            # Perform a database backup
-            db_file_path = settings.DATABASES['default']['NAME']  # Assuming the default database settings
-            with open(db_file_path, 'rb') as f:
-                database_data = f.read()
 
-            print("Backup data generated successfully.")
+            if not last_backup or self.detect_database_update() or (
+                (self.utc_today.date() - last_backup.date()).days >= 7
+            ):
+                self.backup_database()
+                with open(settings.JSON_DB, "w") as file:
+                    json.dump({"last_backup": self.utc_today.strftime("%Y-%m-%d %H:%M:%S")}, file, indent=4)
 
-            # Generate a symmetric encryption key
-            encryption_key = base64.b64decode(settings.ENCRYPTION_KEY.encode('utf-8'))
-            cipher_suite = Fernet(encryption_key)
-            # Encrypt the database data
-            encrypted_data = cipher_suite.encrypt(database_data)
+            print(f"\n{self.utc_today.strftime('%Y-%m-%d %H:%M:%S')} : Scheduler completed.")
+            print("--------------------------------------------------")
 
-            print("Data encrypted successfully.")
-
-            # Sending email with the encrypted data as an attachment
-            subject = 'Daily Backup'
-            message = 'Please find the attached encrypted database backup.'
-            from_email = settings.EMAIL_HOST_USER  # Replace with your email address
-            recipient_list = [settings.RECIEPINT_EMAIL]  # Replace with the recipient's email address
-            email = EmailMessage(subject, message, from_email, recipient_list)
-            today = datetime.datetime.today().strftime("%Y%m%d%H%M")
-            email.attach(f'{today}.bin', encrypted_data, 'application/octet-stream')
-            # if changes_detected:
-            email_sent = email.send()
-            if email_sent:
-                print("Email sent successfully.")
-            else:
-                print("Email sending failed.")
-            # else:
-                # print("No changes Made Today")
         except Exception as e:
-            print(traceback.print_exc())
-            print(f"An error occurred: {e}")
+            traceback.print_exc()
+            print(f"\nAn error occurred during scheduler execution: {e}")
+
+    def detect_database_update(self):
+        """
+        Checks if there have been any updates in the database in the last 24 hours.
+        """
+        print("\nStarting change detection...")
+        changes_detected = False
+        query = Q(
+            updated_at__date__gte=self.utc_today.date() - datetime.timedelta(days=1)
+        ) | Q(
+            created_at__date__gte=self.utc_today - datetime.timedelta(days=1)
+        )
+
+        models_to_check = [User, Transaction, LedgerTransaction, FinancialProduct, Task, Reminder]
+
+        for model in models_to_check:
+            if model.objects.filter(query).exists():
+                print(f"\tChanges detected in {model.__name__}")
+                changes_detected = True
+                break
+
+        print("Change detection completed. Status:", changes_detected)
+        return changes_detected
+
+    def backup_database(self):
+        """
+        Encrypts and backs up the database, then emails it as an attachment.
+        """
+        print("\nDatabase backup started...")
+
+        db_file_path = settings.DATABASES["default"]["NAME"]
+        with open(db_file_path, "rb") as f:
+            database_data = f.read()
+
+        file_name = f"{self.utc_today.strftime('%Y%m%d%H%M')}.bin"
+        encrypted_data = self.encrypt_data(database_data)
+
+        if encrypted_data:
+            attachments = [(file_name, encrypted_data, "application/octet-stream")]
+
+            self.email_service.send_email(
+                subject="Database Backup Status",
+                recipient_list=[settings.ADMIN_EMAIL],
+                message=(
+                    f"✅ Backup Successful!\n"
+                    f"Timestamp: {self.utc_today.strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    f"Backup File: {file_name}\n"
+                ),
+                attachments=attachments,
+            )
+
+            print("\nDatabase backup completed successfully.")
+        else:
+            print("\nDatabase backup failed due to encryption error.")
+
+    def encrypt_data(self, data):
+        """
+        Encrypts data using a symmetric encryption key.
+        """
+        print("\nData encryption started...")
+        try:
+            encryption_key = base64.b64decode(settings.ENCRYPTION_KEY.encode("utf-8"))
+            cipher_suite = Fernet(encryption_key)
+            encrypted_data = cipher_suite.encrypt(data)
+            print("Data encryption successfully completed.")
+            return encrypted_data
+        except Exception:
+            print("Error during encryption.")
+            traceback.print_exc()
+            return None
+
+    def send_todays_task_reminder(self):
+        """
+        Fetches pending tasks and reminders for today and notifies users.
+        """
+        print("\nFetching pending tasks and today's reminders...")
+
+        for user in User.objects.all():
+            pending_date = self.utc_today.date() + datetime.timedelta(days=1)
+            pending_tasks = Task.objects.filter(
+                created_by=user, complete_by_date__lte=pending_date, status="Pending"
+            )
+            reminders = calculate_reminder(user)
+
+            if pending_tasks or reminders:
+                context = {
+                    "user": user,
+                    "tasks": pending_tasks,
+                    "reminders": reminders,
+                    "site_url": settings.SITE_URL,
+                }
+
+                self.email_service.send_email(
+                    subject="Pending Tasks & Reminders",
+                    recipient_list=[user.email],
+                    template_name="email_templates\\task_reminders_email.html",
+                    context=context,
+                    is_html=True,
+                )
 
+        print("Pending tasks and today's reminders fetched successfully.")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# from django.core.management.base import BaseCommand
-# from django.core.management import call_command
-# import os
-# import datetime
-
-# class Command(BaseCommand):
-#     help = 'Backup the database'
-
-#     def handle(self, *args, **options):
-#         print("he")
-#         backup_dir = 'D:\expense_manager\backup'
-#         if not os.path.exists(backup_dir):
-#             os.makedirs(backup_dir)
-
-#         backup_file = os.path.join(backup_dir, f'db_backup_{datetime.datetime.now().strftime("%Y-%m-%d")}.json')
-
-#         with open(backup_file, 'w') as f:
-#             call_command('dumpdata', stdout=f)
-#         print("Backup data generated successfully.")
-
-
-
-
-
-
-# Without Storing to system
-# from django.core.management.base import BaseCommand
-# from django.core.management import call_command
-# from django.core.mail import EmailMessage,send_mail
-# import io
-# import traceback;
-# import datetime
-# from django.conf import settings
-
-
-# class Command(BaseCommand):
-#     help = 'Backup the database and send as an email attachment'
-#     def handle(self, *args, **options):
-#         try:
-#             print("Starting the backup process...")
-#             in_memory_file = io.BytesIO()  # Use io.StringIO() for text-based data
-
-#             call_command('dumpdata', stdout=in_memory_file)
-#             print("Backup data generated successfully.")
-#             # Sending email with the backup data as an attachment
-#             subject = 'Daily Database Backup'
-#             message = 'Please find the attached database backup file.'
-#             from_email = settings.EMAIL_HOST_USER  # Replace with your email address
-#             recipient_list = ['yash.goodluck4@gmail.com']  # Replace with the recipient's email address
-#             email = EmailMessage(subject, message, from_email, recipient_list)
-#             backup_filename = f'db_backup_{datetime.datetime.now().strftime("%Y-%m-%d")}.json'
-#             email.attach(backup_filename, in_memory_file.getvalue(), 'application/json')
-
-#             email_sent = email.send()
-#             if email_sent:
-#                 print("Email sent successfully.")
-#             else:
-#                 print("Email sending failed.")
-#         except:
-#             print(traceback.print_exc())
-
-
-
-
-
-
-# import io
-# import os
-# from django.core.management import call_command
-# from django.core.mail import EmailMessage
-# from django.core.management.base import BaseCommand
-# from django.conf import settings
-
-# class Command(BaseCommand):
-#     help = 'Backup the database and send as an email attachment'
-
-#     def handle(self, *args, **options):
-#         try:
-#             print("Starting the backup process...")
-#             in_memory_file = io.BytesIO()
-
-#             # Perform a database backup
-#             db_file_path = settings.DATABASES['default']['NAME']  # Assuming the default database settings
-#             with open(db_file_path, 'rb') as f:
-#                 in_memory_file.write(f.read())
-
-#             print("Backup data generated successfully.")
-
-#             # Sending email with the database backup file as an attachment
-#             subject = 'Daily Database Backup'
-#             message = 'Please find the attached database backup file.'
-#             from_email = settings.EMAIL_HOST_USER  # Replace with your email address
-#             recipient_list = ['yash.goodluck4@gmail.com']  # Replace with the recipient's email address
-#             email = EmailMessage(subject, message, from_email, recipient_list)
-
-#             backup_filename = os.path.basename(db_file_path)
-#             email.attach(backup_filename, in_memory_file.getvalue(), 'application/octet-stream')
-
-#             email_sent = email.send()
-#             if email_sent:
-#                 print("Email sent successfully.")
-#             else:
-#                 print("Email sending failed.")
-#         except Exception as e:
-#             print(f"An error occurred: {e}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-# python manage.py loaddata /path/to/db_backup_YYYY-MM-DD.json
-
-
-# python3 /path/to/your/manage.py your_custom_command
-# python3 manage.py_path file_to_run
+# To run the command:
+# python manage.py your_custom_command

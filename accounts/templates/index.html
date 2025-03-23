@@ -65,6 +65,18 @@
       type="text/css"
       href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"
     />
+
+     <!-- Web Manifest -->
+     <link rel="manifest" href="{% static 'manifest.json' %}">
+
+     <!-- Add Service Worker -->
+     <script>
+         if ("serviceWorker" in navigator) {
+             navigator.serviceWorker.register("/static/service-worker.js")
+                 .then(reg => console.log("Service Worker Registered!", reg))
+                 .catch(err => console.log("Service Worker Registration Failed!", err));
+         }
+     </script>
   </head>
   {% block mainbody %} 
   

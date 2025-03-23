@@ -45,7 +45,7 @@
         <div class="col-12 col-md-3 mb-3">
             <a class="text-decoration-none" href="/fetch-financial-transaction/{{ i.id }}">
                 <div class="card shadow rounded-3">
-                    <div class="card-body p-4" style="background: linear-gradient(to bottom right, #a7c4c9, #e6e6e6);">
+                    <div class="card-body p-4" style="background: rgba(94, 134, 1, 0.108)">
                         <div class="d-flex justify-content-between">
                             <h5 class="card-title text-start" style="color: var(--primary-dark-four); font-size: 1.2rem; font-weight: 600;">
                                 {{ i.name | title | truncatechars:25 }}
@@ -66,6 +66,8 @@
                                 <a class="btn p-0 fs-5 text-start" aria-label="Loan Type">
                                     {% if i.type == "Loan" %}
                                     <i class="fa-solid fa-landmark" style="color: #7c135b;"></i>
+                                    {% elif i.type == "Split" %}
+                                    <i class="fa-solid fa-bolt" style="color: var(--primary)"></i>
                                     {% else %}
                                     <i class="fa-solid fa-hand-holding-dollar" style="color: #367864;"></i>
                                     {% endif %}

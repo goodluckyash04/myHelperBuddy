@@ -126,6 +126,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# STATIC_URL = "/static/"
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, "accounts/static"),
+# ]
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
@@ -137,7 +141,7 @@ EMAIL_USE_TLS = True
 EMAIL_PORT = 587
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
-RECIEPINT_EMAIL = config('RECIEPINT_EMAIL')
+ADMIN_EMAIL = config('ADMIN_EMAIL')
 
 ENCRYPTION_KEY = config('ENCRYPTION_KEY')
 
@@ -148,3 +152,9 @@ FINANCE_USER_ACCESS = config('FINANCE_USER_ACCESS')
 TASK_USER_ACCESS = config('TASK_USER_ACCESS')
 TRANSACTION_USER_ACCESS = config('TRANSACTION_USER_ACCESS')
 LEDGER_USER_ACCESS = config('LEDGER_USER_ACCESS')
+
+SITE_URL = config('SITE_URL')
+
+EMAIL_SERVICE = config('EMAIL_SERVICE')
+
+JSON_DB = BASE_DIR /config("JSON_DB")

@@ -39,7 +39,7 @@
             required
           />
         </div>
-        <div class="mb-3">
+        <div class="mb-3 input-group">
           <input
             type="email"
             placeholder="Email"
@@ -51,6 +51,9 @@
             aria-describedby="emailHelp"
             required
           />
+          <span class="input-group-text" id="addon-wrapping">
+            <i class="fa-regular fa-paper-plane" style="color:var(--primary); cursor: pointer;" id="getOTPButton" onclick="get_otp('{{ csrf_token }}')"></i>
+          </span>
         </div>
         <div class="mb-3">
           <input
@@ -71,6 +74,17 @@
             style="line-height:2rem"
             name="rpassword"
             id="rpassword"
+            required
+          />
+        </div>
+        <div class="mb-3">
+          <input
+            type="password"
+            placeholder="Enter OTP"
+            class="form-control"
+            style="line-height:2rem"
+            name="otp"
+            id="otp"
             required
           />
         </div>
@@ -96,3 +110,8 @@
 </div>
 
 {% endblock mainbody %}
+
+{% block script %}
+<script src="{% static 'js/auth.js' %}"></script>
+{% endblock script %}
+

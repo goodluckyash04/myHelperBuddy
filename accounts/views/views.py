@@ -144,7 +144,6 @@ def calculate_current_month_category_expenses(transactions, user):
    
 # ...........................................Index..................................................
 def index(request):
-    print(request.session.get('username'))
     if request.session.get('username'):
         return redirect('dashboard')
     data = [
@@ -183,7 +182,7 @@ def dashboard(request,user):
         transactions = Transaction.objects.filter(created_by=user,is_deleted = False)        
 
         user_info = {}
-        user_info['first_txn_date'] = min(entry.date for entry in transactions if entry.category.lower()) 
+        user_info['first_txn_date'] = min(entry.date for entry in transactions if entry.category.lower()) if transactions else "" 
         user_info['account_age'] = (timezone.now() - user.created_at).days
 
         # Financial Overview
@@ -265,6 +264,13 @@ def utilities(request,user):
         # messages.error(request, "An unexpected error occurred.") 
         return redirect('error_500')
 
+
+@auth_user
+def profile(request, user):
+
+    service_status = {key.replace("_USER_ACCESS", ""): user.username.lower() in value.split(",") or value=="*"  for key, value in USER_ACCESS.items()}
+    
+    return render(request, "profile.html", {"user":user, "service_status":service_status})
 
 def error_500(request):  
     return render(request,"error_500.html",{'prev':request.META.get('HTTP_REFERER', '/')})

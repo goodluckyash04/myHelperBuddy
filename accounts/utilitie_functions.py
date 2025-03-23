@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+import re
 
 
 def date_convert(date_text:str,date_input_format:str = "%Y-%m-%d",date_output_format:str = "%d%b%y"):
@@ -50,3 +51,7 @@ def convert_decimal(obj):
     if isinstance(obj, Decimal):
         return float(obj) 
     return obj
+
+def validate_password(password):
+    pattern = r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+    return bool(re.match(pattern, password))

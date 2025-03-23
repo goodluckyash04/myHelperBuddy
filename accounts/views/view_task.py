@@ -35,7 +35,7 @@ def currentMonthTaskReport(request, user):
     current_month = timezone.now().month
     taskData = Task.objects.filter(
         created_by=user,
-        complete_by_date__month=current_month,
+        complete_by_date__month__lte=current_month,
         status="Pending",
         is_deleted=False
     ).order_by('complete_by_date')

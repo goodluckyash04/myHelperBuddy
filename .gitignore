@@ -46,3 +46,5 @@ Pipfile.lock
 Thumbs.db
 
 Django.txt
+
+db.json

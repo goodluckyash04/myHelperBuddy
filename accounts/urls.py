@@ -1,7 +1,7 @@
 from django.urls import path
 
-from .views.views import utilities,dashboard,index,about,error_500
-from .views.view_auth import login,logout,forgotPassword,changePassword,signup 
+from .views.views import utilities,dashboard,index,about,error_500, profile
+from .views.view_auth import login,logout,forgotPassword,changePassword,signup, send_otp
 from .views.view_ledger_transaction import add_ledger_transaction, ledger_transaction_details, ledger_transaction, \
     update_ledger_transaction_status, delete_ledger_transaction, update_ledger_transaction, update_counterparty_name, \
     undo_ledger_transaction, fetch_deleted_ledger_transaction
@@ -18,6 +18,7 @@ urlpatterns = [
 # ..........................................Home Page........................................................
     path("",index,name="index"),
     path("utilities/",utilities,name="utilities"),
+    path("profile/",profile,name="profile"),
     path("dashboard/",dashboard,name="dashboard"),
     path("about/",about,name="about"),
     path("error/",error_500,name="error_500"),
@@ -26,6 +27,7 @@ urlpatterns = [
     path("login",login,name="login"),
     path("signup/",signup,name="signup"),
     path("logout/",logout,name="logout"),
+    path("send-otp/",send_otp,name="send_otp"),
     path("forgotPassword/",forgotPassword,name="forgotPassword"),
     path("changePassword/",changePassword,name="changePassword"),
 

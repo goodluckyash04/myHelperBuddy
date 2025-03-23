@@ -17,7 +17,7 @@ STATUS = ["Pendiing", "Completed"];
 // Get the current date and time in ISO format (YYYY-MM-DD)
 var currentDate = new Date().toISOString().split("T")[0];
 
-function beneficiary() {
+function beneficiary_s() {
   var bene = document.getElementById("beneficiary");
   var other_bene = document.getElementById("other_beneficiary");
   var other_input = document.getElementById("beneficiary_text");
@@ -144,3 +144,4 @@ function hiddendiscription() {
     th.setAttribute("hidden", true);
   }
 }
+

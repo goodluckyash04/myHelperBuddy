@@ -1,0 +1,84 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block body %}
+<style>
+    @media (max-width: 576px) { /* Target mobile screens */
+        .profile-img {
+            width: 25% !important;
+        }
+    }
+  </style>
+
+<div class="container mt-5">
+    <div class="row g-3">
+        <!-- Profile Section -->
+        <div class="col-md-4 ">
+            <div class="card shadow-sm p-4 text-center">
+                <img src="{% static 'image\user_m.jpg' %}" class="w-50 rounded-circle mx-auto border border-3 profile-img"  alt="Profile Picture">
+                <h3 class="mt-3 mb-0" style="color: var(--primary);">{{user.name}}</h3>
+                <p  style="color: var(--primary-dark);">@{{user.username}}</p>
+                <p class="text-muted" >{{user.email}}</p>
+                <p class="text-muted">Active since {{user.created_at|date:'M d, Y'}}</p>
+            </div>
+        </div>
+
+        <!-- Settings Section -->
+        <div class="col-md-8">
+            <div class="card shadow-sm p-4">
+                <h4 class="mb-3">Settings</h4>
+                <hr>
+        
+                <!-- Account Settings -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="mb-3">
+                            <label class="form-label">Email Preference</label>
+                            <select disabled class="form-select">
+                                <option >Enabled</option>
+                                <option selected>Disabled</option>
+                            </select>
+                        </div>
+        
+                        <!-- <div class="mb-3">
+                            <label class="form-label">Account Privacy</label>
+                            <select disabled aria-readonly="true" class="form-select">
+                                <option>Public</option>
+                                <option selected>Private</option>
+                            </select>
+                        </div> -->
+                    </div>
+                </div>
+        
+                <!-- Service Toggles -->
+                <h5 class="mt-4">Services Status</h5>
+                <hr>
+                <div class="row px-3">
+                    {% for service, status in service_status.items %}
+                    <div class="col-6 col-md-4 form-check form-switch mb-3">
+                        <input class="form-check-input pointer-none" type="checkbox" id="switch{{ forloop.counter }}" 
+                            {% if status %}checked{% endif %} onclick="return false;">
+                        <label class="form-check-label" for="switch{{ forloop.counter }}">{{ service }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+        
+                <!-- Change Password Section -->
+                <h5 class="mt-4">Change Password</h5>
+                <hr>
+                {% include 'auth/changePassword.html' %}
+
+                <h5 class="mt-4">Account Management</h5>
+                <hr>
+                <p class="text-muted">
+                    If you no longer wish to use your account, you can permanently delete it.
+                </p>
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-danger" onclick="confirmDeletion()">Delete Account</button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+{% endblock body %}

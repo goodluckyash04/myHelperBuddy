@@ -25,7 +25,7 @@
           <!-- Finance Type Selection -->
           <div class="row mb-4">
             <label class="col-form-label col-12">Select Type</label>
-            <div class="col-6">
+            <div class="col-4">
               <div class="form-check">
                 <input
                   class="form-check-input"
@@ -33,23 +33,54 @@
                   name="type"
                   id="loan"
                   value="Loan"
+                  onchange="splitCategory()"
                   required
                 />
                 <label class="form-check-label" for="loan">Loan</label>
               </div>
             </div>
-            <div class="col-6">
+            <div class="col-4">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="type"
+                  id="split"
+                  value="Split"
+                  onchange="splitCategory()"
+                  required
+                />
+                <label class="form-check-label" for="split">Split</label>
+              </div>
+            </div>
+            <div class="col-4">
               <div class="form-check">
                 <input
                   class="form-check-input"
                   type="radio"
                   name="type"
                   id="sip"
+                  onchange="splitCategory()"
                   value="SIP"
                 />
                 <label class="form-check-label" for="sip">SIP</label>
               </div>
             </div>
+          </div>
+
+          <div class="mb-3">
+            <select
+              class="form-select shadow-sm"
+              id="sp_category"
+              name="category"
+              aria-label="Select Category"
+              style="display: none;"
+            >
+              <option value="" disabled selected>
+                -- Select Category --
+              </option>
+              <!-- Categories will be populated dynamically -->
+            </select>
           </div>
 
           <!-- Instrument Name -->
@@ -123,4 +154,31 @@
 
 <script>
   document.getElementById("started_on").value = new Date().toISOString().split("T")[0];
+  var CATEGORIES = [
+  "Shopping",
+  "Food",
+  "Investment",
+  "Utilities",
+  "Groceries",
+  "Medical",
+  "General",
+  "Gifts",
+  "Entertainment",
+  "EMI",
+  "Other",
+];
+
+function splitCategory() {
+  let categorySelect = document.getElementById("sp_category");
+  let splitCheckbox = document.getElementById("split");
+  
+  if (splitCheckbox.checked) {
+    categorySelect.style.display = "";
+    categorySelect.innerHTML = CATEGORIES.map(function (category) {
+      return `<option value="${category}">${category}</option>`;
+    }).join("");
+  } else {
+    categorySelect.style.display = "none";
+  }
+}
 </script>
