@@ -48,7 +48,7 @@ class Command(BaseCommand):
             self.send_todays_task_reminder()
 
             with open(settings.JSON_DB) as file:
-                last_backup = json.loads(file.read()).get("last_backup")
+                last_backup = json.loads(file.read()).get("last_backup") if file.read() else None
 
             last_backup = (
                 datetime.datetime.strptime(last_backup, "%Y-%m-%d %H:%M:%S")
