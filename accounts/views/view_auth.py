@@ -217,7 +217,7 @@ def send_otp(request):
         email_sent = email_service.send_email(
             subject="OTP Verification code",
             recipient_list=[data["email"], settings.ADMIN_EMAIL],
-            template_name="email_templates\\otp_verification.html",
+            template_name="email_templates/otp_verification.html",
             context={"otp": otp},
             is_html=True,
             )

@@ -48,7 +48,8 @@ class Command(BaseCommand):
             self.send_todays_task_reminder()
 
             with open(settings.JSON_DB) as file:
-                last_backup = json.loads(file.read()).get("last_backup") if file.read() else None
+                file_data = file.read()
+                last_backup = json.loads(file_data).get("last_backup") if file_data else None
 
             last_backup = (
                 datetime.datetime.strptime(last_backup, "%Y-%m-%d %H:%M:%S")
@@ -164,7 +165,7 @@ class Command(BaseCommand):
                 self.email_service.send_email(
                     subject="Pending Tasks & Reminders",
                     recipient_list=[user.email],
-                    template_name="email_templates\\task_reminders_email.html",
+                    template_name="email_templates/task_reminders_email.html",
                     context=context,
                     is_html=True,
                 )
