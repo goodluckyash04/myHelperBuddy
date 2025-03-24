@@ -102,7 +102,7 @@ def update_transaction(request, id):
         entry.description = request.POST.get("description", entry.description)
         entry.beneficiary = request.POST.get("beneficiary", entry.beneficiary).title()
         entry.mode_detail = request.POST.get("mode_detail", entry.mode_detail).title()
-        entry.mode = request.POST.get("mode", entry.mode).title()
+        entry.mode = request.POST.get("mode", entry.mode).title() if request.POST.get("mode", entry.mode) else  request.POST.get("mode", entry.mode) 
         entry.save()
 
         messages.success(request, "Transaction Updated")

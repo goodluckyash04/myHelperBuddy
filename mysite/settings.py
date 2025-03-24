@@ -12,7 +12,7 @@ log_dir.mkdir(exist_ok=True)
 
 # Security settings
 SECRET_KEY = config("SECRET_KEY")
-DEBUG = config("DEBUG", cast=bool)
+DEBUG = config("DEBUG")
 ALLOWED_HOSTS = ["*"]
 
 # Application definition
