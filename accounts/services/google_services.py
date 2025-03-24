@@ -44,8 +44,8 @@ class GoogleDriveService:
                 recipient_list=[settings.ADMIN_EMAIL],
                 message=(
                     f"Timestamp: {datetime.datetime.strftime('%Y-%m-%d %H:%M:%S')}\n"
-                    f"Error: {response_data("error")}\n"
-                    f"Description: {response_data("error_description")}\n"
+                    f"Error: {response_data('error')}\n"
+                    f"Description: {response_data('error_description')}\n"
                 )
             )
         
