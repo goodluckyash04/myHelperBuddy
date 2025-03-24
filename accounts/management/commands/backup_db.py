@@ -1,6 +1,5 @@
 import traceback
 import base64
-import json
 import datetime
 from cryptography.fernet import Fernet
 
@@ -9,6 +8,7 @@ from django.conf import settings
 from django.db.models import Q
 
 from accounts.services.email_services import EmailService
+from accounts.services.google_services import GoogleDriveService
 from accounts.models import (
     Reminder,
     Task,
@@ -19,7 +19,6 @@ from accounts.models import (
 )
 from accounts.views.view_reminder import calculate_reminder
 
-
 class Command(BaseCommand):
     """
     Django management command to:
@@ -29,6 +28,8 @@ class Command(BaseCommand):
     """
 
     help = "Backup and send the encrypted database via email"
+    
+
 
     def __init__(self):
         super().__init__()
@@ -36,6 +37,7 @@ class Command(BaseCommand):
             datetime.timezone(datetime.timedelta(hours=5, minutes=30))
         )
         self.email_service = EmailService()
+        self.google_service = GoogleDriveService()
 
     def handle(self, *args, **options):
         """
@@ -46,24 +48,20 @@ class Command(BaseCommand):
             print(f"{self.utc_today.strftime('%Y-%m-%d %H:%M:%S')} : Starting the scheduler...")
 
             self.send_todays_task_reminder()
+            
+            try:
+                existing_files = self.google_service.list_files(folder_id=settings.BACKUP_FOLDER_ID)            
+            except:
+                existing_files = []
 
-            with open(settings.JSON_DB) as file:
-                file_data = file.read()
-                last_backup = json.loads(file_data).get("last_backup") if file_data else None
-
-            last_backup = (
-                datetime.datetime.strptime(last_backup, "%Y-%m-%d %H:%M:%S")
-                if last_backup
-                else None
-            )
+            last_backup = max([datetime.datetime.strptime(i['name'].split(".")[0], "%Y%m%d%H%M") for i in existing_files if i['name'].endswith(".bin")] ) if existing_files else None
 
             if not last_backup or self.detect_database_update() or (
                 (self.utc_today.date() - last_backup.date()).days >= 7
             ):
+                self.clean_old_backups(existing_files)
                 self.backup_database()
-                with open(settings.JSON_DB, "w") as file:
-                    json.dump({"last_backup": self.utc_today.strftime("%Y-%m-%d %H:%M:%S")}, file, indent=4)
-
+               
             print(f"\n{self.utc_today.strftime('%Y-%m-%d %H:%M:%S')} : Scheduler completed.")
             print("--------------------------------------------------")
 
@@ -108,18 +106,20 @@ class Command(BaseCommand):
         encrypted_data = self.encrypt_data(database_data)
 
         if encrypted_data:
-            attachments = [(file_name, encrypted_data, "application/octet-stream")]
-
-            self.email_service.send_email(
-                subject="Database Backup Status",
-                recipient_list=[settings.ADMIN_EMAIL],
-                message=(
-                    f"✅ Backup Successful!\n"
-                    f"Timestamp: {self.utc_today.strftime('%Y-%m-%d %H:%M:%S')}\n"
-                    f"Backup File: {file_name}\n"
-                ),
-                attachments=attachments,
-            )
+            try:
+                self.google_service.upload_to_drive(encrypted_data, file_name, mime_type="application/octet-stream", folder_id=settings.BACKUP_FOLDER_ID)
+            except:
+                attachments = [(file_name, encrypted_data, "application/octet-stream")]
+                self.email_service.send_email(
+                    subject="Database Backup Status",
+                    recipient_list=[settings.ADMIN_EMAIL],
+                    message=(
+                        f"✅ Backup Successful!\n"
+                        f"Timestamp: {self.utc_today.strftime('%Y-%m-%d %H:%M:%S')}\n"
+                        f"Backup File: {file_name}\n"
+                    ),
+                    attachments=attachments,
+                )
 
             print("\nDatabase backup completed successfully.")
         else:
@@ -172,6 +172,53 @@ class Command(BaseCommand):
 
         print("Pending tasks and today's reminders fetched successfully.")
 
+    def clean_old_backups(self, existing_files):
+        """
+        Keeps backups from the last 7 days and the last backup of each month, deleting the rest.
+    
+        """
+        print("\nBackup cleanup started...")
+        try:
+            backup_files = []
+            for file in existing_files:
+                name = file.get("name", "")
+                if name.endswith(".bin"):
+                    try:
+                        backup_date = datetime.datetime.strptime(name.split(".")[0], "%Y%m%d%H%M")
+                        backup_files.append((backup_date, file))
+                    except ValueError:
+                        pass 
+
+            if not backup_files:
+                return 
+
+            # Sort backups by date (oldest first)
+            backup_files.sort(reverse=True, key=lambda x: x[0])
+
+            keep_files = set()
+            last_backup_per_month = set()
+
+            for backup_date, file in backup_files:
+                # Keep backups from the last 7 days
+                month_key = f"{backup_date.year}_{backup_date.month}"
+                if (self.utc_today.date() - backup_date.date()).days <= 7:
+                    last_backup_per_month.add(month_key)
+                    keep_files.add(file["name"])
+                    continue
+                    
+                # Keep the last backup of each month
+                if month_key not in last_backup_per_month:
+                    last_backup_per_month.add(month_key)
+                    keep_files.add(file["name"])
+
+            for backup_date, file in backup_files:
+                if file["name"] not in keep_files or backup_date.date() == self.utc_today.date() :
+                    print(f"🗑️ Deleting: {file['name']}")
+                    self.google_service.delete_file(file["id"]) 
+
+            print(f"✅ Cleanup complete! Kept {len(keep_files)} backups, deleted {len(backup_files) - len(keep_files)} backups.")
+        except:
+            traceback.print_exc()
 
 # To run the command:
 # python manage.py your_custom_command
