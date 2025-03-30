@@ -74,8 +74,9 @@
                                 </a>
                             </div>
                             <div class="d-flex align-items-center">
-                                <a href="/update-instrument-status/{{ i.id }}" class="btn p-0 fs-5 text-success" aria-label="Update Status">
-                                    <i class="fa-solid fa-lock-open"></i>
+
+                                <a href="/update-instrument-status/{{ i.id }}" class="btn p-0 fs-5 text-warning" aria-label="Closed Status">
+                                    <i class="fa-solid fa-lock" style="color: #e24081;"></i>
                                 </a>
                                 <a href="/remove-instrument/{{ i.id }}" class="btn p-0 fs-5 text-danger" aria-label="Delete Instrument">
                                     <i class="fa-solid fa-trash"></i>
@@ -119,16 +120,18 @@
                         <div class="d-flex justify-content-between mt-3">
                             <div class="d-flex align-items-center">
                                 <a class="btn p-0 fs-5 text-start" aria-label="Loan Type">
-                                    {% if i.type == "Loan" %}
+                                     {% if i.type == "Loan" %}
                                     <i class="fa-solid fa-landmark" style="color: #7c135b;"></i>
+                                    {% elif i.type == "Split" %}
+                                    <i class="fa-solid fa-bolt" style="color: var(--primary)"></i>
                                     {% else %}
                                     <i class="fa-solid fa-hand-holding-dollar" style="color: #367864;"></i>
                                     {% endif %}
                                 </a>
                             </div>
                             <div class="d-flex align-items-center">
-                                <a href="/update-instrument-status/{{ i.id }}" class="btn p-0 fs-5 text-warning" aria-label="Closed Status">
-                                    <i class="fa-solid fa-lock" style="color: #e24081;"></i>
+                                <a href="/update-instrument-status/{{ i.id }}" class="btn p-0 fs-5 text-success" aria-label="Update Status">
+                                    <i class="fa-solid fa-lock-open"></i>
                                 </a>
                                 <a href="/remove-instrument/{{ i.id }}" class="btn p-0 fs-5 text-danger" aria-label="Delete Instrument">
                                     <i class="fa-solid fa-trash"></i>
