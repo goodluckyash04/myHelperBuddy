@@ -1,3 +1,4 @@
+import re
 import traceback
 import json
 
@@ -29,16 +30,18 @@ def get_counter_parties(user):
 
 def calculate_financial_overview(transactions):
     income = sum(entry.amount for entry in transactions if entry.type.lower() == 'income'and not entry.is_deleted)
-    expense = sum(entry.amount for entry in transactions if entry.type.lower() == 'expense' and entry.date <= datetime.now().date())
-    investment = sum(entry.amount for entry in transactions if entry.category.lower() == 'investment' and entry.date <= datetime.now().date())
+    expense = sum(entry.amount for entry in transactions if entry.type.lower() == 'expense' and entry.category.lower() != 'investment' and entry.status.lower() == "completed")
+    investment = sum(entry.amount for entry in transactions if entry.category.lower() == 'investment' and entry.status.lower() == "completed")
+    
     overdue = sum(entry.amount for entry in transactions if entry.category.lower() == 'emi'and entry.status.lower()=="pending")
-
+    split_due = sum(entry.amount for entry in transactions if re.search(r"Split\s\d{1,2}$", entry.description, re.IGNORECASE) and entry.status.lower()=="pending")
+    
     return {
         "Income": format_amount(income),
-        "Expense": format_amount(expense - investment),
-        "Saving": format_amount(income - expense),
+        "Expense": format_amount(expense),
+        "Saving": format_amount(income - expense - investment - split_due),
         "Investment": format_amount(investment),
-        "Due": format_amount(overdue),
+        "Due (Split | EMI)": f"{format_amount(split_due)} |  {format_amount(overdue)}"
     }
 
 def calculate_category_wise_expenses(transactions):

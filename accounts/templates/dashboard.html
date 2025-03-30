@@ -9,9 +9,9 @@
     <div class="container mt-4">
         <div class="row g-2">
             {% for label, amount in financial_data.items %}
-                {% if label == "Income" or label == "Expense" %}
+                {% if label == "Income" or label == "Expense" or label == "Saving" %}
                     <!-- Cards for Income and Expense -->
-                    <div class="col-md-3 col-6">
+                    <div class="col-md-4 col-4">
                         <div class="card text-center shadow-sm">
                             <div class="card-body">
                                 <p class="card-title fs-6 text-secondary">{{ label }}</p>
@@ -22,7 +22,7 @@
                 
                 {% else %}
                     <!-- Cards for other labels (Saving, Investment, etc.) -->
-                    <div class="col-md-2 col-4">
+                    <div class="col-md-6 col-6">
                         <div class="card text-center shadow-sm">
                             <div class="card-body">
                                 <p class="card-title fs-6 text-secondary">{{ label }}</p>
