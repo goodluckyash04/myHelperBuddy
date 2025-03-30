@@ -23,7 +23,7 @@ def create_transaction(request, user):
         # date = datetime.strptime(request.POST.get("date"),"%Y-%m-%dT%H:%M")
         date = request.POST.get("date")
         beneficiary = request.POST.get("beneficiary", "Self").title()
-        amount = int(request.POST.get("amount", 0.0))
+        amount = float(request.POST.get("amount", 0.0))
         description = request.POST.get("description", "")
         status = request.POST.get("status", "completed")
         mode = request.POST.get("mode", "Online")
