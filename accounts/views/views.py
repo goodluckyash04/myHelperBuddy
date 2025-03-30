@@ -40,8 +40,10 @@ def calculate_financial_overview(transactions):
         "Income": format_amount(income),
         "Expense": format_amount(expense),
         "Saving": format_amount(income - expense - investment - split_due),
+        "EMI Due":format_amount(overdue),
         "Investment": format_amount(investment),
-        "Due (Split | EMI)": f"{format_amount(split_due)} |  {format_amount(overdue)}"
+        "Split Due": format_amount(split_due)
+        # "Due (Split | EMI)": f"{format_amount(split_due)} |  {format_amount(overdue)}"
     }
 
 def calculate_category_wise_expenses(transactions):
