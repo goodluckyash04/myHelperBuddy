@@ -37,7 +37,6 @@ class GoogleDriveService:
             "access_type": "offline",
             "prompt": "select_account consent",  # 👈 Force account picker and refresh token
         }
-        print(params)
 
         full_url = f"{auth_url}?{urlencode(params)}"
         webbrowser.open(full_url)
@@ -69,7 +68,6 @@ class GoogleDriveService:
             },
         )
         response_data = response.json()
-        print(response_data)
 
         if "access_token" in response_data:
             return OAuthCredentials(token=response_data["access_token"])

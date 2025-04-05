@@ -103,11 +103,9 @@ def create_finance(request, user):
 def finance_details(request, user):
     try:
         search_query = request.GET.get('search','').strip()
-        print("search_query",search_query)
         query = Q(created_by=user, is_deleted=False)
         if search_query:
             query &=Q(name__icontains=search_query) | Q(type=search_query)
-        print(query)
         details = FinancialProduct.objects.filter(query).order_by(F('status').desc(), 'name')
         for product in details:
             installments = Transaction.objects.filter(source=product.id,is_deleted = False)
@@ -175,7 +173,6 @@ def update_finance_detail(request,id, user):
             dates = [trn.date for trn in transactions if trn.status == "Completed"]
             if dates:
                 for date in dates:
-                    print(date,started_on)
                     if date >= datetime.datetime.strptime(started_on,"%Y-%m-%d").date():
                         raise ValueError(f'Date can not be less than {date}.')
             if not no_of_paid_installments:
@@ -219,7 +216,6 @@ def update_finance_detail(request,id, user):
                             trn.save()
                     for i in range(previous_installments,previous_installments+new_trn):
                         new = transactions.last()
-                        print(new)
                         Transaction.objects.create(
                             type=new.type,
                             category=new.category,
@@ -261,7 +257,6 @@ def update_finance_detail(request,id, user):
                         trn.save()
                     for i in range(previous_installments, previous_installments + new_trn):
                         new = transactions.last()
-                        print(new)
                         Transaction.objects.create(
                             type=new.type,
                             category=new.category,

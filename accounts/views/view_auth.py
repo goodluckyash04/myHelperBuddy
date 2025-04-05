@@ -21,7 +21,6 @@ from ..utilitie_functions import mask_email, validate_password
 
 
 def login(request):
-    print(request.session)
     if 'username' in request.session:
         return redirect("dashboard")
 
@@ -84,8 +83,6 @@ def signup(request):
             context['msg'] = "Please verify the email first!"
             return render(request, "auth/signup.html", context=context)
         
-        print(session_data)
-
         first_attempt_time =  datetime.datetime.strptime(session_data['created_at'], "%d/%m/%Y %H:%M:%S")
         if (datetime.datetime.now() - first_attempt_time).total_seconds() > 600:
             context['msg'] = "OTP Expired try again"
@@ -133,7 +130,6 @@ def forgotPassword(request):
             message = f"Use This Password to Login to your account:\n{new_password}\n\n Do Not Share With anyone"
             from_email = settings.EMAIL_HOST_USER
             recipient_list = [user.email]
-            print(sub, message, from_email, recipient_list)
             send_mail(sub, message, from_email, recipient_list)
 
             user.password = make_password(new_password)
@@ -195,11 +191,9 @@ def generate_refresh_token(request, user):
     
     else:
         data = json.loads(request.body)
-        print(data)
         code = data.get("code", "")
         token = google_service.get_refresh_token(code)
         request.session["token"] = token
-        print("token", token)
         request.session["token_generation"] = datetime.datetime.now().strftime("%d %b %Y %H:%M")
         return redirect("profile")
 

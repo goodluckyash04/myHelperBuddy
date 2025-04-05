@@ -182,7 +182,6 @@ def transaction_detail(request, user):
                 paid_amount += i.amount
             elif i.status == "Pending" and i.type == 'Expense':
                 pending_amount += i.amount
-        print(start_date)
         filter_remaining_amount &= Q(date__lt=start_date)
 
         previous_pending = sum(trn.amount for trn in Transaction.objects.filter(filter_remaining_amount))
@@ -250,7 +249,6 @@ def delete_transaction(request,user, id = None):
             del_list = [id]
         else:
             del_list = request.POST.getlist('record_ids','')
-        print(del_list)
         for id in del_list:
             entry = Transaction.objects.get(id=id,created_by = user)
             entry.is_deleted = True

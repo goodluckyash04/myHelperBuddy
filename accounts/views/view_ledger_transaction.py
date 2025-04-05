@@ -149,7 +149,6 @@ def update_ledger_transaction_status(request,user,id=None):
             trasaction_list = [id]
         else:
             trasaction_list = request.POST.getlist('record_ids', '')
-            print(trasaction_list)
 
         for id in trasaction_list:
             entry = LedgerTransaction.objects.get(id=id,created_by = user)
@@ -267,7 +266,6 @@ def undo_ledger_transaction(request, user,id=None):
             undo_list = [id]
         else:
             undo_list = request.POST.getlist('record_ids', '')
-        print("FER",undo_list)
         for id in undo_list:
             entry = LedgerTransaction.objects.get(id=id,created_by = user,is_deleted = True)
             if entry:
