@@ -2,6 +2,7 @@ import datetime
 import io
 import os
 import mimetypes
+from django.http import JsonResponse
 import requests
 import webbrowser
 from urllib.parse import urlencode
@@ -39,7 +40,9 @@ class GoogleDriveService:
         }
 
         full_url = f"{auth_url}?{urlencode(params)}"
-        webbrowser.open(full_url)
+        # webbrowser.open(full_url)
+        return full_url
+
 
     def get_refresh_token(self, code):
         token_url = "https://oauth2.googleapis.com/token"

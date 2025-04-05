@@ -83,7 +83,7 @@
                         </div>
                     {% else %}
                         <div class="d-flex justify-content-end">
-                            <a href="\generate-refresh-token\" class="btn btn-secondary">Generate Now</a>
+                            <button class="btn btn-secondary" onclick="getGoogleAuth()">Generate Now</button>
                         </div>
                     {% endif %}
                 {% endif %}
@@ -101,3 +101,20 @@
     </div>
 </div>
 {% endblock body %}
+
+{% block script %}
+<script>
+    function getGoogleAuth() {
+  fetch('/generate-refresh-token/')
+    .then(response => response.json())
+    .then(data => {
+      if (data.auth_url) {
+        window.location.href = data.auth_url;  // ✅ Redirect to Google
+      }
+    })
+    .catch(err => {
+      console.error('Error:', err);
+    });
+}
+  </script>
+{% endblock script %}

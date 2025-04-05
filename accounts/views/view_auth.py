@@ -186,9 +186,10 @@ def generate_refresh_token(request, user):
         if request.session.get("token"):
             del request.session["token"]
         else:
-            google_service.get_authentication_code()
-        return redirect("profile")
-    
+            url = google_service.get_authentication_code()
+        # return redirect("profile")
+            return JsonResponse({"auth_url": url})
+
     else:
         data = json.loads(request.body)
         code = data.get("code", "")
