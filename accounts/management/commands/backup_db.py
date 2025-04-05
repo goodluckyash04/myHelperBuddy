@@ -8,7 +8,7 @@ from django.conf import settings
 from django.db.models import Q
 
 from accounts.services.email_services import EmailService
-from accounts.services.google_services import google_service
+from accounts.services.google_services import GoogleDriveService
 from accounts.models import (
     Reminder,
     Task,
@@ -37,7 +37,8 @@ class Command(BaseCommand):
             datetime.timezone(datetime.timedelta(hours=5, minutes=30))
         )
         self.email_service = EmailService()
-        
+        self.google_service = GoogleDriveService()
+
     def handle(self, *args, **options):
         """
         Main function executed when the command is run.
@@ -134,7 +135,7 @@ class Command(BaseCommand):
         for backup_date, file in backup_files:
             if file["name"] not in keep_files or backup_date.date() == self.utc_today.date() :
                 print(f"🗑️ Deleting: {file['name']}")
-                google_service.delete_file(file["id"]) 
+                self.google_service.delete_file(file["id"]) 
 
         print(f"✅ Cleanup complete! Kept {len(keep_files)} backups, deleted {len(backup_files) - len(keep_files)} backups.")
 
@@ -151,7 +152,7 @@ class Command(BaseCommand):
         last_backup = None
 
         try:
-            existing_files = google_service.list_files(folder_id=settings.BACKUP_FOLDER_ID)            
+            existing_files = self.google_service.list_files(folder_id=settings.BACKUP_FOLDER_ID)            
         except:
             pass    
         
@@ -172,7 +173,7 @@ class Command(BaseCommand):
         encrypted_data = self.encrypt_data(database_data)
 
         try:
-            google_service.upload_to_drive(
+            self.google_service.upload_to_drive(
                     encrypted_data, 
                     file_name, 
                     mime_type="application/octet-stream", 

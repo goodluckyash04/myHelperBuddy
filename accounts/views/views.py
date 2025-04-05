@@ -277,7 +277,7 @@ def profile(request, user):
     context["service_status"] = get_service_status(user)
     if user.username == settings.ADMIN:
         context["token"] = request.session.get("token", None)
-        context["last_genration"] = request.session["token_generation"]
+        context["last_genration"] = request.session.get("token_generation", None)
     return render(request, "profile.html",context=context)
 
 def error_500(request):  

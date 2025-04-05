@@ -196,11 +196,6 @@ class GoogleDriveService:
 
 
 
-google_service = GoogleDriveService()
-
-
-
-
 
 
 

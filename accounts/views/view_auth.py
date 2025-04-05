@@ -13,8 +13,7 @@ from django.utils.crypto import get_random_string
 import json
 
 from accounts.services.email_services import EmailService
-from accounts.services.google_services import google_service
-from accounts.views.views import get_service_status
+from accounts.services.google_services import GoogleDriveService
 
 from ..decorators import auth_user
 from ..models import User
@@ -185,7 +184,8 @@ def changePassword(request, user):
 def generate_refresh_token(request, user):
     if user.username != settings.ADMIN:
         return redirect('profile')
-    
+    google_service = GoogleDriveService()
+
     if request.method == "GET":
         if request.session.get("token"):
             del request.session["token"]
@@ -194,7 +194,7 @@ def generate_refresh_token(request, user):
         return redirect("profile")
     
     else:
-        data = json.loads(request.body)  # 👈 this is correct
+        data = json.loads(request.body)
         print(data)
         code = data.get("code", "")
         token = google_service.get_refresh_token(code)

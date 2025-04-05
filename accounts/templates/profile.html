@@ -72,7 +72,7 @@
                 <h5 class="mt-4">Token Management</h5>
                 <hr>
                 <p class="text-muted">
-                    Last token was generated on {{last_genration}}
+                    Last token was generated on {{ last_genration | default:"N/A" }}
                 </p>
                     {% if token %}
                         <p class="fs-6" style="color: var(--primary);">

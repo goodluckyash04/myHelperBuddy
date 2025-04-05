@@ -1,6 +1,4 @@
-import calendar
 import traceback
-from itertools import chain
 from django.db.models import Q
 from django.contrib import messages
 from datetime import datetime, timedelta
@@ -172,7 +170,7 @@ def transaction_detail(request, user):
         for i in transaction_data:
             if i.type == "Income":
                 income += i.amount
-            elif i.type == "Expense":
+            elif i.type == "Expense" and i.category != "Investment":
                 expense += i.amount
 
             if i.category == "Investment":
@@ -197,7 +195,7 @@ def transaction_detail(request, user):
             "pending_amount": pending_amount,
             "paid_amount": paid_amount,
             "previous_pending":previous_pending,
-            "total": income - expense
+            "total": income - expense - investment
         }
         CATEGORIES = ['Shopping', 'Food', 'Investment', 'Utilities', 'Groceries','Medical', 'General', 'Gifts', 'Entertainment', 'EMI', 'Salary','Other']
 

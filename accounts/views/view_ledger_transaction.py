@@ -76,22 +76,35 @@ def add_ledger_transaction(request,user):
 
 @auth_user
 def ledger_transaction_details(request,user):
+    '''
+    payable + completed = paid
+    recivable + completed = recived
+     '''
     try:
+        def get_paid_and_received_sums(text):
+            if text == "Paid":
+                txn_types = ["Payable", "Paid"]
+            else:
+                txn_types = ["Receivable", "Received"]
+
+            return Coalesce(
+                Sum('amount', filter=Q(
+                    (Q(transaction_type=txn_types[0], status='Completed') | Q(transaction_type=txn_types[1])) &
+                    Q(created_by=user, is_deleted=False)
+                )),
+                Value(0, output_field=DecimalField())
+            )
+
+        def get_sum(text):
+            return Coalesce(Sum('amount', filter=Q(transaction_type=text,created_by = user, is_deleted = False)),
+                                      Value(0, output_field=DecimalField()))
 
         receivables_payables = LedgerTransaction.objects.filter(created_by=user).values('counterparty').annotate(
-            total_receivable=Coalesce(Sum('amount', filter=Q(transaction_type='Receivable',status='Pending',created_by = user, is_deleted = False)),
-                                      Value(0, output_field=DecimalField())),
-            total_payable=Coalesce(Sum('amount', filter=Q(transaction_type='Payable',status='Pending',created_by = user, is_deleted = False)),
-                                   Value(0, output_field=DecimalField())),
-
-            total_received=Coalesce(Sum('amount', filter=Q(transaction_type='Received',status='Pending',created_by = user, is_deleted = False)),
-                                   Value(0, output_field=DecimalField())),
-            total_paid=Coalesce(Sum('amount', filter=Q(transaction_type='Paid',status='Pending',created_by = user, is_deleted = False)),
-                                   Value(0, output_field=DecimalField()))
+            total_receivable=get_sum("Receivable") - get_paid_and_received_sums("Received"),
+            total_payable= get_sum("Payable") - get_paid_and_received_sums("Paid") 
         ).annotate(
     total=ExpressionWrapper(
-        # F('total_receivable')- F('total_received') - F('total_payable') + F('total_paid'),
-        F('total_receivable')- F('total_payable'),
+        F('total_receivable') - F('total_payable') ,
         output_field=DecimalField()
     )
         )
