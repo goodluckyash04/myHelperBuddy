@@ -271,13 +271,18 @@ def utilities(request,user):
 
 
 @auth_user
-def profile(request, user):
-
-    service_status = {key.replace("_USER_ACCESS", ""): user.username.lower() in value.split(",") or value=="*"  for key, value in USER_ACCESS.items()}
-    
-    return render(request, "profile.html", {"user":user, "service_status":service_status})
+def profile(request, user):    
+    context={}
+    context["user"] = user
+    context["service_status"] = get_service_status(user)
+    if user.username == settings.ADMIN:
+        context["token"] = request.session.get("token", None)
+        context["last_genration"] = request.session["token_generation"]
+    return render(request, "profile.html",context=context)
 
 def error_500(request):  
     return render(request,"error_500.html",{'prev':request.META.get('HTTP_REFERER', '/')})
 
+def get_service_status(user):
+    return {key.replace("_USER_ACCESS", ""): user.username.lower() in value.split(",") or value=="*"  for key, value in USER_ACCESS.items()}
 

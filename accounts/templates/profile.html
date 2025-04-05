@@ -67,7 +67,26 @@
                 <h5 class="mt-4">Change Password</h5>
                 <hr>
                 {% include 'auth/changePassword.html' %}
-
+                
+                {% if user.username == "yash04"%}
+                <h5 class="mt-4">Token Management</h5>
+                <hr>
+                <p class="text-muted">
+                    Last token was generated on {{last_genration}}
+                </p>
+                    {% if token %}
+                        <p class="fs-6" style="color: var(--primary);">
+                            {{ token }}
+                        </p>
+                        <div class="d-flex justify-content-end">
+                            <a href="\generate-refresh-token\" class="btn btn-secondary">Delete Now</a>
+                        </div>
+                    {% else %}
+                        <div class="d-flex justify-content-end">
+                            <a href="\generate-refresh-token\" class="btn btn-secondary">Generate Now</a>
+                        </div>
+                    {% endif %}
+                {% endif %}
                 <h5 class="mt-4">Account Management</h5>
                 <hr>
                 <p class="text-muted">

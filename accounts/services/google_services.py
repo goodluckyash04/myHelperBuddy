@@ -3,26 +3,61 @@ import io
 import os
 import mimetypes
 import requests
-from .email_services import EmailService
+import webbrowser
+from urllib.parse import urlencode
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials as OAuthCredentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload, MediaIoBaseDownload
 
+from .email_services import EmailService
 from django.conf import settings
 
 # pip install requests google-auth google-api-python-client
 # pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client
 
-
+    
 class GoogleDriveService:
     def __init__(self):
         self.email_service = EmailService()
-        self.creds = self.refresh_access_token()
-        self.drive_service = build("drive", "v3", credentials=self.creds)
+        try:
+            self.creds = self.get_access_token()
+            self.drive_service = build("drive", "v3", credentials=self.creds)
+        except:
+            pass
+
+    def get_authentication_code(self):
+        auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
+        params = {
+            "client_id": settings.CLIENT_ID,
+            "redirect_uri": settings.REDIRECT_URI,
+            "response_type": "code",
+            "scope": "https://www.googleapis.com/auth/drive",
+            "access_type": "offline",
+            "prompt": "select_account consent",  # 👈 Force account picker and refresh token
+        }
+        print(params)
+
+        full_url = f"{auth_url}?{urlencode(params)}"
+        webbrowser.open(full_url)
+
+    def get_refresh_token(self, code):
+        token_url = "https://oauth2.googleapis.com/token"
+        data = {
+            "code": code,
+            "client_id": settings.CLIENT_ID,
+            "client_secret": settings.CLIENT_SECRET,
+            "redirect_uri": settings.REDIRECT_URI,
+            "grant_type": "authorization_code"
+        }
+        response = requests.post(token_url, data=data)
+        tokens = response.json()
+
+        return tokens.get("refresh_token")  
 
     # generate access token
-    def refresh_access_token(self):
+    def get_access_token(self):
         """Automatically refreshes OAuth access token."""
         response = requests.post(
             settings.TOKEN_URI,
@@ -34,18 +69,19 @@ class GoogleDriveService:
             },
         )
         response_data = response.json()
+        print(response_data)
 
         if "access_token" in response_data:
             return OAuthCredentials(token=response_data["access_token"])
-        
+
         if "error" in response_data:
             self.email_service.send_email(
                 subject="Error in Google services",
                 recipient_list=[settings.ADMIN_EMAIL],
                 message=(
-                    f"Timestamp: {datetime.datetime.strftime('%Y-%m-%d %H:%M:%S')}\n"
-                    f"Error: {response_data('error')}\n"
-                    f"Description: {response_data('error_description')}\n"
+                    f"Timestamp: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                    f"Error: {response_data.get('error')}\n"
+                    f"Description: {response_data.get('error_description')}\n"
                 )
             )
         
@@ -67,7 +103,7 @@ class GoogleDriveService:
             list: List of files with details.
         """
         query = ["trashed=false"]
-        
+
         if folder_id:
             query.append(f"'{folder_id}' in parents")
         if mime_type:
@@ -160,7 +196,7 @@ class GoogleDriveService:
 
 
 
-
+google_service = GoogleDriveService()
 
 
 
