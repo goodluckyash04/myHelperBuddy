@@ -1,5 +1,4 @@
 import re
-import traceback
 import json
 
 from datetime import datetime
@@ -7,7 +6,6 @@ from django.db.models import Q,Sum
 from dateutil.relativedelta import relativedelta
 from django.shortcuts import render,redirect
 from django.conf import settings
-from django.contrib import messages
 from django.utils import timezone
 
 from ..decorators import auth_user
@@ -22,6 +20,7 @@ USER_ACCESS = {
             "FINANCE_USER_ACCESS": settings.FINANCE_USER_ACCESS,
             "LEDGER_USER_ACCESS": settings.LEDGER_USER_ACCESS,
             "REMINDER_USER_ACCESS": settings.REMINDER_USER_ACCESS,
+            "PRICE_TRACKER_USER_ACCESS": settings.PRICE_TRACKER_USER_ACCESS
         }
 
 def get_counter_parties(user):
@@ -183,91 +182,88 @@ def about(request,user):
 # ...........................................Dashboard..................................................
 @auth_user
 def dashboard(request,user):
-    try:
-        transactions = Transaction.objects.filter(created_by=user,is_deleted = False)        
+    transactions = Transaction.objects.filter(created_by=user,is_deleted = False)        
 
-        user_info = {}
-        user_info['first_txn_date'] = min(entry.date for entry in transactions if entry.category.lower()) if transactions else "" 
-        user_info['account_age'] = (timezone.now() - user.created_at).days
+    user_info = {}
+    user_info['first_txn_date'] = min(entry.date for entry in transactions if entry.category.lower()) if transactions else "" 
+    user_info['account_age'] = (timezone.now() - user.created_at).days
 
-        # Financial Overview
-        financial_data = calculate_financial_overview(transactions)
-        
-        context = {}
-        # Category-wise expense calculations
-        context['category_wise_data'] = calculate_category_wise_expenses(transactions)
+    # Financial Overview
+    financial_data = calculate_financial_overview(transactions)
+    
+    context = {}
+    # Category-wise expense calculations
+    context['category_wise_data'] = calculate_category_wise_expenses(transactions)
 
-        # Monthly savings of the last 12 months      
-        context["savings"] = calculate_monthly_savings(transactions, user)
+    # Monthly savings of the last 12 months      
+    context["savings"] = calculate_monthly_savings(transactions, user)
 
-        # Year-wise income and expense
-        context['year_wise_data'] = calculate_year_wise_data(transactions, user)
+    # Year-wise income and expense
+    context['year_wise_data'] = calculate_year_wise_data(transactions, user)
 
-        # Current month's category-wise expense
-        context["category_wise_month"] = calculate_current_month_category_expenses(transactions, user)
+    # Current month's category-wise expense
+    context["category_wise_month"] = calculate_current_month_category_expenses(transactions, user)
 
-        context = {'data': json.dumps(context,default=convert_decimal),'financial_data':financial_data,'user_info':user_info,'user':user}
+    context = {'data': json.dumps(context,default=convert_decimal),'financial_data':financial_data,'user_info':user_info,'user':user}
 
-        return render(request,'dashboard.html',context=context)
-    except:
-        traceback.print_exc()
-        # messages.error(request, "An unexpected error occurred.") 
-        return redirect('error_500')
+    return render(request,'dashboard.html',context=context)
 
 # ...........................................Home Page..................................................
 @auth_user
 def utilities(request,user):
-    try:        
-        utility_items = [
-            {
-                "key": "TRANSACTION_USER_ACCESS",
-                "title": "TRANSACTION",
-                "description": "Manage Your Money Moves, One Day at a Time!",
-                "url": "/transaction-detail/",
-            },
-            {
-                "key": "TASK_USER_ACCESS",
-                "title": "TASK",
-                "description": "Give Your Brain a Break, We've Got Your To-Dos Covered!",
-                "url": "/currentMonthTaskReport/",
-            },
-            {
-                "key": "FINANCE_USER_ACCESS",
-                "title": "FINANCE",
-                "description": "Track Your Loans and Sips, No Slips!",
-                "url": "/finance-details/",
-            },
-            {
-                "key": "LEDGER_USER_ACCESS",
-                "title": "LEDGER",
-                "description": "Balance Your Payables and Receivables with Ease!",
-                "url": "/ledger-transaction-details/",
-            },
-            {
-                "key": "REMINDER_USER_ACCESS",
-                "title": "REMINDER",
-                "description": "Never Miss a Moment, Let the Reminders Handle it All!",
-                "url": "/view-today-reminder/",
-            },
-        ]
+  
+    utility_items = [
+        {
+            "key": "TRANSACTION_USER_ACCESS",
+            "title": "TRANSACTION",
+            "description": "Manage Your Money Moves, One Day at a Time!",
+            "url": "/transaction-detail/",
+        },
+        {
+            "key": "TASK_USER_ACCESS",
+            "title": "TASK",
+            "description": "Give Your Brain a Break, We've Got Your To-Dos Covered!",
+            "url": "/currentMonthTaskReport/",
+        },
+        {
+            "key": "FINANCE_USER_ACCESS",
+            "title": "FINANCE",
+            "description": "Track Your Loans and Sips, No Slips!",
+            "url": "/finance-details/",
+        },
+        {
+            "key": "LEDGER_USER_ACCESS",
+            "title": "LEDGER",
+            "description": "Balance Your Payables and Receivables with Ease!",
+            "url": "/ledger-transaction-details/",
+        },
+        {
+            "key": "REMINDER_USER_ACCESS",
+            "title": "REMINDER",
+            "description": "Never Miss a Moment, Let the Reminders Handle it All!",
+            "url": "/view-today-reminder/",
+        },
+        {
+            "key": "PRICE_TRACKER_USER_ACCESS",
+            "title": "PRICE TRACKER",
+            "description": "Track your price easily and stay updated.",
+            "url": "https://trackmyprice.streamlit.app/",
+        },
+    ]
 
-        items = [
-            {
-                "title": item["title"],
-                "description": item["description"],
-                "url": item["url"],
-            }
-            for item in utility_items
-            if user.username.lower() in USER_ACCESS[item["key"]].split(",") or USER_ACCESS[item["key"]] == "*"
-        ]
+    items = [
+        {
+            "title": item["title"],
+            "description": item["description"],
+            "url": item["url"],
+        }
+        for item in utility_items
+        if user.username.lower() in USER_ACCESS[item["key"]].split(",") or USER_ACCESS[item["key"]] == "*"
+    ]
 
-        reminder_count = len(calculate_reminder(user))
-        counterparties = get_counter_parties(user)
-        return render(request,"utiltities.html",{"user":user,'items': items, "counterparties":counterparties,"badge":reminder_count})
-    except:
-        traceback.print_exc()
-        # messages.error(request, "An unexpected error occurred.") 
-        return redirect('error_500')
+    reminder_count = len(calculate_reminder(user))
+    counterparties = get_counter_parties(user)
+    return render(request,"utiltities.html",{"user":user,'items': items, "counterparties":counterparties,"badge":reminder_count})
 
 
 @auth_user
@@ -279,9 +275,6 @@ def profile(request, user):
         context["token"] = request.session.get("token", None)
         context["last_genration"] = request.session.get("token_generation", None)
     return render(request, "profile.html",context=context)
-
-def error_500(request):  
-    return render(request,"error_500.html",{'prev':request.META.get('HTTP_REFERER', '/')})
 
 def get_service_status(user):
     return {key.replace("_USER_ACCESS", ""): user.username.lower() in value.split(",") or value=="*"  for key, value in USER_ACCESS.items()}

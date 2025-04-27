@@ -12,7 +12,7 @@ log_dir.mkdir(exist_ok=True)
 
 # Security settings
 SECRET_KEY = config("SECRET_KEY")
-DEBUG = config("DEBUG")
+DEBUG = config("DEBUG") == "True"
 ALLOWED_HOSTS = ["*"]
 
 # Application definition
@@ -116,6 +116,7 @@ FINANCE_USER_ACCESS = config('FINANCE_USER_ACCESS')
 TASK_USER_ACCESS = config('TASK_USER_ACCESS')
 TRANSACTION_USER_ACCESS = config('TRANSACTION_USER_ACCESS')
 LEDGER_USER_ACCESS = config('LEDGER_USER_ACCESS')
+PRICE_TRACKER_USER_ACCESS = config('PRICE_TRACKER_USER_ACCESS')
 
 # Site configuration
 SITE_URL = config('SITE_URL')

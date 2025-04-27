@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views.views import utilities,dashboard,index,about,error_500, profile
+from .views.views import utilities,dashboard,index,about, profile
 from .views.view_auth import login,logout,forgotPassword,changePassword,signup, send_otp, generate_refresh_token, get_auth
 from .views.view_ledger_transaction import add_ledger_transaction, ledger_transaction_details, ledger_transaction, \
     update_ledger_transaction_status, delete_ledger_transaction, update_ledger_transaction, update_counterparty_name, \
@@ -21,7 +21,6 @@ urlpatterns = [
     path("profile/",profile,name="profile"),
     path("dashboard/",dashboard,name="dashboard"),
     path("about/",about,name="about"),
-    path("error/",error_500,name="error_500"),
 
 # ..........................................User Management..................................................
     path("login",login,name="login"),
