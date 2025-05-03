@@ -2,15 +2,22 @@ import datetime
 import io
 import os
 import mimetypes
+import trace
+import traceback
 from django.http import JsonResponse
 import requests
 import webbrowser
 from urllib.parse import urlencode
 
+from accounts.models import RefreshToken
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials as OAuthCredentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload, MediaIoBaseDownload
+from google.oauth2 import service_account
+from google.auth import exceptions
+from mysite.settings import REFRESH_TOKEN
+
 
 from .email_services import EmailService
 from django.conf import settings
@@ -20,13 +27,34 @@ from django.conf import settings
 
     
 class GoogleDriveService:
-    def __init__(self):
+    def __init__(self, use_oAuth = True):
         self.email_service = EmailService()
         try:
-            self.creds = self.get_access_token()
-            self.drive_service = build("drive", "v3", credentials=self.creds)
+            print("Init")
+            REFRESH_TOKEN = RefreshToken.objects.filter(is_active=True).order_by('-created_at').first()
+            self.refresh_token = REFRESH_TOKEN.refresh_token if REFRESH_TOKEN else settings.REFRESH_TOKEN
+            if use_oAuth:
+                self.creds = self.get_access_token()
+                self.drive_service = build("drive", "v3", credentials=self.creds)
+            else:
+                self.drive_service = self.authenticate_with_service_account()
+            self.is_service_active = True
         except:
-            pass
+            self.is_service_active = False
+
+    def authenticate_with_service_account(self):
+        """
+        Authenticate using Google Service Account and return the drive service.
+        """
+        try:
+            credentials = service_account.Credentials.from_service_account_file(
+                "cred.json",  # Path to your service account json file
+                scopes=["https://www.googleapis.com/auth/drive"]
+            )
+            # Build the service client with the credentials
+            return build("drive", "v3", credentials=credentials)
+        except exceptions.DefaultCredentialsError as e:
+            raise Exception("Service Account Authentication failed: ", str(e))
 
     def get_authentication_code(self):
         auth_url = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -44,7 +72,7 @@ class GoogleDriveService:
         return full_url
 
 
-    def get_refresh_token(self, code):
+    def get_refresh_token(self, code, user):
         token_url = "https://oauth2.googleapis.com/token"
         data = {
             "code": code,
@@ -55,8 +83,15 @@ class GoogleDriveService:
         }
         response = requests.post(token_url, data=data)
         tokens = response.json()
-
-        return tokens.get("refresh_token")  
+        token = tokens.get("refresh_token") 
+        self.refresh_token = token
+        if token:
+            RefreshToken.objects.create(
+                refresh_token = token,
+                created_by = user
+            )
+            return True
+        return False
 
     # generate access token
     def get_access_token(self):
@@ -66,7 +101,7 @@ class GoogleDriveService:
             data={
                 "client_id": settings.CLIENT_ID,
                 "client_secret": settings.CLIENT_SECRET,
-                "refresh_token": settings.REFRESH_TOKEN,
+                "refresh_token": self.refresh_token,
                 "grant_type": "refresh_token",
             },
         )
@@ -76,6 +111,13 @@ class GoogleDriveService:
             return OAuthCredentials(token=response_data["access_token"])
 
         if "error" in response_data:
+            if response_data.get('error') == "invalid_grant":
+                token = RefreshToken.objects.filter(is_active=True).order_by('-created_at').first()
+                if token:
+                    token.is_active = False
+                    token.deactivation_time = datetime.datetime.now()
+                    token.save()
+
             self.email_service.send_email(
                 subject="Error in Google services",
                 recipient_list=[settings.ADMIN_EMAIL],

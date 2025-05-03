@@ -181,7 +181,7 @@ def generate_refresh_token(request, user):
     if user.username != settings.ADMIN:
         return redirect('profile')
     google_service = GoogleDriveService()
-
+    
     if request.method == "GET":
         if request.session.get("token"):
             del request.session["token"]
@@ -193,9 +193,8 @@ def generate_refresh_token(request, user):
     else:
         data = json.loads(request.body)
         code = data.get("code", "")
-        token = google_service.get_refresh_token(code)
-        request.session["token"] = token
-        request.session["token_generation"] = datetime.datetime.now().strftime("%d %b %Y %H:%M")
+        if google_service.get_refresh_token(code, user):
+            request.session["token_generation"] = datetime.datetime.now().strftime("%d %b %Y %H:%M")
         return redirect("profile")
 
 

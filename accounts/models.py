@@ -166,3 +166,13 @@ class Reminder(models.Model):
     def __str__(self):
         return self.title
 
+class RefreshToken(models.Model):  
+    refresh_token = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=True)
+    deactivation_at = models.DateField(blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.created_at

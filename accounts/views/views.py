@@ -10,7 +10,7 @@ from django.utils import timezone
 
 from ..decorators import auth_user
 from .view_reminder import calculate_reminder
-from ..models import LedgerTransaction, Transaction
+from ..models import LedgerTransaction, RefreshToken, Transaction
 from ..utilitie_functions import format_amount,convert_decimal
 
 
@@ -272,8 +272,8 @@ def profile(request, user):
     context["user"] = user
     context["service_status"] = get_service_status(user)
     if user.username == settings.ADMIN:
-        context["token"] = request.session.get("token", None)
-        context["last_genration"] = request.session.get("token_generation", None)
+        refresh_token_time = RefreshToken.objects.filter(is_active=True).order_by("-created_at").first()
+        context["last_genration"] = refresh_token_time.created_at if refresh_token_time else "N/A"
     return render(request, "profile.html",context=context)
 
 def get_service_status(user):
