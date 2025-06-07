@@ -18,27 +18,30 @@
 </style>
 <div class="container my-5">
   <!-- Section Title -->
-  <h2 class="text-center fw-bold mb-4" style=" color: var(--primary-dark-secondary);font-family: Dancing Script;">My Utilities</h2>
+  <h2 class="text-center fw-bold mb-4" style="color: var(--primary-dark-secondary);font-family: Dancing Script;">My Utilities</h2>
 
   <!-- Card Grid -->
-  <div class="row g-4 mx-2" >
+  <div class="row g-4 mx-2">
     {% for item in items %}
-    <a href="{{ item.url }}" target="{% if item.title == 'PRICE TRACKER' %}_blank{% endif %}" class="text-decoration-none">
-
-    <div class="card h-100 border-0 shadow-sm rounded-3">
-      <div class="card-body">
-        <h5 class="card-title fw-semibold" style="color: var(--primary);font-family: Cardo;">{{ item.title }} 
-          {% if item.title == 'REMINDER' and badge > 0  %}
-          <span class="position-absolute top-20 start-100 translate-middle badge " style="background-color: var(--primary);">{{badge}}</span>
-          {% endif %}
-        </h5>
-        <p class="card-text text-muted">{{ item.description }}</p>
-      </div>
+    <div class="col-12 col-md-6">
+      <a href="{{ item.url }}" target="{% if item.title == 'PRICE TRACKER' %}_blank{% endif %}" class="text-decoration-none">
+        <div class="card h-100 border-0 shadow-sm rounded-3">
+          <div class="card-body">
+            <h5 class="card-title fw-semibold" style="color: var(--primary);font-family: Cardo;">
+              {{ item.title }}
+              {% if item.title == 'REMINDER' and badge > 0 %}
+              <span class="position-absolute top-20 start-100 translate-middle badge" style="background-color: var(--primary);">{{ badge }}</span>
+              {% endif %}
+            </h5>
+            <p class="card-text text-muted">{{ item.description }}</p>
+          </div>
+        </div>
+      </a>
     </div>
-    </a>
     {% endfor %}
   </div>
 </div>
+
 
 {% include 'floating_button.html' with m_type='*' %}
 {% endblock body %}

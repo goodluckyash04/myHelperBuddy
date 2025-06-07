@@ -11,6 +11,7 @@ from .views.view_financial_instrument import create_finance, finance_details, fe
     update_instrument_status, update_finance_detail, remove_instrument
 from .views.view_task import addTask,currentMonthTaskReport,taskAction,editTask,taskReports
 from .views.view_reminder import add_reminder,todays_reminder,reminder_list,cancel_reminder
+from .views.view_music_downloader import music_download
 
     
 urlpatterns = [
@@ -78,6 +79,12 @@ urlpatterns = [
     path('view-today-reminder/', todays_reminder, name='todays-reminder'),
     path('view-reminder/', reminder_list, name='view-reminders'),
     path('cancel-reminder/<int:id>', cancel_reminder, name='cancel-reminder'),
+
+
+# ..........................................Music Management..................................................
+
+    path('play-my-music/', music_download, name='music_download'),
+
 
 ]
 

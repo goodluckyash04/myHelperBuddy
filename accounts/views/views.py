@@ -20,7 +20,8 @@ USER_ACCESS = {
             "FINANCE_USER_ACCESS": settings.FINANCE_USER_ACCESS,
             "LEDGER_USER_ACCESS": settings.LEDGER_USER_ACCESS,
             "REMINDER_USER_ACCESS": settings.REMINDER_USER_ACCESS,
-            "PRICE_TRACKER_USER_ACCESS": settings.PRICE_TRACKER_USER_ACCESS
+            "PRICE_TRACKER_USER_ACCESS": settings.PRICE_TRACKER_USER_ACCESS,
+            "MUSIC_USER_ACCESS": settings.MUSIC_USER_ACCESS,
         }
 
 def get_counter_parties(user):
@@ -220,12 +221,6 @@ def utilities(request,user):
             "url": "/transaction-detail/",
         },
         {
-            "key": "TASK_USER_ACCESS",
-            "title": "TASK",
-            "description": "Give Your Brain a Break, We've Got Your To-Dos Covered!",
-            "url": "/currentMonthTaskReport/",
-        },
-        {
             "key": "FINANCE_USER_ACCESS",
             "title": "FINANCE",
             "description": "Track Your Loans and Sips, No Slips!",
@@ -238,12 +233,24 @@ def utilities(request,user):
             "url": "/ledger-transaction-details/",
         },
         {
+            "key": "TASK_USER_ACCESS",
+            "title": "TASK",
+            "description": "Give Your Brain a Break, We've Got Your To-Dos Covered!",
+            "url": "/currentMonthTaskReport/",
+        },
+        {
             "key": "REMINDER_USER_ACCESS",
             "title": "REMINDER",
             "description": "Never Miss a Moment, Let the Reminders Handle it All!",
             "url": "/view-today-reminder/",
         },
         {
+            "key": "MUSIC_USER_ACCESS",
+            "title": "MUSIC",
+            "description": "Easily listen music and stay updated in real-time.",
+            "url": "/play-my-music/"
+        },
+        {   
             "key": "PRICE_TRACKER_USER_ACCESS",
             "title": "PRICE TRACKER",
             "description": "Track your price easily and stay updated.",
@@ -277,5 +284,5 @@ def profile(request, user):
     return render(request, "profile.html",context=context)
 
 def get_service_status(user):
-    return {key.replace("_USER_ACCESS", ""): user.username.lower() in value.split(",") or value=="*"  for key, value in USER_ACCESS.items()}
+    return {key.replace("_USER_ACCESS", "").replace("_"," "): user.username.lower() in value.split(",") or value=="*"  for key, value in USER_ACCESS.items()}
 

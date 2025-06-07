@@ -3,45 +3,46 @@
 
 {% block body %}
 <link rel="stylesheet" href="{% static 'css/about.css' %}">
-<div class="about-section container ">
-    <div class="text-center">
-      <h1 class="display-4 mb-4">myHelperBuddy</h1>
-      <p class="lead text-muted">myHelperBuddy is a powerful tool to help you manage your daily financial activities, tasks, loans, and more, all in one place.</p>
-    </div>
-  
-    <div class="about-content d-flex justify-content-between mb-5">
-      <div class="feature card p-4 shadow-lg rounded">
-        <h4 class=" mb-3">Daily Transactions</h4>
-        <p>Easily track and categorize your daily expenses and income, giving you complete control over your finances.</p>
-      </div>
-      <div class="feature card p-4 shadow-lg rounded">
-        <h4 class="mb-3">Finance Management</h4>
-        <p>Keep track of any loans or borrowings or sip with repayment schedules, and ensure you never miss a payment.</p>
-      </div>
-      <div class="feature card p-4 shadow-lg rounded">
-        <h4 class=" mb-3">Task Management</h4>
-        <p>Stay on top of your daily tasks and activities with easy-to-manage task lists and reminders.</p>
-      </div>
-      <div class="feature card p-4 shadow-lg rounded">
-        <h4 class="mb-3">Ledger Management</h4>
-        <p>Manage all your financial records in a structured ledger system. Keep track of all credits and debits for proper accounting.</p>
-      </div>
-      <div class="feature card p-4 shadow-lg rounded">
-        <h4 class="mb-3">Reminder Management</h4>
-        <p>Stay on top of your schedule by managing all your important dates and never miss a reminder again.</p>
-      </div>
-    </div>
-  
-    <div class="section-title mb-4">
-      <h3 >Key Features:</h3>
-    </div>
-    <ul class="text-muted key-feature">
-        <li><i class="fas fa-check-circle"></i> Effortlessly track daily transactions and income.</li>
-        <li><i class="fas fa-check-circle"></i> Manage loans and repayment schedules with ease.</li>
-        <li><i class="fas fa-check-circle"></i> Organize and prioritize daily tasks.</li>
-        <li><i class="fas fa-check-circle"></i> Maintain and update your ledger entries for accurate records.</li>
-        <li><i class="fas fa-check-circle"></i> Remind your dates with Reminder facility.</li>
-    </ul>
+<div class="about-section container">
+  <div class="text-center mb-5">
+    <h1 class="display-4 mb-3">myHelperBuddy</h1>
+    <p class="lead text-muted mx-auto" style="max-width: 700px;">
+      myHelperBuddy is your all-in-one platform designed to efficiently manage your daily finances, investments, tasks, and more — helping you stay organized and in control.
+    </p>
   </div>
-  
-  {% endblock body %}
+
+  <div class="about-slider container">
+    <div class="slider-titles">
+      <div class="slider-title active" data-detail="Seamlessly manage your daily financial transactions to keep your budget on track.">Day-to-Day Transaction Management</div>
+      <div class="slider-title" data-detail="Maintain and track your loans and investments with clear splits and schedules.">Loan & Investment Management</div>
+      <div class="slider-title" data-detail="Organize your daily tasks efficiently and never miss an important activity.">Task Management</div>
+      <div class="slider-title" data-detail="Set and receive timely reminders for your important dates and deadlines.">Reminder Management</div>
+      <div class="slider-title" data-detail="Track price fluctuations on your favorite products and make informed purchase decisions.">Price Tracking</div>
+      <div class="slider-title" data-detail="Download and manage your favorite music easily within the platform.">Music Download</div>
+      <div class="slider-title" data-detail="Maintain detailed ledger records for accurate accounting and financial clarity.">Ledger Management</div>
+    </div>
+
+    <div class="slider-detail">
+      Seamlessly manage your daily financial transactions to keep your budget on track.
+    </div>
+  </div>
+
+  <div class="section-title my-5 text-center">
+    <h3>Key Features</h3>
+  </div>
+<ul class="key-feature">
+    <li><i class="fas fa-exchange-alt"></i> Seamless day-to-day transaction management for your finances.</li>
+    <li><i class="fas fa-hand-holding-usd"></i> Maintain and monitor loan and investment splits effectively.</li>
+    <li><i class="fas fa-tasks"></i> Efficient task management to stay organized and productive.</li>
+    <li><i class="fas fa-bell"></i> Timely reminder management to never miss important dates.</li>
+    <li><i class="fas fa-tags"></i> Real-time tracking of product prices to maximize savings.</li>
+    <li><i class="fas fa-music"></i> Easy music downloads and management within your workspace.</li>
+    <li><i class="fas fa-book-open"></i> Detailed ledger maintenance for comprehensive financial records.</li>
+</ul>
+
+</div>
+{% endblock body %}
+
+{% block script %}
+<script src="{% static 'js/about.js' %}"></script>
+{% endblock script %}
