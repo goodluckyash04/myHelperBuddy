@@ -171,6 +171,16 @@ def index(request):
             "icon":"fa-book",
             "title":"Comprehensive Ledger",
             "description":"Keep your financial records well-organized. Maintain accurate accounting with ease."
+        },
+        {
+            "icon":"fa-tags",
+            "title":"Price Tracker",
+            "description":"Keep tabs on your favorite products and get the best deals with real-time price tracking."
+        },
+        {
+            "icon":"fa-bell",
+            "title":"Reminder Management",
+            "description":"Never miss important dates with customizable reminders for bills, tasks, and events."
         }
     ]
     return render(request,"landing_page.html",{"data":data})

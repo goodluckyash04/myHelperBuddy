@@ -82,7 +82,6 @@ urlpatterns = [
 
 
 # ..........................................Music Management..................................................
-
     path('play-my-music/', music_download, name='music_download'),
 
 

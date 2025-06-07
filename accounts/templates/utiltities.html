@@ -1,39 +1,52 @@
 {% extends 'header.html' %}
 {% load static %}
+
 {% block body %}
 <style>
-.card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-}
+  .utility-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .utility-card:hover {
+    transform: translateY(-5px) scale(1.01);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  }
 
-.btn:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-}
+  .utility-badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.7em;
+    background-color: var(--primary);
+    color: white;
+    border-radius: 999px;
+  }
 
+  .card-title {
+    font-family: Cardo;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 </style>
+
 <div class="container my-5">
   <!-- Section Title -->
-  <h2 class="text-center fw-bold mb-4" style="color: var(--primary-dark-secondary);font-family: Dancing Script;">My Utilities</h2>
+  <h2 class="text-center fw-bold mb-4" style="color: var(--primary-dark-secondary); font-family: 'Dancing Script';">
+    My Utilities
+  </h2>
 
   <!-- Card Grid -->
-  <div class="row g-4 mx-2">
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 mx-2">
     {% for item in items %}
-    <div class="col-12 col-md-6">
+    <div class="col">
       <a href="{{ item.url }}" target="{% if item.title == 'PRICE TRACKER' %}_blank{% endif %}" class="text-decoration-none">
-        <div class="card h-100 border-0 shadow-sm rounded-3">
+        <div class="card utility-card h-100 border-0 shadow-sm rounded-3 p-3">
           <div class="card-body">
-            <h5 class="card-title fw-semibold" style="color: var(--primary);font-family: Cardo;">
+            <div class="card-title fw-semibold" style="color: var(--primary);">
               {{ item.title }}
               {% if item.title == 'REMINDER' and badge > 0 %}
-              <span class="position-absolute top-20 start-100 translate-middle badge" style="background-color: var(--primary);">{{ badge }}</span>
+              <span class="utility-badge">{{ badge }}</span>
               {% endif %}
-            </h5>
-            <p class="card-text text-muted">{{ item.description }}</p>
+            </div>
+            <p class="card-text text-muted mt-2">{{ item.description }}</p>
           </div>
         </div>
       </a>
@@ -41,7 +54,6 @@
     {% endfor %}
   </div>
 </div>
-
 
 {% include 'floating_button.html' with m_type='*' %}
 {% endblock body %}

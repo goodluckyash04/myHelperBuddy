@@ -1,117 +1,129 @@
-{% extends 'index.html' %} {% load static %} 
+{% extends 'index.html' %}
+{% load static %}
 {% block mainbody %}
-<div style="min-height: 90vh">
+<div style="min-height: 90vh; display: flex; align-items: center; justify-content: center;">
 
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-10 col-sm-10 col-md-8 col-lg-4">
-      <form
-        method="post"
-        action="/signup/"
-        style="margin-top: 30%;"
-      >
-        {% csrf_token %}
-        <h2 class="text-center" ><a class="text-decoration-none" style="color:var(--primary);font-family:Rubik Vinyl;" href="/">MyHelperBuddy</a></h2>
-        <p class="fs-4 text-center" style="color:var(--primary);">Sign-Up</p>
+  <div class="container mt-2">
+    <div class="row justify-content-center">
+      <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
 
-        <div class="mb-3">
-          <input
-            type="text"
-            placeholder="Name"
-            class="form-control"
-            name="name"
-            id="name"
-            value='{{name}}'
-            style="line-height:2rem"
-            aria-describedby="emailHelp"
-          />
-        </div>
-        <div class="mb-3">
-          <input
-            type="text"
-            placeholder="Username"
-            class="form-control"
-            name="username"
-            id="username"
-            value='{{username}}'
-            style="line-height:2rem"
-            aria-describedby="emailHelp"
-            required
-          />
-        </div>
-        <div class="mb-3 input-group">
-          <input
-            type="email"
-            placeholder="Email"
-            class="form-control"
-            name="email"
-            id="email"
-            value='{{email}}'
-            style="line-height:2rem"
-            aria-describedby="emailHelp"
-            required
-          />
-          <span class="input-group-text" id="addon-wrapping">
-            <i class="fa-regular fa-paper-plane" style="color:var(--primary); cursor: pointer;" id="getOTPButton" onclick="get_otp('{{ csrf_token }}')"></i>
-          </span>
-        </div>
-        <div class="mb-3">
-          <input
-            type="password"
-            placeholder="Password"
-            class="form-control"
-            style="line-height:2rem"
-            name="password"
-            id="password"
-            required
-          />
-        </div>
-        <div class="mb-3">
-          <input
-            type="password"
-            placeholder="Re-Enter Password"
-            class="form-control"
-            style="line-height:2rem"
-            name="rpassword"
-            id="rpassword"
-            required
-          />
-        </div>
-        <div class="mb-3">
-          <input
-            type="password"
-            placeholder="Enter OTP"
-            class="form-control"
-            style="line-height:2rem"
-            name="otp"
-            id="otp"
-            required
-          />
-        </div>
-      <p class="text-danger mb-0">{{msg}}</p>
-        <div class="mb-3">
-         <button
-            type="submit"
-            class="btn btn-primary form-control"
-            style="background-color: var(--primary); border: none; line-height:2.2rem"
-          >
-            SIGN UP
-          </button>
+        <form method="post" action="/signup/" class="p-4 rounded shadow-sm" style="background: white;">
+
+          {% csrf_token %}
+          <h2 class="text-center mb-3">
+            <a class="text-decoration-none" style="color: var(--primary); font-family: 'Rubik Vinyl', cursive; font-weight: 500; font-size: 2.5rem;" href="/">MyHelperBuddy</a>
+          </h2>
+          <p class="fs-5 text-center mb-4" style="color: var(--primary); font-weight: 500;">Sign Up</p>
+
+          <div class="mb-3">
+            <input
+              type="text"
+              placeholder="Name"
+              class="form-control form-control-lg"
+              name="name"
+              id="name"
+              value="{{ name }}"
+              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
+              aria-describedby="nameHelp"
+            />
+          </div>
+
+          <div class="mb-3">
+            <input
+              type="text"
+              placeholder="Username"
+              class="form-control form-control-lg"
+              name="username"
+              id="username"
+              value="{{ username }}"
+              required
+              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
+              aria-describedby="usernameHelp"
+            />
+          </div>
+
+          <div class="mb-3 input-group" style="border-radius: 0.5rem; border: 1.5px solid #ddd;">
+            <input
+              type="email"
+              placeholder="Email"
+              class="form-control form-control-lg border-0"
+              name="email"
+              id="email"
+              value="{{ email }}"
+              required
+              style="font-size: medium; border-radius: 0.5rem 0 0 0.5rem;"
+              aria-describedby="emailHelp"
+            />
+            <span class="input-group-text bg-white border-0" id="addon-wrapping" style="border-radius: 0 0.5rem 0.5rem 0; cursor: pointer;">
+              <i class="fa-regular fa-paper-plane" style="color: var(--primary);" id="getOTPButton" onclick="get_otp('{{ csrf_token }}')"></i>
+            </span>
+          </div>
+
+          <div class="mb-3">
+            <input
+              type="password"
+              placeholder="Password"
+              class="form-control form-control-lg"
+              name="password"
+              id="password"
+              required
+              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
+            />
+          </div>
+
+          <div class="mb-3">
+            <input
+              type="password"
+              placeholder="Re-Enter Password"
+              class="form-control form-control-lg"
+              name="rpassword"
+              id="rpassword"
+              required
+              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
+            />
+          </div>
+
+          <div class="mb-3">
+            <input
+              type="text"
+              placeholder="Enter OTP"
+              class="form-control form-control-lg"
+              name="otp"
+              id="otp"
+              required
+              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
+            />
+          </div>
+
+          <p class="text-danger mb-2 text-center fw-semibold">{{ msg }}</p>
+
+          <div class="d-grid mb-3">
+            <button
+              type="submit"
+              class="btn btn-primary btn-lg"
+              style="background-color: var(--primary); border: none; border-radius: 0.5rem; font-weight: 600;"
+            >
+              SIGN UP
+            </button>
+          </div>
+
           <hr>
-        </div>
 
-      </form>
-        <div class="d-flex justify-content-center">
-          <a class="text-secondary text-decoration-none" href="/login">Already have an Account? &nbsp; <b style="color: var(--primary);">SIGN IN</b></a>
-        </div>
+          <div class="text-center">
+            <a href="/login" class="text-secondary text-decoration-none" style="font-weight: 500;">
+              Already have an account? <b style="color: var(--primary);">Sign In</b>
+            </a>
+          </div>
+
+        </form>
+
+      </div>
     </div>
   </div>
-</div>
-</div>
 
+</div>
 {% endblock mainbody %}
 
 {% block script %}
 <script src="{% static 'js/auth.js' %}"></script>
 {% endblock script %}
-

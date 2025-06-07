@@ -1,80 +1,92 @@
 {% extends 'index.html' %}
 {% load static %}
 {% block mainbody %}
-<div style="min-height: 90vh">
+<div style="min-height: 90vh; display: flex; align-items: center; justify-content: center;">
 
-<div class="container ">
-  <div class="row justify-content-center">
-    <div class="col-10 col-sm-10 col-md-8 col-lg-4">
-      <form
-        method="post"
-        action="/login"
-        style="margin-top: 30%;">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
 
-        <h2 class="text-center" ><a class="text-decoration-none" style="color:var(--primary);font-family:Rubik Vinyl;" href="/">MyHelperBuddy</a></h2>
-        <p class="fs-4 text-center" style="color:var(--primary);">Sign-In</p>
-        <div class="mb-3">
-          <input
-            type="text"
-            placeholder="Username"
-            class="form-control"
-            name="username"
-            id="username"
-            style="line-height:2rem"
-            aria-describedby="emailHelp"
-            required
-          />
-        </div>
-        <div class="mb-3 input-group">
-          <input
-            type="password"
-            placeholder="Password"
-            class="form-control"
-            name="password"
-            id="password"
-            style="line-height:1.9rem"
+        <form method="post" action="/login" class="p-4 rounded shadow-sm" style="background: white;">
 
-            required
-          />
-          <span class="input-group-text" id="addon-wrapping">
-            <i class="fa-solid fa-eye " style="color:var(--primary)" id="showPasswordButton" onclick="togglePasswordVisibility()"></i>
-          </span>
-        </div>
-        {% if msg|first in "PU" %}
-        <p class="text-success my-1">{{msg}}</p>
-        {% else %}
-        <p class="text-danger my-1 ">{{msg | title}}</p>
-        {% endif %}
-        {% csrf_token %}
-        <div class="mb-2">
-          <button
-            type="submit"
-            class="btn btn-primary form-control"
-            style="background-color:var(--primary); border: none; line-height:2.2rem"
-          >
-            LOGIN
-          </button>
-        </div>
-        <div class="d-flex justify-content-center">
-          <a class="text-decoration-none" style="color:var(--primary)" href="/forgotPassword"> Forgot Password?</a>
-        </div>
-        <hr class="my-3">
-          <div class="d-flex justify-content-center ">
-          <a class="text-secondary text-decoration-none" href="/signup">Don't have an Account? &nbsp; <b style="color:var(--primary)">SIGN UP</b></a>
-        </div>
+          <h2 class="text-center mb-3">
+            <a class="text-decoration-none" style="color: var(--primary); font-family: 'Rubik Vinyl', cursive; font-weight: 500; font-size: 2.5rem;" href="/">MyHelperBuddy</a>
+          </h2>
+          <p class="fs-5 text-center mb-4" style="color: var(--primary); font-weight: 500;">Sign In</p>
 
-      </form>
+          <div class="mb-3">
+            <input
+              type="text"
+              placeholder="Username/Email"
+              class="form-control form-control-lg"
+              name="username"
+              id="username"
+              required
+              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
+              autocomplete="username"
+            />
+          </div>
+
+          <div class="mb-3 input-group" style="border-radius: 0.5rem; border: 1.5px solid #ddd;">
+            <input
+              type="password"
+              placeholder="Password"
+              class="form-control form-control-lg border-0"
+              name="password"
+              id="password"
+              required
+              style="font-size: medium; border-radius: 0.5rem 0 0 0.5rem;"
+              autocomplete="current-password"
+            />
+            <span class="input-group-text bg-white border-0" id="addon-wrapping" style="border-radius: 0 0.5rem 0.5rem 0; cursor: pointer;">
+              <i class="fa-solid fa-eye" style="color: var(--primary);" id="showPasswordButton" onclick="togglePasswordVisibility()"></i>
+            </span>
+          </div>
+
+          {% if msg|first in "PU" %}
+            <p class="text-success my-2 text-center fw-semibold">{{ msg }}</p>
+          {% else %}
+            <p class="text-danger my-2 text-center fw-semibold">{{ msg|title }}</p>
+          {% endif %}
+
+          {% csrf_token %}
+
+          <div class="d-grid mb-3">
+            <button
+              type="submit"
+              class="btn btn-primary btn-lg"
+              style="background-color: var(--primary); border: none; border-radius: 0.5rem; font-weight: 600;"
+            >
+              LOGIN
+            </button>
+          </div>
+
+          <div class="text-center mb-3">
+            <a href="/forgotPassword" class="text-decoration-none" style="color: var(--primary); font-weight: 500;">Forgot Password?</a>
+          </div>
+
+          <hr>
+
+          <div class="text-center">
+            <a href="/signup" class="text-secondary text-decoration-none" style="font-weight: 500;">
+              Don't have an account? <b style="color: var(--primary);">Sign Up</b>
+            </a>
+          </div>
+
+        </form>
+
+      </div>
     </div>
   </div>
-</div>
+
 </div>
 {% endblock mainbody %}
 
 {% block script %}
 <script>
   function togglePasswordVisibility() {
-    var passwordInput = document.getElementById("password");
-    var showPasswordButton = document.getElementById("showPasswordButton");
+    const passwordInput = document.getElementById("password");
+    const showPasswordButton = document.getElementById("showPasswordButton");
 
     if (passwordInput.type === "password") {
       passwordInput.type = "text";
