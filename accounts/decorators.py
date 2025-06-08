@@ -22,7 +22,6 @@ def auth_user(view_func):
 
             # Add the 'user' parameter to the decorated view function's arguments only if it's used
             if 'user' in view_func.__code__.co_varnames:
-                user.u_id = security_service.encrypt_text(f"{user.username}:{user.id}".strip())
                 kwargs['user'] = user
 
             return view_func(request, *args, **kwargs)
