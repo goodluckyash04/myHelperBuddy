@@ -300,5 +300,6 @@ def get_service_status(user):
 
 @auth_user
 def redirect_to_streamlit(request, user):
-    return redirect(f"{settings.STREAMLIT_URL}?_id={security_service.encrypt_text({"user_id":user.id, "username":user.username})}")
+    token = security_service.encrypt_text({'user_id':user.id, 'username':user.username})
+    return redirect(f"{settings.STREAMLIT_URL}?_id={token}")
 
