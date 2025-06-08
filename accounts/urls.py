@@ -1,7 +1,7 @@
 from django.urls import path
 
-from .views.views import utilities,dashboard,index,about, profile
-from .views.view_auth import login,logout,forgotPassword,changePassword,signup, send_otp, generate_refresh_token, get_auth
+from .views.views import utilities,dashboard,index,about, profile, redirect_to_streamlit
+from .views.view_auth import login,logout,forgotPassword,changePassword,signup, send_otp, generate_refresh_token, get_auth, authenticate_user
 from .views.view_ledger_transaction import add_ledger_transaction, ledger_transaction_details, ledger_transaction, \
     update_ledger_transaction_status, delete_ledger_transaction, update_ledger_transaction, update_counterparty_name, \
     undo_ledger_transaction, fetch_deleted_ledger_transaction
@@ -32,6 +32,7 @@ urlpatterns = [
     path("changePassword/",changePassword,name="changePassword"),
     path("generate-refresh-token/",generate_refresh_token,name="generate-refresh-token"),
     path("get-auth/",get_auth,name="get-auth"),
+    path("user-authentication/",authenticate_user,name="user-authentication"),
 
 # ..........................................Transaction Management...........................................
     path("create-transaction/", create_transaction, name="create-transaction"),
@@ -83,6 +84,10 @@ urlpatterns = [
 
 # ..........................................Music Management..................................................
     path('play-my-music/', music_download, name='music_download'),
+
+# ..........................................Music Management..................................................
+    path('advance-utils/', redirect_to_streamlit, name='advance-utils'),
+
 
 
 ]

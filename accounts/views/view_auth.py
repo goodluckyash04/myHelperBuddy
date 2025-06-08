@@ -1,7 +1,9 @@
+import json
 import datetime
 from random import randint
 import re
 import traceback
+
 from django.db.models import Q,Sum
 from django.http import JsonResponse
 from django.shortcuts import render,redirect
@@ -10,11 +12,11 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib import messages
 from django.utils.crypto import get_random_string
-import json
+from django.views.decorators.csrf import csrf_exempt
 
+from accounts.services.security_services import security_service
 from accounts.services.email_services import EmailService
 from accounts.services.google_services import GoogleDriveService
-
 from ..decorators import auth_user
 from ..models import User
 from ..utilitie_functions import mask_email, validate_password
@@ -250,3 +252,32 @@ def send_otp(request):
         return JsonResponse({"status": "Success"}) 
 
     return JsonResponse({"status": "error", "message": "Invalid request"})
+
+def authenticate_user(request):
+    from django.core import signing
+
+    try:
+        if 'username' in request.session:
+            username = request.session.get('username')
+        encrypted = request.GET.get("session_key")
+        if not encrypted:
+            return JsonResponse(data={"status": 400, "validate": False, "error": "Missing session_key"}, status=400)
+
+        data = security_service.decrypt_text(encrypted)
+
+        # Get the user
+        user = User.objects.filter(username=data['username'], id=data["user_id"]).first()
+        if not user:
+            return JsonResponse(data={"status": 404, "validate": False, "error": "User not found"}, status=404)
+        
+        # Build and return the response
+        return JsonResponse(data={
+            "status": 200,
+            "validate": True,
+            "username": user.username,
+            "name": user.name,
+            "email": user.email
+        })
+
+    except Exception as e:
+        return JsonResponse(data={"status": 500, "validate": False, "error": "Invalid session"}, status=500)

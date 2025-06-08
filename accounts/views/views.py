@@ -8,6 +8,8 @@ from django.shortcuts import render,redirect
 from django.conf import settings
 from django.utils import timezone
 
+from accounts.services.security_services import security_service
+
 from ..decorators import auth_user
 from .view_reminder import calculate_reminder
 from ..models import LedgerTransaction, RefreshToken, Transaction
@@ -20,7 +22,7 @@ USER_ACCESS = {
             "FINANCE_USER_ACCESS": settings.FINANCE_USER_ACCESS,
             "LEDGER_USER_ACCESS": settings.LEDGER_USER_ACCESS,
             "REMINDER_USER_ACCESS": settings.REMINDER_USER_ACCESS,
-            "PRICE_TRACKER_USER_ACCESS": settings.PRICE_TRACKER_USER_ACCESS,
+            "OTHER_UTILITIES_USER_ACCESS": settings.OTHER_UTILITIES_USER_ACCESS,
             "MUSIC_USER_ACCESS": settings.MUSIC_USER_ACCESS,
         }
 
@@ -254,17 +256,17 @@ def utilities(request,user):
             "description": "Never Miss a Moment, Let the Reminders Handle it All!",
             "url": "/view-today-reminder/",
         },
-        {
-            "key": "MUSIC_USER_ACCESS",
-            "title": "MUSIC",
-            "description": "Easily listen music and stay updated in real-time.",
-            "url": "/play-my-music/"
-        },
+        # {
+        #     "key": "MUSIC_USER_ACCESS",
+        #     "title": "MUSIC",
+        #     "description": "Easily listen music and stay updated in real-time.",
+        #     "url": "/play-my-music/"
+        # },
         {   
-            "key": "PRICE_TRACKER_USER_ACCESS",
-            "title": "PRICE TRACKER",
-            "description": "Track your price easily and stay updated.",
-            "url": "https://trackmyprice.streamlit.app/",
+            "key": "OTHER_UTILITIES_USER_ACCESS",
+            "title": "ADVANCE UTILITIES",
+            "description": "Access and manage advanced utility tools integrated with your account.",
+            "url": "/advance-utils/",
         },
     ]
 
@@ -295,4 +297,8 @@ def profile(request, user):
 
 def get_service_status(user):
     return {key.replace("_USER_ACCESS", "").replace("_"," "): user.username.lower() in value.split(",") or value=="*"  for key, value in USER_ACCESS.items()}
+
+@auth_user
+def redirect_to_streamlit(request, user):
+    return redirect(f"{settings.STREAMLIT_URL}?_id={security_service.encrypt_text({"user_id":user.id, "username":user.username})}")
 

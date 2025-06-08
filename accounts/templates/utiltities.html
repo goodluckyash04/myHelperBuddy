@@ -37,9 +37,9 @@
   <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 mx-2">
     {% for item in items %}
     <div class="col">
-      <a href="{{ item.url }}" target="{% if item.title == 'PRICE TRACKER' %}_blank{% endif %}" class="text-decoration-none">
+      <a href="{{ item.url }}" target="{% if item.title == 'ADVANCE UTILITIES' %}_blank{% endif %}" class="text-decoration-none">
         <div class="card utility-card h-100 border-0 shadow-sm rounded-3 p-3">
-          <div class="card-body">
+          <div class="card-body p-0">
             <div class="card-title fw-semibold" style="color: var(--primary);">
               {{ item.title }}
               {% if item.title == 'REMINDER' and badge > 0 %}
