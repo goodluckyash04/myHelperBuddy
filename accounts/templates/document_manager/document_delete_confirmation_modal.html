@@ -1,0 +1,48 @@
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form method="post" id="deleteForm">
+      {% csrf_token %}
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-trash-fill text-danger me-1"></i> Delete File
+          </h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
+        </div>
+
+        <div class="modal-body">
+          <p class="mb-2">
+            Are you sure you want to
+            <span class="fw-bold text-danger">permanently delete</span> file
+            <span class="fw-bold mb-3" id="deleteFilename"></span>
+          </p>
+
+          <div id="deletePasswordWrap" class="mb-3 d-none">
+            <label class="form-label">Enter Password</label>
+            <input
+              type="password"
+              name="password"
+              id="deletePassword"
+              class="form-control"
+              placeholder="Required"
+            />
+          </div>
+          <div class="form-text small text-muted mt-2">
+            This action cannot be undone.
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,6 +1,8 @@
+from django.contrib.auth.hashers import check_password, make_password
 from django.db import models
-from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
 
 class User(models.Model):
     name = models.CharField(max_length=100)
@@ -24,7 +26,11 @@ class FinancialProduct(models.Model):
     amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     no_of_installments = models.IntegerField(default=0)
     started_on = models.DateField()
-    status = models.CharField(max_length=20, choices=[("Open", _("Open")), ("Closed", _("Closed"))], default="Open")
+    status = models.CharField(
+        max_length=20,
+        choices=[("Open", _("Open")), ("Closed", _("Closed"))],
+        default="Open",
+    )
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateField(blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -41,10 +47,10 @@ class FinancialProduct(models.Model):
 
 class Transaction(models.Model):
     CATEGORY_CHOICES = [
-        ("Personal", _('Personal')),
-        ("Loan", _('Loan')),
-        ("Food", _('Food')),
-        ("Shopping", _('Shopping')),
+        ("Personal", _("Personal")),
+        ("Loan", _("Loan")),
+        ("Food", _("Food")),
+        ("Shopping", _("Shopping")),
     ]
     STATUS_CHOICES = [
         ("Completed", _("Completed")),
@@ -55,16 +61,27 @@ class Transaction(models.Model):
         ("Online", _("Online")),
         ("Cash", _("Cash")),
     ]
-    type = models.CharField(max_length=50)  # type is a reserved keyword, consider renaming this field
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default="Personal")
+    type = models.CharField(
+        max_length=50
+    )  # type is a reserved keyword, consider renaming this field
+    category = models.CharField(
+        max_length=50, choices=CATEGORY_CHOICES, default="Personal"
+    )
     date = models.DateField()
     amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
     beneficiary = models.CharField(max_length=100)
     description = models.CharField(max_length=255)
-    source = models.ForeignKey(FinancialProduct, on_delete=models.CASCADE, related_name='transactions', null=True, blank=True, default=None)
+    source = models.ForeignKey(
+        FinancialProduct,
+        on_delete=models.CASCADE,
+        related_name="transactions",
+        null=True,
+        blank=True,
+        default=None,
+    )
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="Pending")
     mode = models.CharField(max_length=10, choices=MODE_CHOICES, null=True)
-    mode_detail = models.CharField(max_length=10,null=True)
+    mode_detail = models.CharField(max_length=10, null=True)
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateField(blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -135,28 +152,29 @@ class LedgerTransaction(models.Model):
         verbose_name = _("LedgerTransaction")
         verbose_name_plural = _("LedgerTransactions")
 
+
 class Reminder(models.Model):
-    DAILY = 'daily'
-    MONTHLY = 'monthly'
-    YEARLY = 'yearly'
-    CUSTOM = 'custom'
-    
+    DAILY = "daily"
+    MONTHLY = "monthly"
+    YEARLY = "yearly"
+    CUSTOM = "custom"
+
     REMINDER_FREQUENCY_CHOICES = [
-        (DAILY, 'Daily'),
-        (MONTHLY, 'Monthly'),
-        (YEARLY, 'Yearly'),
-        (CUSTOM, 'Custom'),
+        (DAILY, "Daily"),
+        (MONTHLY, "Monthly"),
+        (YEARLY, "Yearly"),
+        (CUSTOM, "Custom"),
     ]
-    
+
     title = models.CharField(max_length=200)
     description = models.TextField()
-    reminder_date = models.DateField() 
+    reminder_date = models.DateField()
     frequency = models.CharField(
-        max_length=10,
-        choices=REMINDER_FREQUENCY_CHOICES,
-        default=DAILY
+        max_length=10, choices=REMINDER_FREQUENCY_CHOICES, default=DAILY
     )
-    custom_repeat_days = models.PositiveIntegerField(null=True, blank=True)  # Days for custom repetition
+    custom_repeat_days = models.PositiveIntegerField(
+        null=True, blank=True
+    )  # Days for custom repetition
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateField(blank=True, null=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -166,7 +184,8 @@ class Reminder(models.Model):
     def __str__(self):
         return self.title
 
-class RefreshToken(models.Model):  
+
+class RefreshToken(models.Model):
     refresh_token = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
     deactivation_at = models.DateField(blank=True, null=True)
@@ -176,3 +195,68 @@ class RefreshToken(models.Model):
 
     def __str__(self):
         return self.created_at
+
+
+class UploadedFile(models.Model):
+    owner = models.ForeignKey(
+        User,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="uploaded_files",
+    )
+    filename = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=100, blank=True)
+    data = models.BinaryField()
+    keywords = models.CharField(max_length=500, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    download_password_hash = models.CharField(max_length=128, blank=True, null=True)
+
+    # small metadata
+    size = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def __str__(self):
+        return f"{self.filename} ({self.owner})"
+
+    # helpers to set/check password
+    def set_download_password(self, raw_password: str | None):
+        if raw_password:
+            self.download_password_hash = make_password(raw_password)
+        else:
+            self.download_password_hash = None
+
+    def check_download_password(self, raw_password: str) -> bool:
+        if not self.download_password_hash:
+            return True  # no password required
+        return check_password(raw_password or "", self.download_password_hash)
+
+    def keyword_list(self):
+        """Return normalized list of keywords (lowercase, stripped, unique keeping order)."""
+        if not self.keywords:
+            return []
+        seen = set()
+        out = []
+        for k in (kw.strip() for kw in self.keywords.split(",") if kw.strip()):
+            nk = k.lower()
+            if nk in seen:
+                continue
+            seen.add(nk)
+            out.append(nk)
+        return out
+
+    def set_keywords_from_list(self, kw_list):
+        """Store keywords (list) back to comma-separated string with normalization."""
+        cleaned = []
+        seen = set()
+        for k in kw_list:
+            if not k:
+                continue
+            nk = k.strip().lower()
+            if not nk or nk in seen:
+                continue
+            seen.add(nk)
+            cleaned.append(nk)
+        self.keywords = ", ".join(cleaned)
