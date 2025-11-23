@@ -8,6 +8,11 @@ from django.db.models import Q
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.conf import settings
+from django.db.models.functions import Coalesce
+from django.db.models import Sum
+
+
 
 from ..decorators import auth_user
 from ..models import UploadedFile
@@ -29,6 +34,33 @@ def upload_file(request, user):
         ).exists():
             messages.error(request, "File already exist.")
             return HttpResponseRedirect(request.META.get("HTTP_REFERER"))
+
+        total_files_size = UploadedFile.objects.all().aggregate(
+                total=Coalesce(Sum("size"), 0)
+            )
+        total_size = int(settings.TOTAL_DB_FILE_SIZE) * 1024 * 1024
+        size_per_user = int(settings.MAX_TOTAL_BYTES_PER_USER) * 1024 * 1024 
+
+        if total_files_size.get("total", 0) > total_size:
+            if user.username == settings.ADMIN:
+                messages.error(request, "Total file size has reached 200 mb.")
+            
+            else:
+                messages.error(request, "File upload service is currently down please try again later.")
+            return HttpResponseRedirect(request.META.get("HTTP_REFERER")) 
+
+        if user.username != settings.ADMIN:
+
+            total_obj = UploadedFile.objects.filter(owner=user).aggregate(
+                total=Coalesce(Sum("size"), 0)
+            )
+            current_total = int(total_obj.get("total", 0) or 0)
+
+            new_total = current_total + (uploaded.size or 0)
+
+            if new_total > size_per_user:
+                messages.error(request, f"File Quota of {settings.MAX_TOTAL_BYTES_PER_USER} mb Exceeded. Currently in use {calculate_size(current_total)}")                                         
+                return HttpResponseRedirect(request.META.get("HTTP_REFERER"))
 
         original_name = uploaded.name
         base, ext = os.path.splitext(original_name)
