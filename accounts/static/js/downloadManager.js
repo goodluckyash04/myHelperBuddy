@@ -90,7 +90,7 @@
     if (fileInput)
       try {
         fileInput.value = "";
-      } catch {}
+      } catch { }
     if (fileDetails) fileDetails.classList.add("d-none");
     if (fileNameEl) fileNameEl.textContent = "";
     if (fileMetaEl) fileMetaEl.textContent = "";

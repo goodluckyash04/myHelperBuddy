@@ -1,57 +1,91 @@
-{% extends 'header.html' %}
-{% load static %}
-{% block body %}
+{% extends 'header.html' %} {% load static %} {% block body %}
 
 <style>
-/* small polish */
+  /* small polish */
 
-@media (max-width: 575.98px){
-  /* make search full width on extra small */
-  #fileSearchInput { min-width: 0; }
-}
+  @media (max-width: 575.98px) {
 
-.chip-outline {
-  padding: 4px 12px;
-  border-radius: 12px;
-  border: 1px solid #ccc;
-  font-size: 0.75rem;
-  color: #555;
-  transition: 0.2s;
-  text-decoration: none;
-}
+    /* make search full width on extra small */
+    #fileSearchInput {
+      min-width: 0;
+    }
+  }
 
-.chip-outline:hover {
-  background: #f0f0f0;
-  border-color: #999;
-  color: #000;
-}
+  .chip-outline {
+    padding: 4px 12px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    font-size: 0.75rem;
+    color: #555;
+    transition: 0.2s;
+    text-decoration: none;
+  }
+
+  .chip-outline:hover {
+    background: #f0f0f0;
+    border-color: #999;
+    color: #000;
+  }
+
+  /* Pagination color override */
+  .pagination .page-link {
+    color: var(--primary);
+    border-color: var(--primary);
+    transition: 0.25s;
+  }
+
+  .pagination .page-link:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+    color: var(--primary-dark);
+    border-color: var(--primary-dark);
+  }
+
+  .pagination .page-item.active .page-link {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    font-weight: 600;
+  }
+
+  .pagination .page-item.disabled .page-link {
+    color: #b0b0b0;
+    border-color: #ddd;
+    background-color: #f7f7f7;
+  }
+
+  .pagination .page-link {
+    border-radius: 6px;
+    padding: 4px 10px;
+  }
+
+  .pagination {
+    gap: 4px;
+  }
 </style>
 
+<!-- Header container -->
 <div class="container-fluid my-3">
   <div class="row align-items-center">
     <div class="col-12 col-md-6 mb-2 mb-md-0">
-      <h1 class="h3 mb-0" style="color:var(--primary); font-family: 'Dancing Script', system-ui, sans-serif;">
+      <h1 class="h3 mb-0" style="
+          color: var(--primary);
+          font-family: 'Dancing Script', system-ui, sans-serif;
+        ">
         My Documents
       </h1>
     </div>
 
     <div class="col-12 col-md-6">
-      <div class="d-flex justify-content-md-end align-items-center gap-5">
+      <div class="d-flex justify-content-md-end align-items-center gap-2">
         <!-- search form -->
         <form class="d-flex align-items-center w-100 w-md-auto" method="get" role="search" aria-label="Search files">
-          <div class="input-group input-group-sm" style="min-width:220px; max-width:420px;">
-            <input
-              name="q"
-              id="fileSearchInput"
-              value="{{ q }}"
-              class="form-control form-control-sm"
-              placeholder="Search filename or keywords"
-              aria-label="Search files"
-            />
+          <div class="input-group input-group-sm" style="min-width: 220px; max-width: 420px">
+            <input name="q" id="fileSearchInput" value="{{ q }}" class="form-control form-control-sm"
+              placeholder="Search filename or keywords" aria-label="Search files" />
             {% if tag %}
-              <input type="hidden" name="tag" value="{{ tag }}">
+            <input type="hidden" name="tag" value="{{ tag }}" />
             {% endif %}
-            <button class="btn btn-outline-secondary btn-sm" type="submit" aria-label="Submit search">
+            <button class="btn btn-sm custom-btn-primary" type="submit" aria-label="Submit search">
               <i class="bi bi-search"></i>
             </button>
           </div>
@@ -59,144 +93,120 @@
 
         <!-- active tag badge -->
         {% if tag %}
-          <div class="d-none d-md-block ms-2">
-            <span class="badge bg-info text-dark" title="Active tag">
-              Tag: {{ tag }}
-              <a href="?{% if q %}q={{ q }}&{% endif %}" class="ms-2 text-decoration-none" aria-label="Clear tag">×</a>
-            </span>
-          </div>
+        <div class="d-none d-md-block ms-2">
+          <span class="badge bg-info text-dark" title="Active tag">
+            Tag: {{ tag }}
+            <a href="?{% if q %}q={{ q }}&{% endif %}" class="ms-2 text-decoration-none" aria-label="Clear tag">×</a>
+          </span>
+        </div>
         {% endif %}
 
         <!-- upload button -->
         <div class="ms-2">
-          <button
-            class="btn btn-sm custom-btn-primary"
-            data-bs-toggle="modal"
-            data-bs-target="#fileUploadModal"
-            type="button"
-          >
+          <button class="btn btn-sm custom-btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal"
+            data-bs-target="#fileUploadModal" type="button">
             <i class="bi bi-cloud-upload-fill"></i>
+            <span>Upload</span>
           </button>
         </div>
       </div>
 
       <!-- show active tag under search on small screens -->
       {% if tag %}
-        <div class="d-block d-md-none mt-2">
-          <span class="badge bg-info text-dark">Tag: {{ tag }}
-            <a href="?{% if q %}q={{ q }}&{% endif %}" class="ms-2 text-decoration-none" aria-label="Clear tag">×</a>
-          </span>
-        </div>
+      <div class="d-block d-md-none mt-2">
+        <span class="badge bg-info text-dark">Tag: {{ tag }}
+          <a href="?{% if q %}q={{ q }}&{% endif %}" class="ms-2 text-decoration-none" aria-label="Clear tag">×</a>
+        </span>
+      </div>
       {% endif %}
     </div>
   </div>
 </div>
 
-<div id="filesGrid" class="row g-3 m-3">
+<!-- pagination -->
+<div class="d-flex justify-content-between px-3">
+  <div class="small text-muted text-center my-2">
+    Showing {{ files.start_index }}–{{ files.end_index }} of {{ files.paginator.count }} files
+  </div>
+  <nav aria-label="Pagination">
+    <ul class="pagination pagination-sm mb-0">
+      {% if files.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ files.previous_page_number }}">
+          &laquo;
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+      {% endif %} {% for p in page_range %} {% if p == '…' or p == '...' %}
+      <li class="page-item disabled"><span class="page-link">…</span></li>
+      {% else %} {% if p == files.number %}
+      <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+      {% else %}
+      <li class="page-item">
+        <a class="page-link" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ p }}">{{ p }}</a>
+      </li>
+      {% endif %} {% endif %} {% endfor %} {% if files.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ files.next_page_number }}">
+          &raquo;
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+
+<!-- files grid -->
+<div id="filesGrid" class="row g-3 mx-3 mt-1">
   {% for f in files %}
-  <div class="col-md-6 col-lg-4 file-card" data-filename="{{ f.filename|lower }}" data-mimetype="{{ f.content_type|default:''|lower }}" data-uploaded="{{ f.uploaded_at.isoformat }}" data-size="{{ f.size }}">
+  <div class="col-md-6 col-lg-4 file-card" data-filename="{{ f.filename|lower }}"
+    data-mimetype="{{ f.content_type|default:''|lower }}" data-uploaded="{{ f.uploaded_at.isoformat }}"
+    data-size="{{ f.size }}">
     <div class="card card-file h-100 shadow-sm">
       <div class="card-body d-flex flex-column">
         <div class="d-flex align-items-start gap-3 mb-2">
           <!-- icon or thumbnail -->
-          <div style="width:56px; height:56px; flex:0 0 56px;">
-            {% with ct=f.content_type|default:"" %}
-              {% if "pdf" in ct %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                   <i class="bi bi-file-earmark-pdf text-danger fs-1"></i> 
-                </div>
-
-              {% elif "image" in ct %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-file-earmark-image text-info fs-1"></i>
-                </div>
-
-              {% elif "word" in ct or ct == "application/msword" or "officedocument.word" in ct %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-file-earmark-word text-primary fs-1"></i>
-                </div>
-
-              {% elif "excel" in ct or ct == "application/vnd.ms-excel" or "spreadsheet" in ct %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-file-earmark-spreadsheet text-success fs-1"></i>
-                </div>
-
-              {% elif "powerpoint" in ct or "presentation" in ct or "ppt" in ct %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-file-earmark-slides text-warning fs-1"></i>
-                </div>
-
-              {% elif "zip" in ct %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-file-zip text-secondary fs-1"></i>
-                </div>
-
-              {% elif "rar" in ct %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-file-zip text-dark fs-1"></i>
-                </div>
-
-              {% elif "epub" in ct %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-book-half text-info fs-1"></i>
-                </div>
-
-              {% elif "text" in ct or ct == "text/plain" %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-file-text text-muted fs-1"></i>
-                </div>
-
-              {% elif "json" in ct %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-file-code text-success fs-1"></i>
-                </div>
-
-              {% elif "csv" in ct %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-file-spreadsheet text-success fs-1"></i>
-                </div>
-
-              {% elif "opendocument" in ct %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-file-earmark-text text-primary fs-1"></i>
-                </div>
-
-              {% else %}
-                <div class="d-flex align-items-center justify-content-center bg-light rounded" style="width:56px;height:56px;">
-                  <i class="bi bi-file-earmark fs-1"></i>
-                </div>
-              {% endif %}
-            {% endwith %}
+          <div style="width: 56px; height: 56px; flex: 0 0 56px">
+            <div class="d-flex align-items-center justify-content-center bg-light rounded"
+              style="width: 56px; height: 56px">
+              <i class="bi {{ f.icon_class }} fs-1"></i>
+            </div>
           </div>
 
+          <!-- file name and size and tags -->
           <div class="flex-grow-1">
-          <p class="card-title mb-0 fs-6" title="{{ f.filename }}">{{ f.filename }}</p>
-          <div class="small text-muted">
-            <span>{{ f.size|default:"unknown" }}</span> ·
-            <span>{{ f.content_type|default:"unknown" }}</span> 
-          </div>
-
-          <div class="mt-2 d-flex flex-wrap gap-2">
-            {% for tag_item in f.keyword_list %}
-              <a href="?tag={{ tag_item }}{% if q %}&q={{ q }}{% endif %}"
-                class="chip-outline"
+            <p class="card-title mb-0 fs-6" title="{{ f.filename }}">
+              {{ f.filename }}
+            </p>
+            <div class="small text-muted">
+              <span>{{ f.size|default:"unknown" }}</span> ·
+              <span>{{ f.file_type|default:"unknown" }}</span>
+            </div>
+            <!-- tags -->
+            <div class="mt-2 d-flex flex-wrap gap-2">
+              {% for tag_item in f.keyword_list %}
+              <a href="?tag={{ tag_item }}{% if q %}&q={{ q }}{% endif %}" class="chip-outline"
                 title="Filter by tag: {{ tag_item }}">
                 <i class="bi bi-hash"></i> {{ tag_item }}
               </a>
-            {% endfor %}
-          </div>
-          
+              {% endfor %}
+            </div>
           </div>
 
           <!-- three-dot actions -->
           <div class="ms-2 dropdown">
-            <a class="text-muted" href="#" id="cardMenu{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="text-muted" href="#" id="cardMenu{{ forloop.counter }}" data-bs-toggle="dropdown"
+              aria-expanded="false">
               <i class="bi bi-three-dots-vertical"></i>
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="cardMenu{{ forloop.counter }}">
               {% if f.password_protected %}
               <li>
-                <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#pwdModal" data-file-id="{{ f.pk }}" data-filename="{{ f.filename }}">
+                <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#pwdModal"
+                  data-file-id="{{ f.pk }}" data-filename="{{ f.filename }}">
                   <i class="bi bi-lock-fill me-2"></i> Download (protected)
                 </button>
               </li>
@@ -208,41 +218,32 @@
               </li>
               {% endif %}
               <li>
-                <button
-                  class="dropdown-item "
-                  data-bs-toggle="modal"
-                  data-bs-target="#editDetailsModal"
-                  data-file-id="{{ f.pk }}"
-                  data-filename="{{ f.filename }}"
-                  data-keywords="{{ f.keywords }}"
-                  data-protected="{{ f.password_protected|yesno:'1,0' }}"
-                >
-                <i class="bi bi-pencil me-2"></i> Edit
+                <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editDetailsModal"
+                  data-file-id="{{ f.pk }}" data-filename="{{ f.filename }}" data-keywords="{{ f.keywords }}"
+                  data-protected="{{ f.password_protected|yesno:'1,0' }}">
+                  <i class="bi bi-pencil me-2"></i> Edit
                 </button>
               </li>
-              <li><hr class="dropdown-divider"></li>
               <li>
-                <button
-                  class="dropdown-item text-danger"
-                  data-bs-toggle="modal"
-                  data-bs-target="#deleteModal"
-                  data-file-id="{{ f.pk }}"
-                  data-filename="{{ f.filename }}"
-                  data-protected="{{ f.password_protected|yesno:'1,0' }}"
-                >
+                <hr class="dropdown-divider" />
+              </li>
+              <li>
+                <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                  data-file-id="{{ f.pk }}" data-filename="{{ f.filename }}"
+                  data-protected="{{ f.password_protected|yesno:'1,0' }}">
                   <i class="bi bi-trash-fill me-2"></i> Delete
                 </button>
               </li>
             </ul>
           </div>
         </div>
-
       </div>
     </div>
   </div>
+
   {% empty %}
   <div class="col-12">
-    <div class="alert alert-info">You have not uploaded any files yet.</div>
+    <div class="alert alert-secondary text-center">No file found.</div>
   </div>
   {% endfor %}
 </div>
@@ -251,9 +252,7 @@
 {% include 'document_manager/document_update_modal.html' %}
 {% include 'document_manager/document_delete_confirmation_modal.html' %}
 {% include 'document_manager/download_password_modal.html' %}
-{% endblock body %}
-
-{% block script %}
+{% endblock body %} {% block script %}
 
 <script src="{% static 'js/downloadManager.js' %}"></script>
 {% endblock %}

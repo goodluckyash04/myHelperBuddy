@@ -3,6 +3,7 @@ import re
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
 from django.db.models import Q
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,7 +11,7 @@ from django.urls import reverse
 
 from ..decorators import auth_user
 from ..models import UploadedFile
-from ..utilitie_functions import calculate_size, validate_uploaded_file
+from ..utilitie_functions import calculate_size, fetch_file_icon, validate_uploaded_file
 
 
 @auth_user
@@ -59,55 +60,61 @@ def upload_file(request, user):
 
 @auth_user
 def list_files(request, user):
-    """
-    List files for current user with:
-      - q (text) search across filename and keywords
-      - tag (single tag) exact match against comma-separated keywords
-    """
     qs = UploadedFile.objects.filter(owner=user).order_by("-uploaded_at")
 
+    for file in qs:
+        file.password_protected = file.download_password_hash is not None
+        file.size = calculate_size(file.size)
+        file.file_type, file.icon_class = fetch_file_icon(file.content_type)
+
     q = (request.GET.get("q") or "").strip()
-    tag = (request.GET.get("tag") or "").strip().lower()  # normalize
+    tag = (request.GET.get("tag") or "").strip().lower()
 
     if q:
-        # search filename OR keywords
         qs = qs.filter(Q(filename__icontains=q) | Q(keywords__icontains=q))
 
     if tag:
-        # safer: find tag as a boundary in comma-separated keywords.
-        # This regex looks for: ^tag, , tag, , tag$ or solitary tag
-        # Use keywords__regex for a DB regex (Postgres, MySQL may differ on syntax)
         import re
 
         esc = re.escape(tag)
-        # pattern matches:
-        # - at start: 'tag' or 'tag,'
-        # - in middle: ', tag' or ',tag'
-        # - at end: ', tag' or ',tag' or entire value == tag
-        # using word boundaries around commas/spaces
         regex = rf"(^|,\s*){esc}(\s*,|$)"
         qs = qs.filter(keywords__regex=regex)
 
-    # Optional: paginate (recommended if many files)
-    from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+    # PAGINATION
+    per_page = 9  # change to 8/24 depending on your grid
+    paginator = Paginator(qs, per_page)
 
-    page = request.GET.get("page", 1)
-    paginator = Paginator(qs, 24)  # 24 cards per page
+    page_num = request.GET.get("page", 1)
     try:
-        files_page = paginator.page(page)
+        files_page = paginator.page(page_num)
     except PageNotAnInteger:
         files_page = paginator.page(1)
     except EmptyPage:
         files_page = paginator.page(paginator.num_pages)
 
-    for file in files_page:
-        file.password_protected = file.download_password_hash is not None
-        file.size = calculate_size(file.size)
+    # build base query string (all GET params except page)
+    base_qs = request.GET.copy()
+    if "page" in base_qs:
+        base_qs.pop("page")
+    base_qs = base_qs.urlencode()
+
+    # use Django's elided page range for compact pagination display (Django ≥3.2)
+    try:
+        page_range = list(
+            files_page.paginator.get_elided_page_range(
+                files_page.number, on_each_side=1, on_ends=1
+            )
+        )
+    except Exception:
+        # fallback to simple range
+        page_range = list(files_page.paginator.page_range)
 
     context = {
-        "files": files_page,
+        "files": files_page,  # Page object — still iterable in template
         "q": q,
         "tag": tag,
+        "base_qs": base_qs,
+        "page_range": page_range,
         "paginator": paginator,
         "user": user,
     }

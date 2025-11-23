@@ -2,42 +2,73 @@ import re
 from datetime import datetime
 from decimal import Decimal
 
-# Validation constants (same as before, adjust as needed)
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
-ALLOWED_CONTENT_TYPES = {
-    # Images
-    "image/png",
-    "image/jpeg",
-    "image/jpg",
-    "image/webp",
-    # PDF
-    "application/pdf",
-    # Text formats
-    "text/plain",
-    "text/csv",
-    "text/html",
-    "application/json",
-    # Zip / compressed archives
-    "application/zip",
-    "application/x-zip-compressed",
-    "application/x-rar-compressed",
-    "application/vnd.rar",
-    # Word documents
-    "application/msword",  # .doc
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",  # .docx
-    # Excel sheets
-    "application/vnd.ms-excel",  # .xls
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",  # .xlsx
-    # PowerPoint
-    "application/vnd.ms-powerpoint",  # .ppt
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation",  # .pptx
-    # OpenOffice / LibreOffice
-    "application/vnd.oasis.opendocument.text",  # .odt
-    "application/vnd.oasis.opendocument.spreadsheet",  # .ods
-    "application/vnd.oasis.opendocument.presentation",  # .odp
-    # Epub
-    "application/epub+zip",
+FILE_TYPE_MAPPING = {
+    "image": {
+        "types": ["image/png", "image/jpeg", "image/jpg", "image/webp"],
+        "icon_class": "bi-file-earmark-image text-info",
+    },
+    "pdf": {
+        "types": ["application/pdf"],
+        "icon_class": "bi-file-earmark-pdf text-danger",
+    },
+    "text": {
+        "types": ["text/plain", "text/csv", "text/html", "application/json"],
+        "icon_class": "bi bi-file-text text-muted",
+    },
+    "zip": {
+        "types": [
+            "application/zip",
+            "application/x-zip-compressed",
+            "application/x-rar-compressed",
+            "application/vnd.rar",
+        ],
+        "icon_class": "bi-file-zip text-secondary",
+    },
+    "word": {
+        "types": [
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.oasis.opendocument.text",
+        ],
+        "icon_class": "bi-file-earmark-word text-primary",
+    },
+    "spreadsheet": {
+        "types": [
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.oasis.opendocument.spreadsheet",
+        ],
+        "icon_class": "bi-file-spreadsheet text-success",
+    },
+    "presentation": {
+        "types": [
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/vnd.oasis.opendocument.presentation",
+        ],
+        "icon_class": "bi-file-earmark-slides text-warning",
+    },
+    "epub": {
+        "types": ["application/epub+zip"],
+        "icon_class": "bi-book-half text-info",
+    },
 }
+
+ALLOWED_CONTENT_TYPES = [
+    item for types in FILE_TYPE_MAPPING.values() for item in types["types"]
+]
+
+
+def fetch_file_icon(content_type: str):
+    """
+    fetch icon class from content type
+    """
+
+    for file_type, details in FILE_TYPE_MAPPING.items():
+        if content_type in details["types"]:
+            return file_type, details["icon_class"]
+    return "Unknown", "bi-file-earmark text-muted"
 
 
 def date_convert(
@@ -45,7 +76,8 @@ def date_convert(
     date_input_format: str = "%Y-%m-%d",
     date_output_format: str = "%d%b%y",
 ):
-    """change date format
+    """
+    change date format
 
     Args:
         date_text (str): _description_
@@ -113,7 +145,7 @@ def validate_uploaded_file(f):
     if f.size > MAX_UPLOAD_SIZE:
         return False, f"File too large. Max {MAX_UPLOAD_SIZE // (1024*1024)} MB."
     ct = getattr(f, "content_type", "")
-    if ALLOWED_CONTENT_TYPES and ct not in ALLOWED_CONTENT_TYPES:
+    if ct not in ALLOWED_CONTENT_TYPES:
         return False, "File type not allowed."
     return True, None
 
