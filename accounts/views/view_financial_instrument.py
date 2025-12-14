@@ -106,7 +106,7 @@ def finance_details(request, user):
         query = Q(created_by=user, is_deleted=False)
         if search_query:
             query &=Q(name__icontains=search_query) | Q(type=search_query)
-        details = FinancialProduct.objects.filter(query).order_by(F('status').desc(), 'name')
+        details = FinancialProduct.objects.filter(query).select_related('created_by').order_by(F('status').desc(), 'name')
         for product in details:
             installments = Transaction.objects.filter(source=product.id,is_deleted = False)
             remaining_transactions = [trn for trn in installments if trn.status != "Completed"]

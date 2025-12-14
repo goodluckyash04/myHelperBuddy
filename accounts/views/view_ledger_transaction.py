@@ -119,27 +119,24 @@ def ledger_transaction_details(request,user):
 
 @auth_user
 def ledger_transaction(request,id,user):
-    try:
-        search = request.GET.get('search', '')
-        start = request.GET.get('start_d', '')
-        end = request.GET.get('end_d', '')
+    type =id
 
-        data_filter = Q(counterparty=id, is_deleted=False, created_by=user)
-        if search:
-            data_filter &= Q(description__icontains=search)
-        if start and end:
-            data_filter &= Q(transaction_date__gte=start, transaction_date__lte=end)
-        ledger_trn = LedgerTransaction.objects.filter(data_filter).order_by('-transaction_date')
-        query = {
-            "search":search,
-            "start":start,
-            "end":end
-        }
-        return render(request, 'ledger_transaction/ledgerTransaction.html',{'user': user,'ledger_trn':ledger_trn,'counter_party':id,"query":query})
-    except Exception as e:
-        print(traceback.print_exc())
-        messages.error(request, f"An error occurred: try again after some time")
-        return render(request, "ledger_transaction/counterparty.html", {"user": user,'counter_party':id})
+    if type=="all":
+        transactions = LedgerTransaction.objects.filter(created_by=user, is_deleted=False).select_related('created_by').order_by('-transaction_date')
+    elif type =="completed":
+        transactions = LedgerTransaction.objects.filter(created_by=user, is_deleted=False, status="Completed").select_related('created_by').order_by('-transaction_date')
+    elif type =="pending":
+        transactions = LedgerTransaction.objects.filter(created_by=user, is_deleted=False, status="Pending").select_related('created_by').order_by('-transaction_date')
+    else:
+        counterparty = type
+        transactions = LedgerTransaction.objects.filter(
+            created_by=user, is_deleted=False, counterparty__iexact=counterparty
+        ).select_related('created_by').order_by('-transaction_date')
+    
+    
+    context = {"user": user, 'transaction_data': transactions, 'current_filter': type}
+
+    return render(request, 'ledger_transaction/ledgerTransaction.html', context)
 
 
 @auth_user

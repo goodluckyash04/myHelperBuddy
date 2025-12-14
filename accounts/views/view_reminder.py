@@ -57,7 +57,7 @@ def todays_reminder(request, user):
 def reminder_list(request, user):
 
     # List to store reminders for this month based on frequency
-    reminders = Reminder.objects.filter(created_by=user, is_deleted=False).order_by('-reminder_date')
+    reminders = Reminder.objects.filter(created_by=user, is_deleted=False).select_related('created_by').order_by('-reminder_date')
 
     return render(request, 'reminder/viewReminder.html', {"user": user, 'reminders': reminders, 'key':"all"})
 
@@ -89,7 +89,7 @@ def calculate_reminder(user):
     all_reminders = []
 
     # List to store reminders for this month based on frequency
-    reminders = Reminder.objects.filter(created_by=user,reminder_date__lte=today, is_deleted=False)
+    reminders = Reminder.objects.filter(created_by=user,reminder_date__lte=today, is_deleted=False).select_related('created_by')
 
     for reminder in reminders:
         if reminder.reminder_date > today:

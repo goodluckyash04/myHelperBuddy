@@ -7,7 +7,7 @@ from ..decorators import auth_user
 
 
 def get_task_data_by_user(user):
-    return Task.objects.filter(created_by=user).order_by(F('status').desc(), 'complete_by')
+    return Task.objects.filter(created_by=user).select_related('created_by').order_by(F('status').desc(), 'complete_by_date')
 
 def get_task_by_id(id):
     return get_object_or_404(Task, id=id)
@@ -38,13 +38,13 @@ def currentMonthTaskReport(request, user):
         complete_by_date__month__lte=current_month,
         status="Pending",
         is_deleted=False
-    ).order_by('complete_by_date')
+    ).select_related('created_by').order_by('complete_by_date')
 
     return render(request, "task/tasks.html", {"user": user, "taskData": taskData})
 
 @auth_user
 def taskReports(request, user):
-    taskData = Task.objects.filter(created_by=user).order_by(F('status').desc(), 'complete_by_date')
+    taskData = Task.objects.filter(created_by=user).select_related('created_by').order_by(F('status').desc(), 'complete_by_date')
     return render(request, 'task/taskReport.html', {'user': user, 'taskData': taskData})
 
 @auth_user
