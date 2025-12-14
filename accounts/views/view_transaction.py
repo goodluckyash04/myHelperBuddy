@@ -163,28 +163,35 @@ def transaction_detail(request, user):
             current_month = now.month
             filterData &= Q(date__year=current_year, date__month=current_month)
 
-        transaction_data = Transaction.objects.filter(filterData).order_by('-date')
+        # Optimize with select_related for foreign keys
+        transaction_data = Transaction.objects.filter(filterData).select_related('created_by', 'source').order_by('-date')
 
-        income = expense = emi = investment = pending_amount = paid_amount = total = 0
+        # Use database aggregations instead of loops
+        from django.db.models import Sum, Case, When, DecimalField, Value
 
-        for i in transaction_data:
-            if i.type == "Income":
-                income += i.amount
-            elif i.type == "Expense" and i.category != "Investment":
-                expense += i.amount
+        aggregations = transaction_data.aggregate(
+            income=Sum('amount', filter=Q(type='Income'), output_field=DecimalField()),
+            expense=Sum('amount', filter=Q(type='Expense') & ~Q(category='Investment'), output_field=DecimalField()),
+            investment=Sum('amount', filter=Q(category='Investment'), output_field=DecimalField()),
+            emi=Sum('amount', filter=Q(category='EMI'), output_field=DecimalField()),
+            paid_amount=Sum('amount', filter=Q(status='Completed', type='Expense'), output_field=DecimalField()),
+            pending_amount=Sum('amount', filter=Q(status='Pending', type='Expense'), output_field=DecimalField()),
+        )
 
-            if i.category == "Investment":
-                investment += i.amount
-            elif i.category == "EMI":
-                emi += i.amount
+        # Handle None values from aggregation
+        income = aggregations['income'] or 0
+        expense = aggregations['expense'] or 0
+        investment = aggregations['investment'] or 0
+        emi = aggregations['emi'] or 0
+        paid_amount = aggregations['paid_amount'] or 0
+        pending_amount = aggregations['pending_amount'] or 0
 
-            if i.status == "Completed" and i.type == 'Expense':
-                paid_amount += i.amount
-            elif i.status == "Pending" and i.type == 'Expense':
-                pending_amount += i.amount
+        # Optimize previous pending calculation
         filter_remaining_amount &= Q(date__lt=start_date)
-
-        previous_pending = sum(trn.amount for trn in Transaction.objects.filter(filter_remaining_amount))
+        previous_pending_agg = Transaction.objects.filter(filter_remaining_amount).aggregate(
+            total=Sum('amount', output_field=DecimalField())
+        )
+        previous_pending = previous_pending_agg['total'] or 0
 
         transaction_calculation = {
             "income": income,
@@ -193,7 +200,7 @@ def transaction_detail(request, user):
             "investment": investment,
             "pending_amount": pending_amount,
             "paid_amount": paid_amount,
-            "previous_pending":previous_pending,
+            "previous_pending": previous_pending,
             "total": income - expense - investment
         }
         CATEGORIES = ['Shopping', 'Food', 'Investment', 'Utilities', 'Groceries','Medical', 'General', 'Gifts', 'Entertainment', 'EMI', 'Salary','Other']
@@ -218,8 +225,17 @@ def transaction_detail(request, user):
         messages.error(request, f"An error occurred: try again after some time")
         return render(request, "transaction/transactionDetails.html", {
              "user": user,
-            "transaction_data": transaction_data,
-            "transaction_calculation": transaction_calculation,
+            "transaction_data": [],
+            "transaction_calculation": {
+                "income": 0,
+                "expense": 0,
+                "emi": 0,
+                "investment": 0,
+                "pending_amount": 0,
+                "paid_amount": 0,
+                "previous_pending": 0,
+                "total": 0
+            },
             "categories": CATEGORIES,
             "data":{
                 "type": type,

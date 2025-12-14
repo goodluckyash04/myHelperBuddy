@@ -12,8 +12,8 @@ log_dir.mkdir(exist_ok=True)
 
 # Security settings
 SECRET_KEY = config("SECRET_KEY")
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+DEBUG = config("DEBUG", default="True", cast=lambda v: v.lower() in ("true", "1", "yes"))
+ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*").split(",") if not DEBUG else ["*"]
 
 # Application definition
 INSTALLED_APPS = [
@@ -137,3 +137,16 @@ BACKUP_FOLDER_ID = config("BACKUP_FOLDER_ID")
 # Document Manager settings
 MAX_TOTAL_BYTES_PER_USER = config("MAX_TOTAL_BYTES_PER_USER")
 TOTAL_DB_FILE_SIZE = config("TOTAL_DB_FILE_SIZE")
+
+# Security middleware settings
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG and config("FORCE_HTTPS", default="False", cast=lambda v: v.lower() in ("true", "1", "yes"))
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = True
+SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = not DEBUG
+SECURE_HSTS_PRELOAD = not DEBUG

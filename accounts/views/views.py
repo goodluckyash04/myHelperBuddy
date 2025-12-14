@@ -36,35 +36,35 @@ def get_counter_parties(user):
 
 
 def calculate_financial_overview(transactions):
-    income = sum(
-        entry.amount
-        for entry in transactions
-        if entry.type.lower() == "income" and not entry.is_deleted
+    """Optimized using database aggregations instead of Python loops."""
+    from django.db.models import Sum, DecimalField
+    
+    aggregations = transactions.aggregate(
+        income=Sum('amount', filter=Q(type__iexact='income', is_deleted=False), output_field=DecimalField()),
+        expense=Sum('amount', filter=Q(
+            type__iexact='expense',
+            status__iexact='completed'
+        ) & ~Q(category__iexact='investment'), output_field=DecimalField()),
+        investment=Sum('amount', filter=Q(
+            category__iexact='investment',
+            status__iexact='completed'
+        ), output_field=DecimalField()),
+        overdue=Sum('amount', filter=Q(
+            category__iexact='emi',
+            status__iexact='pending'
+        ), output_field=DecimalField()),
     )
-    expense = sum(
-        entry.amount
-        for entry in transactions
-        if entry.type.lower() == "expense"
-        and entry.category.lower() != "investment"
-        and entry.status.lower() == "completed"
-    )
-    investment = sum(
-        entry.amount
-        for entry in transactions
-        if entry.category.lower() == "investment"
-        and entry.status.lower() == "completed"
-    )
-
-    overdue = sum(
-        entry.amount
-        for entry in transactions
-        if entry.category.lower() == "emi" and entry.status.lower() == "pending"
-    )
+    
+    income = aggregations['income'] or 0
+    expense = aggregations['expense'] or 0
+    investment = aggregations['investment'] or 0
+    overdue = aggregations['overdue'] or 0
+    
+    # Split due requires regex match, so we still need Python loop for this
     split_due = sum(
         entry.amount
-        for entry in transactions
+        for entry in transactions.filter(status__iexact="pending")
         if re.search(r"Split\s\d{1,2}$", entry.description, re.IGNORECASE)
-        and entry.status.lower() == "pending"
     )
 
     return {
@@ -74,18 +74,21 @@ def calculate_financial_overview(transactions):
         "EMI Due": format_amount(overdue),
         "Investment": format_amount(investment),
         "Split Due": format_amount(split_due),
-        # "Due (Split | EMI)": f"{format_amount(split_due)} |  {format_amount(overdue)}"
     }
 
 
 def calculate_category_wise_expenses(transactions):
-    category_wise_data = {}
-    for txn in transactions.filter(
-        type__iexact="Expense", date__lte=datetime.now().date()
-    ):
-        category_wise_data[txn.category] = (
-            category_wise_data.get(txn.category, 0) + txn.amount
-        )
+    """Optimized using database aggregations grouped by category."""
+    from django.db.models import Sum
+    
+    category_data = transactions.filter(
+        type__iexact="Expense", 
+        date__lte=datetime.now().date()
+    ).values('category').annotate(
+        total=Sum('amount')
+    ).order_by('-total')
+    
+    category_wise_data = {item['category']: item['total'] for item in category_data}
     return category_wise_data
 
 
@@ -138,9 +141,10 @@ def calculate_monthly_savings(transactions, user):
 def calculate_year_wise_data(transactions, user):
     current_date = timezone.now()
 
-    first_day_of_next_month = datetime(current_date.year, current_date.month + 1, 1)
     if current_date.month == 12:
         first_day_of_next_month = datetime(current_date.year + 1, 1, 1)
+    else:
+        first_day_of_next_month = datetime(current_date.year, current_date.month + 1, 1)
 
     transactions = (
         Transaction.objects.filter(

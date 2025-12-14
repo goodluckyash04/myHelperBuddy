@@ -18,6 +18,10 @@ class User(models.Model):
     class Meta:
         verbose_name = _("User")
         verbose_name_plural = _("Users")
+        indexes = [
+            models.Index(fields=['username']),
+            models.Index(fields=['email']),
+        ]
 
 
 class FinancialProduct(models.Model):
@@ -43,6 +47,14 @@ class FinancialProduct(models.Model):
     class Meta:
         verbose_name = _("Financial Product")
         verbose_name_plural = _("Financial Products")
+        indexes = [
+            models.Index(fields=['created_by']),
+            models.Index(fields=['status']),
+            models.Index(fields=['is_deleted']),
+            # Composite indexes
+            models.Index(fields=['created_by', 'is_deleted']),
+            models.Index(fields=['created_by', 'status']),
+        ]
 
 
 class Transaction(models.Model):
@@ -94,6 +106,18 @@ class Transaction(models.Model):
     class Meta:
         verbose_name = _("Transaction")
         verbose_name_plural = _("Transactions")
+        indexes = [
+            models.Index(fields=['date']),
+            models.Index(fields=['created_by']),
+            models.Index(fields=['is_deleted']),
+            models.Index(fields=['status']),
+            models.Index(fields=['type']),
+            models.Index(fields=['category']),
+            # Composite indexes for common queries
+            models.Index(fields=['created_by', 'is_deleted']),
+            models.Index(fields=['created_by', 'is_deleted', 'date']),
+            models.Index(fields=['created_by', 'is_deleted', 'status']),
+        ]
 
 
 class Task(models.Model):
@@ -125,6 +149,15 @@ class Task(models.Model):
     class Meta:
         verbose_name = _("Task")
         verbose_name_plural = _("Tasks")
+        indexes = [
+            models.Index(fields=['created_by']),
+            models.Index(fields=['status']),
+            models.Index(fields=['complete_by_date']),
+            models.Index(fields=['is_deleted']),
+            # Composite indexes
+            models.Index(fields=['created_by', 'is_deleted']),
+            models.Index(fields=['created_by', 'status']),
+        ]
 
 
 class LedgerTransaction(models.Model):
@@ -151,6 +184,14 @@ class LedgerTransaction(models.Model):
     class Meta:
         verbose_name = _("LedgerTransaction")
         verbose_name_plural = _("LedgerTransactions")
+        indexes = [
+            models.Index(fields=['created_by']),
+            models.Index(fields=['status']),
+            models.Index(fields=['transaction_date']),
+            models.Index(fields=['is_deleted']),
+            # Composite indexes
+            models.Index(fields=['created_by', 'is_deleted']),
+        ]
 
 
 class Reminder(models.Model):
@@ -183,6 +224,17 @@ class Reminder(models.Model):
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['created_by']),
+            models.Index(fields=['reminder_date']),
+            models.Index(fields=['is_deleted']),
+            models.Index(fields=['frequency']),
+            # Composite indexes
+            models.Index(fields=['created_by', 'is_deleted']),
+            models.Index(fields=['created_by', 'reminder_date']),
+        ]
 
 
 class RefreshToken(models.Model):
