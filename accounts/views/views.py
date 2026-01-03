@@ -521,7 +521,9 @@ def update_profile(request):
     # Handle name update
     new_name = request.POST.get("name")
     if new_name and new_name.strip():
-        user.first_name, user.last_name = new_name.rsplit(" ", 1)
+        name_parts = new_name.rsplit(" ", 1)
+        user.first_name = name_parts[0].strip()
+        user.last_name = name_parts[1].strip() if len(name_parts) > 1 else ''
         user.save()
 
     # Handle profile picture upload

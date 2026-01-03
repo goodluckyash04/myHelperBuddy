@@ -295,8 +295,7 @@
                 {% include 'auth/changePassword.html' %}
             </div>
 
-            <!-- Token Management (Admin Only) -->
-            {% if user.username == "yash04" %}
+            {% if user.is_superuser %}
             <div class="glass-card">
                 <h5 class="section-title">
                     <i class="fa-solid fa-key"></i> Token Management
@@ -304,22 +303,11 @@
                 <p class="text-muted small">
                     Last token generated: {{ last_genration | default:"N/A" }}
                 </p>
-                {% if token %}
-                    <p class="fs-6" style="color: var(--profile-primary); font-family: monospace;">
-                        {{ token }}
-                    </p>
-                    <div class="d-flex justify-content-end mt-3">
-                        <a href="/generate-refresh-token/" class="btn action-btn">
-                            <i class="fa-solid fa-trash"></i> Delete Token
-                        </a>
-                    </div>
-                {% else %}
                     <div class="d-flex justify-content-end mt-3">
                         <button class="btn action-btn" onclick="getGoogleAuth()">
                             <i class="fa-solid fa-plus"></i> Generate Token
                         </button>
                     </div>
-                {% endif %}
             </div>
             {% endif %}
 

@@ -3,6 +3,8 @@ from django.urls import path
 from .views.view_auth import (
     authenticate_user,
     changePassword,
+    check_email,
+    check_username,
     forgotPassword,
     generate_refresh_token,
     get_auth,
@@ -83,6 +85,8 @@ urlpatterns = [
     path("signup/", signup, name="signup"),
     path("logout/", logout, name="logout"),
     path("send-otp/", send_otp, name="send_otp"),
+    path("check-username/", check_username, name="check_username"),
+    path("check-email/", check_email, name="check_email"),
     path("forgotPassword/", forgotPassword, name="forgotPassword"),
     path("changePassword/", changePassword, name="changePassword"),
     path(
