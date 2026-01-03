@@ -304,68 +304,10 @@ def dashboard(request, user):
 # ...........................................Home Page..................................................
 @auth_user
 def utilities(request, user):
-
-    utility_items = [
-        {
-            "key": "TRANSACTION_USER_ACCESS",
-            "title": "TRANSACTION",
-            "description": "Manage Your Money Moves, One Day at a Time!",
-            "url": "/transaction-detail/",
-        },
-        {
-            "key": "FINANCE_USER_ACCESS",
-            "title": "FINANCE",
-            "description": "Track Your Loans and Sips, No Slips!",
-            "url": "/finance-details/",
-        },
-        {
-            "key": "LEDGER_USER_ACCESS",
-            "title": "LEDGER",
-            "description": "Balance Your Payables and Receivables with Ease!",
-            "url": "/ledger-transaction-details/",
-        },
-        {
-            "key": "TASK_USER_ACCESS",
-            "title": "TASK",
-            "description": "Give Your Brain a Break, We've Got Your To-Dos Covered!",
-            "url": "/currentMonthTaskReport/",
-        },
-        {
-            "key": "REMINDER_USER_ACCESS",
-            "title": "REMINDER",
-            "description": "Never Miss a Moment, Let the Reminders Handle it All!",
-            "url": "/view-today-reminder/",
-        },
-        {
-            "key": "DOCUMENT_MANAGER_USER_ACCESS",
-            "title": "DOCUMENT MANAGER",
-            "description": "The Right File, Right Now. Never Search Again.",
-            "url": "/fetch-documents/",
-        },
-        # {
-        #     "key": "MUSIC_USER_ACCESS",
-        #     "title": "MUSIC",
-        #     "description": "Easily listen music and stay updated in real-time.",
-        #     "url": "/play-my-music/"
-        # },
-        {
-            "key": "OTHER_UTILITIES_USER_ACCESS",
-            "title": "ADVANCE UTILITIES",
-            "description": "Access and manage advanced utility tools integrated with your account.",
-            "url": "/advance-utils/",
-        },
-    ]
-
-    items = [
-        {
-            "title": item["title"],
-            "description": item["description"],
-            "url": item["url"],
-        }
-        for item in utility_items
-        if user.username.lower() in USER_ACCESS[item["key"]].split(",")
-        or USER_ACCESS[item["key"]] == "*"
-    ]
+    from accounts.services.module_registry import module_registry
+    
+    # Get modules accessible to this user from the registry
+    items = module_registry.get_modules_for_user(user)
 
     reminder_count = len(calculate_reminder(user))
     counterparties = get_counter_parties(user)

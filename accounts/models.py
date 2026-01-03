@@ -249,6 +249,97 @@ class RefreshToken(models.Model):
         return self.created_at
 
 
+class UtilityModule(models.Model):
+    """Registry for application utility modules with permission management"""
+    
+    ACCESS_TYPE_CHOICES = [
+        ('PUBLIC', _('All Users')),
+        ('CONFIG', _('Config-Based')),
+        ('ADMIN', _('Admin Only')),
+    ]
+    
+    # Module Identity
+    key = models.CharField(
+        max_length=50, 
+        unique=True, 
+        help_text=_("Unique module identifier (e.g., 'TRANSACTION', 'FINANCE')")
+    )
+    title = models.CharField(
+        max_length=100, 
+        help_text=_("Display title shown to users")
+    )
+    icon = models.CharField(
+        max_length=50, 
+        blank=True,
+        help_text=_("Font Awesome icon class (e.g., 'fa-credit-card')")
+    )
+    
+    # UI Configuration
+    description = models.TextField(
+        help_text=_("Module description displayed on utilities page")
+    )
+    url_pattern = models.CharField(
+        max_length=200, 
+        help_text=_("URL path for module (e.g., '/transaction-detail/')")
+    )
+    display_order = models.IntegerField(
+        default=0, 
+        help_text=_("Sort order in UI (lower numbers appear first)")
+    )
+    
+    # Access Control
+    access_type = models.CharField(
+        max_length=20,
+        choices=ACCESS_TYPE_CHOICES,
+        default='CONFIG',
+        help_text=_("Access control type: PUBLIC (all users), CONFIG (specific users), ADMIN (admin only)")
+    )
+    allowed_users = models.TextField(
+        blank=True,
+        help_text=_("Comma-separated usernames (if access_type=CONFIG). Use '*' for all users")
+    )
+    
+    # State Management
+    is_active = models.BooleanField(
+        default=True, 
+        help_text=_("Module enabled/disabled toggle")
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['display_order', 'title']
+        verbose_name = _("Utility Module")
+        verbose_name_plural = _("Utility Modules")
+        indexes = [
+            models.Index(fields=['key']),
+            models.Index(fields=['is_active']),
+            models.Index(fields=['display_order']),
+            models.Index(fields=['is_active', 'display_order']),
+        ]
+    
+    def __str__(self):
+        return f"{self.title} ({self.key})"
+    
+    def has_access(self, user):
+        """Check if a user has access to this module"""
+        if not self.is_active:
+            return False
+        
+        if self.access_type == 'PUBLIC':
+            return True
+        elif self.access_type == 'ADMIN':
+            from django.conf import settings
+            return user.username == settings.ADMIN
+        else:  # CONFIG
+            if not self.allowed_users:
+                return False
+            if self.allowed_users.strip() == '*':
+                return True
+            allowed = [u.strip().lower() for u in self.allowed_users.split(',')]
+            return user.username.lower() in allowed
+
+
 class UploadedFile(models.Model):
     owner = models.ForeignKey(
         User,
