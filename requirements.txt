@@ -1,45 +1,94 @@
+# ============================================================================
+# myHelperBuddy - Python Package Requirements
+# Django 4.2.7 | Python 3.12+
+# ============================================================================
+
 # Core Django Framework
 Django==4.2.7
+asgiref==3.7.2
 
-# ASGI support
-asgiref==3.6.0
+# Database
+# SQLite is built-in with Python, PostgreSQL adapter if needed:
+# psycopg2-binary==2.9.9
 
-# Cryptography and security
-cffi==1.15.1
-cryptography==41.0.2
-
-# Character encoding
-charset-normalizer==3.0.1
-
-# CLI utilities
-click==8.1.3
-colorama==0.4.5
-
-# Environment variable management
+# Environment Configuration
 python-decouple==3.8
 
-# YouTube downloader
-yt-dlp==2025.5.22
-
-# Audio metadata
-mutagen==1.47.0
-
-# Security utilities
-itsdangerous==2.1.2
-
-# Virtual environment (typically not needed in requirements.txt but included for reference)
-distlib==0.3.7
-
-# Date utilities
-python-dateutil==2.8.2
-
-# Static file compression
-django-compressor==4.4
-
-# Image processing (for PWA icons and image handling)
-Pillow==10.1.0
-
-# OAuth and Social Authentication
+# Authentication & Authorization
 django-allauth==0.57.0
+
+# Google Services Integration
 google-auth==2.23.4
 google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.1.1
+google-api-python-client==2.108.0
+
+# HTTP Requests
+requests==2.31.0
+urllib3==2.1.0
+
+# Security & Cryptography
+cryptography==41.0.7
+cffi==1.16.0
+pycparser==2.21
+
+# Image Processing (for PWA icons, file uploads)
+Pillow==10.1.0
+
+# Date & Time Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Static File Management
+django-compressor==4.4
+rcssmin==1.1.1
+rjsmin==1.2.1
+
+# Email
+# Django uses built-in SMTP, but if using advanced features:
+# django-ses==3.5.0
+
+# Security Utilities
+itsdangerous==2.1.2
+
+# Character Encoding
+charset-normalizer==3.3.2
+idna==3.6
+
+# CLI Utilities & Color Output
+click==8.1.7
+colorama==0.4.6
+
+# OAuth2 Dependencies
+oauthlib==3.2.2
+requests-oauthlib==1.3.1
+
+# Protocol Buffers (for Google APIs)
+protobuf==4.25.1
+
+# RSA Cryptography
+rsa==4.9
+pyasn1==0.5.1
+pyasn1-modules==0.3.0
+
+# Caching
+cachetools==5.3.2
+
+# HTTP Parsing
+httplib2==0.22.0
+pyparsing==3.1.1
+
+# JSON Web Tokens (if needed for API authentication)
+PyJWT==2.8.0
+
+# Six (Python 2/3 compatibility - required by some dependencies)
+six==1.16.0
+
+# ============================================================================
+# Development Dependencies (Optional - install with: pip install -r requirements-dev.txt)
+# ============================================================================
+# black==23.12.0              # Code formatting
+# flake8==6.1.0               # Linting
+# mypy==1.7.1                 # Type checking
+# django-debug-toolbar==4.2.0 # Debug toolbar
+# ipython==8.18.1             # Enhanced Python shell
