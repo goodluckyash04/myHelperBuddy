@@ -296,9 +296,31 @@ def utilities(request, user):
 
 @auth_user
 def profile(request, user):
-    context = {}
-    context["user"] = user
-    context["service_status"] = get_service_status(user)
+    from accounts.models import UtilityModule
+    
+    # Get accessible modules with full details (icons, names, etc.)
+    accessible_modules = [
+        {
+            'title': module.title,
+            'icon': module.icon or 'fa-puzzle-piece',
+            'access_type': module.get_access_type_display(),
+        }
+        for module in UtilityModule.objects.filter(is_active=True)
+        if module.has_access(user)
+    ]
+    
+    # Calculate account statistics
+    account_age = (timezone.now() - user.created_at).days
+    total_transactions = Transaction.objects.filter(created_by=user, is_deleted=False).count()
+    
+    context = {
+        "user": user,
+        "service_status": get_service_status(user),
+        "accessible_modules": accessible_modules,
+        "account_age": account_age,
+        "total_transactions": total_transactions,
+    }
+    
     if user.username == settings.ADMIN:
         refresh_token_time = (
             RefreshToken.objects.filter(is_active=True).order_by("-created_at").first()
@@ -306,7 +328,44 @@ def profile(request, user):
         context["last_genration"] = (
             refresh_token_time.created_at if refresh_token_time else "N/A"
         )
+    
     return render(request, "profile.html", context=context)
+
+
+@auth_user
+def update_profile(request, user):
+    """Handle profile picture upload and name update"""
+    if request.method == "POST":
+        import json
+        from django.http import JsonResponse
+        
+        # Handle name update
+        new_name = request.POST.get('name')
+        if new_name and new_name.strip():
+            user.name = new_name.strip()
+            user.save()
+        
+        # Handle profile picture upload
+        if request.FILES.get('profile_picture'):
+            # Delete old picture if exists
+            if user.profile_picture:
+                user.profile_picture.delete(save=False)
+            
+            user.profile_picture = request.FILES['profile_picture']
+            user.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Profile updated successfully',
+                'profile_picture_url': user.profile_picture.url if user.profile_picture else None
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Name updated successfully'
+        })
+    
+    return JsonResponse({'success': False, 'message': 'Invalid request method'})
 
 
 def get_service_status(user):
