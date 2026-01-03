@@ -207,7 +207,7 @@
                 </div>
                 
                 <div id="nameEdit" style="display: none; margin-top: 1rem; width: 100%;">
-                    <input type="text" id="nameInput" value="{{user.name}}" class="form-control mb-2" style="text-align: center;">
+                    <input type="text" id="nameInput" value="{{user.first_name}} {{user.last_name}}" class="form-control mb-2" style="text-align: center;">
                     <div style="display: flex; gap: 0.5rem; justify-content: center;">
                         <button onclick="saveName()" class="btn btn-sm action-btn">
                             <i class="fa-solid fa-check"></i> Save
@@ -390,7 +390,7 @@
     function cancelEdit() {
         document.getElementById('nameDisplay').style.display = 'block';
         document.getElementById('nameEdit').style.display = 'none';
-        document.getElementById('nameInput').value = '{{user.name}}';
+        document.getElementById('nameInput').value = '{{user.first_name}} {{user.last_name}}';
     }
     
     function saveName() {

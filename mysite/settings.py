@@ -113,6 +113,11 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 ENCRYPTION_KEY = config('ENCRYPTION_KEY')
 SALT = config('SALT')
 
+# Authentication settings
+LOGIN_URL = '/login'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/login'
+
 # Admin and user access controls
 ADMIN = config('ADMIN')
 ADMIN_EMAIL = config('ADMIN_EMAIL')
