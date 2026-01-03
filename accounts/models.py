@@ -359,8 +359,7 @@ class UtilityModule(models.Model):
         if self.access_type == 'PUBLIC':
             return True
         elif self.access_type == 'ADMIN':
-            from django.conf import settings
-            return user.username == settings.ADMIN
+            return user.is_superuser
         else:  # CONFIG
             # Check if user is in the selected users list
             # Updated to support both old and new user models during migration
