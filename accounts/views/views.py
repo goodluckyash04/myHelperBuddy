@@ -484,7 +484,7 @@ def profile(request):
     }
 
     # Add admin-specific data
-    if user.username == settings.ADMIN:
+    if user.is_superuser:
         refresh_token_time = (
             RefreshToken.objects.filter(is_active=True)
             .order_by("-created_at")
@@ -595,7 +595,8 @@ def manual_backup(request):
     try:
         # Capture management command output
         output = StringIO()
-        call_command('backup_db', stdout=output)
+        # Skip task reminders when manually triggered from UI
+        call_command('backup_db', stdout=output, skip_reminders=True)
         
         # Get the output
         backup_output = output.getvalue()

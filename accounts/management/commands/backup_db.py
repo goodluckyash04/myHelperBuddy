@@ -57,6 +57,14 @@ class Command(BaseCommand):
     # Backup retention settings
     RETENTION_DAYS = 7
     
+    def add_arguments(self, parser):
+        """Add custom command arguments."""
+        parser.add_argument(
+            '--skip-reminders',
+            action='store_true',
+            help='Skip sending task reminder emails (only backup database)',
+        )
+    
     def __init__(self):
         """Initialize command with services and timezone."""
         super().__init__()
@@ -75,9 +83,14 @@ class Command(BaseCommand):
         Main entry point for the management command.
         
         Executes:
-            1. Task and reminder notifications
+            1. Task and reminder notifications (unless --skip-reminders)
             2. Database backup (if needed)
+        
+        Args:
+            options: Command options including skip_reminders flag
         """
+        skip_reminders = options.get('skip_reminders', False)
+        
         try:
             self.stdout.write(self.style.SUCCESS("\n" + "=" * 60))
             self.stdout.write(
@@ -87,8 +100,13 @@ class Command(BaseCommand):
             )
             self.stdout.write(self.style.SUCCESS("=" * 60))
             
-            # Send task reminders to users
-            self.send_todays_task_reminder()
+            # Send task reminders to users (unless skipped)
+            if not skip_reminders:
+                self.send_todays_task_reminder()
+            else:
+                self.stdout.write(
+                    self.style.WARNING("\n⏭️  Skipping task reminder emails")
+                )
             
             # Backup database if needed
             self.backup_database()
