@@ -566,3 +566,64 @@ def redirect_to_streamlit(request):
         {"user_id": request.user.id, "username": request.user.username}
     )
     return redirect(f"{settings.STREAMLIT_URL}?_id={token}")
+
+
+@login_required
+def manual_backup(request):
+    """
+    Manually trigger database backup (superuser only).
+    
+    Executes the backup_db management command programmatically.
+    Restricted to superusers only.
+    
+    Args:
+        request: Django HTTP request object
+        
+    Returns:
+        JsonResponse: Backup status and message
+    """
+    from django.contrib import messages
+    from django.core.management import call_command
+    from io import StringIO
+    import sys
+    
+    # Restrict to superusers only
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('profile')
+    
+    try:
+        # Capture management command output
+        output = StringIO()
+        call_command('backup_db', stdout=output)
+        
+        # Get the output
+        backup_output = output.getvalue()
+        
+        messages.success(request, "Database backup completed successfully!")
+        
+        # Return JSON if AJAX request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Backup completed successfully',
+                'output': backup_output
+            })
+        
+        # Redirect to profile for normal requests
+        return redirect('profile')
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        
+        messages.error(request, f"Backup failed: {str(e)}")
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e),
+                'details': error_details
+            }, status=500)
+        
+        return redirect('profile')

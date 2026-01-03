@@ -66,6 +66,7 @@ from .views.views import (
     about,
     dashboard,
     index,
+    manual_backup,
     profile,
     redirect_to_streamlit,
     update_profile,
@@ -78,6 +79,7 @@ urlpatterns = [
     path("utilities/", utilities, name="utilities"),
     path("profile/", profile, name="profile"),
     path("update-profile/", update_profile, name="update-profile"),
+    path("manual-backup/", manual_backup, name="manual-backup"),
     path("dashboard/", dashboard, name="dashboard"),
     path("about/", about, name="about"),
     # ..........................................User Management..................................................
