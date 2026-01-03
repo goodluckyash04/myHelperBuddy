@@ -294,15 +294,30 @@ class UtilityModule(models.Model):
         default='CONFIG',
         help_text=_("Access control type: PUBLIC (all users), CONFIG (specific users), ADMIN (admin only)")
     )
-    allowed_users = models.TextField(
+    allowed_users_list = models.ManyToManyField(
+        User,
         blank=True,
-        help_text=_("Comma-separated usernames (if access_type=CONFIG). Use '*' for all users")
+        related_name='accessible_modules',
+        help_text=_("Select specific users who can access this module")
     )
     
     # State Management
     is_active = models.BooleanField(
         default=True, 
         help_text=_("Module enabled/disabled toggle")
+    )
+    show_on_landing = models.BooleanField(
+        default=False,
+        help_text=_("Display this module on the landing page (for non-logged-in users)")
+    )
+    landing_title = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text=_("Title to show on landing page (if different from main title)")
+    )
+    landing_description = models.TextField(
+        blank=True,
+        help_text=_("Description to show on landing page (if different from main description)")
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -321,6 +336,13 @@ class UtilityModule(models.Model):
     def __str__(self):
         return f"{self.title} ({self.key})"
     
+    def save(self, *args, **kwargs):
+        """Override save to clear cache when module is updated"""
+        super().save(*args, **kwargs)
+        # Clear the cache so changes take effect immediately
+        from django.core.cache import cache
+        cache.delete('utility_modules_registry')
+    
     def has_access(self, user):
         """Check if a user has access to this module"""
         if not self.is_active:
@@ -332,12 +354,8 @@ class UtilityModule(models.Model):
             from django.conf import settings
             return user.username == settings.ADMIN
         else:  # CONFIG
-            if not self.allowed_users:
-                return False
-            if self.allowed_users.strip() == '*':
-                return True
-            allowed = [u.strip().lower() for u in self.allowed_users.split(',')]
-            return user.username.lower() in allowed
+            # Check if user is in the selected users list
+            return self.allowed_users_list.filter(id=user.id).exists()
 
 
 class UploadedFile(models.Model):

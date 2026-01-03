@@ -15,17 +15,6 @@ from ..models import LedgerTransaction, RefreshToken, Transaction
 from ..utilitie_functions import convert_decimal, format_amount
 from .view_reminder import calculate_reminder
 
-USER_ACCESS = {
-    "TRANSACTION_USER_ACCESS": settings.TRANSACTION_USER_ACCESS,
-    "TASK_USER_ACCESS": settings.TASK_USER_ACCESS,
-    "FINANCE_USER_ACCESS": settings.FINANCE_USER_ACCESS,
-    "LEDGER_USER_ACCESS": settings.LEDGER_USER_ACCESS,
-    "REMINDER_USER_ACCESS": settings.REMINDER_USER_ACCESS,
-    "OTHER_UTILITIES_USER_ACCESS": settings.OTHER_UTILITIES_USER_ACCESS,
-    "MUSIC_USER_ACCESS": settings.MUSIC_USER_ACCESS,
-    "DOCUMENT_MANAGER_USER_ACCESS": settings.DOCUMENT_MANAGER_USER_ACCESS,
-}
-
 
 def get_counter_parties(user):
     return (
@@ -214,43 +203,25 @@ def calculate_current_month_category_expenses(transactions, user):
 def index(request):
     if request.session.get("username"):
         return redirect("dashboard")
+    
+    # Get active modules from database for landing page
+    from accounts.models import UtilityModule
+    
+    # Only show modules that are marked to appear on landing page
+    modules = UtilityModule.objects.filter(
+        is_active=True, 
+        show_on_landing=True
+    ).order_by('display_order')
+    
     data = [
         {
-            "icon": "fa-credit-card",
-            "title": "Smart Transaction Management",
-            "description": "Track your daily expenses and income with a simple, intuitive system that automatically categorizes each transaction.",
-        },
-        {
-            "icon": "fa-wallet",
-            "title": "Easy Finance Tracking",
-            "description": "Stay on top of your loans and investments, with reminders for payment dates and detailed records.",
-        },
-        {
-            "icon": "fa-check-circle",
-            "title": "Efficient Task Management",
-            "description": "Organize your tasks, set reminders, and keep track of what matters most, all in one place.",
-        },
-        {
-            "icon": "fa-book",
-            "title": "Comprehensive Ledger",
-            "description": "Keep your financial records well-organized. Maintain accurate accounting with ease.",
-        },
-        # {
-        #     "icon": "fa-tags",
-        #     "title": "Price Tracker",
-        #     "description": "Keep tabs on your favorite products and get the best deals with real-time price tracking.",
-        # },
-        {
-            "icon": "fa-bell",
-            "title": "Reminder Management",
-            "description": "Never miss important dates with customizable reminders for bills, tasks, and events.",
-        },
-        {
-            "icon": "fa-file",
-            "title": "Document Management",
-            "description": "Your Digital Library. Always Current. Always Ready.",
-        },
+            "icon": module.icon or "fa-puzzle-piece",
+            "title": module.landing_title or module.title,
+            "description": module.landing_description or module.description,
+        }
+        for module in modules
     ]
+    
     return render(request, "landing_page.html", {"data": data})
 
 
@@ -339,11 +310,15 @@ def profile(request, user):
 
 
 def get_service_status(user):
+    """Get user's access status for all modules from database"""
+    from accounts.models import UtilityModule
+    
+    # Get all modules and check access for this user
+    all_modules = UtilityModule.objects.all().order_by('display_order')
+    
     return {
-        key.replace("_USER_ACCESS", "").replace("_", " "): user.username.lower()
-        in value.split(",")
-        or value == "*"
-        for key, value in USER_ACCESS.items()
+        module.title: module.has_access(user)
+        for module in all_modules
     }
 
 

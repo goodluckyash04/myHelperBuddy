@@ -71,6 +71,8 @@ class ModuleRegistryService:
     def seed_default_modules(cls):
         """Seed database with current modules from settings"""
         
+        # Note: User assignments should be done via Django admin or management commands
+        # This just creates the modules with basic configuration
         default_modules = [
             {
                 'key': 'TRANSACTION',
@@ -79,7 +81,7 @@ class ModuleRegistryService:
                 'url_pattern': '/transaction-detail/',
                 'icon': 'fa-credit-card',
                 'display_order': 1,
-                'allowed_users': settings.TRANSACTION_USER_ACCESS,
+                'access_type': 'PUBLIC',  # Default to PUBLIC, configure users in admin
             },
             {
                 'key': 'FINANCE',
@@ -88,7 +90,7 @@ class ModuleRegistryService:
                 'url_pattern': '/finance-details/',
                 'icon': 'fa-wallet',
                 'display_order': 2,
-                'allowed_users': settings.FINANCE_USER_ACCESS,
+                'access_type': 'PUBLIC',
             },
             {
                 'key': 'LEDGER',
@@ -97,7 +99,7 @@ class ModuleRegistryService:
                 'url_pattern': '/ledger-transaction-details/',
                 'icon': 'fa-book',
                 'display_order': 3,
-                'allowed_users': settings.LEDGER_USER_ACCESS,
+                'access_type': 'PUBLIC',
             },
             {
                 'key': 'TASK',
@@ -106,7 +108,7 @@ class ModuleRegistryService:
                 'url_pattern': '/currentMonthTaskReport/',
                 'icon': 'fa-check-circle',
                 'display_order': 4,
-                'allowed_users': settings.TASK_USER_ACCESS,
+                'access_type': 'PUBLIC',
             },
             {
                 'key': 'REMINDER',
@@ -115,7 +117,7 @@ class ModuleRegistryService:
                 'url_pattern': '/view-today-reminder/',
                 'icon': 'fa-bell',
                 'display_order': 5,
-                'allowed_users': settings.REMINDER_USER_ACCESS,
+                'access_type': 'PUBLIC',
             },
             {
                 'key': 'DOCUMENT_MANAGER',
@@ -124,7 +126,7 @@ class ModuleRegistryService:
                 'url_pattern': '/fetch-documents/',
                 'icon': 'fa-file',
                 'display_order': 6,
-                'allowed_users': settings.DOCUMENT_MANAGER_USER_ACCESS,
+                'access_type': 'PUBLIC',
             },
             {
                 'key': 'OTHER_UTILITIES',
@@ -133,7 +135,7 @@ class ModuleRegistryService:
                 'url_pattern': '/advance-utils/',
                 'icon': 'fa-tools',
                 'display_order': 7,
-                'allowed_users': settings.OTHER_UTILITIES_USER_ACCESS,
+                'access_type': 'ADMIN',  # Admin only by default
             },
         ]
         
