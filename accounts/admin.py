@@ -1,6 +1,5 @@
 from django.contrib import admin
 from .models import (
-    User,
     FinancialProduct,
     Transaction,
     Task,
@@ -56,7 +55,6 @@ class UtilityModuleAdmin(admin.ModelAdmin):
 
 
 # Register the rest of the models with simpler admin interface
-admin.site.register(User)
 admin.site.register(FinancialProduct)
 admin.site.register(Transaction)
 admin.site.register(Task)
@@ -64,3 +62,4 @@ admin.site.register(LedgerTransaction)
 admin.site.register(Reminder)
 admin.site.register(RefreshToken)
 admin.site.register(UploadedFile)
+

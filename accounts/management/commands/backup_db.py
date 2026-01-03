@@ -6,6 +6,7 @@ from cryptography.fernet import Fernet
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from django.db.models import Q
+from django.contrib.auth import get_user_model
 
 from accounts.services.email_services import EmailService
 from accounts.services.google_services import GoogleDriveService
@@ -15,9 +16,11 @@ from accounts.models import (
     Transaction,
     LedgerTransaction,
     FinancialProduct,
-    User,
+    UserProfile,
 )
 from accounts.views.view_reminder import calculate_reminder
+
+User = get_user_model()
 
 class Command(BaseCommand):
     """
@@ -69,7 +72,7 @@ class Command(BaseCommand):
             created_at__date__gte=self.utc_today - datetime.timedelta(days=1)
         )
 
-        models_to_check = [User, Transaction, LedgerTransaction, FinancialProduct, Task, Reminder]
+        models_to_check = [UserProfile, Transaction, LedgerTransaction, FinancialProduct, Task, Reminder]
 
         for model in models_to_check:
             if model.objects.filter(query).exists():
@@ -136,7 +139,7 @@ class Command(BaseCommand):
             if file["name"] not in keep_files or backup_date.date() == self.utc_today.date() :
                 print(f"🗑️ Deleting: {file['name']}")
                 self.google_service.delete_file(file["id"]) 
-
+        
         print(f"✅ Cleanup complete! Kept {len(keep_files)} backups, deleted {len(backup_files) - len(keep_files)} backups.")
 
     def backup_database(self):

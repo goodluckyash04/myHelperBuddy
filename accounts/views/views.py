@@ -242,7 +242,7 @@ def dashboard(request, user):
         if transactions
         else ""
     )
-    user_info["account_age"] = (timezone.now() - user.created_at).days
+    user_info["account_age"] = (timezone.now() - user.date_joined).days
 
     # Financial Overview
     financial_data = calculate_financial_overview(transactions)
@@ -310,7 +310,7 @@ def profile(request, user):
     ]
     
     # Calculate account statistics
-    account_age = (timezone.now() - user.created_at).days
+    account_age = (timezone.now() - user.date_joined).days
     total_transactions = Transaction.objects.filter(created_by=user, is_deleted=False).count()
     
     context = {

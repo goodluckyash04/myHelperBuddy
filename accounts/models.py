@@ -4,11 +4,12 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 
-class User(models.Model):
-    name = models.CharField(max_length=100)
-    username = models.CharField(max_length=50, unique=True)
-    email = models.EmailField(unique=True)
-    password = models.CharField(max_length=100)
+class UserProfile(models.Model):
+    user = models.OneToOneField(
+        'auth.User', 
+        on_delete=models.CASCADE, 
+        related_name='profile'
+    )
     profile_picture = models.ImageField(
         upload_to='profile_pictures/',
         null=True,
@@ -19,15 +20,16 @@ class User(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.user.username}'s Profile"
 
     class Meta:
-        verbose_name = _("User")
-        verbose_name_plural = _("Users")
-        indexes = [
-            models.Index(fields=['username']),
-            models.Index(fields=['email']),
-        ]
+        verbose_name = _("User Profile")
+        verbose_name_plural = _("User Profiles")
+
+
+
+
+
 
 
 class FinancialProduct(models.Model):
@@ -43,7 +45,7 @@ class FinancialProduct(models.Model):
     )
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateField(blank=True, null=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -102,7 +104,7 @@ class Transaction(models.Model):
     mode_detail = models.CharField(max_length=10, null=True)
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateField(blank=True, null=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -145,7 +147,7 @@ class Task(models.Model):
     completed_on = models.DateField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateField(blank=True, null=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -180,7 +182,7 @@ class LedgerTransaction(models.Model):
     completion_date = models.DateField(blank=True, null=True)
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateField(blank=True, null=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -224,7 +226,7 @@ class Reminder(models.Model):
     )  # Days for custom repetition
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateField(blank=True, null=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -247,7 +249,7 @@ class RefreshToken(models.Model):
     refresh_token = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
     deactivation_at = models.DateField(blank=True, null=True)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -301,7 +303,7 @@ class UtilityModule(models.Model):
         help_text=_("Access control type: PUBLIC (all users), CONFIG (specific users), ADMIN (admin only)")
     )
     allowed_users_list = models.ManyToManyField(
-        User,
+        'auth.User',
         blank=True,
         related_name='accessible_modules',
         help_text=_("Select specific users who can access this module")
@@ -361,12 +363,15 @@ class UtilityModule(models.Model):
             return user.username == settings.ADMIN
         else:  # CONFIG
             # Check if user is in the selected users list
+            # Updated to support both old and new user models during migration
+            if hasattr(user, 'profile'): # New user
+                return self.allowed_users_list.filter(id=user.id).exists()
             return self.allowed_users_list.filter(id=user.id).exists()
 
 
 class UploadedFile(models.Model):
     owner = models.ForeignKey(
-        User,
+        'auth.User',
         null=True,
         blank=True,
         on_delete=models.SET_NULL,

@@ -1,3 +1,4 @@
+
 import json
 import datetime
 from random import randint
@@ -7,7 +8,9 @@ import traceback
 from django.db.models import Q,Sum
 from django.http import JsonResponse
 from django.shortcuts import render,redirect
-from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib import messages
@@ -17,30 +20,31 @@ from django.views.decorators.csrf import csrf_exempt
 from accounts.services.security_services import security_service
 from accounts.services.email_services import EmailService
 from accounts.services.google_services import GoogleDriveService
+from accounts.models import UserProfile
 from ..decorators import auth_user
-from ..models import User
 from ..utilitie_functions import mask_email, validate_password
 
 
 def login(request):
-    if 'username' in request.session:
+    if request.user.is_authenticated:
         return redirect("dashboard")
 
     if request.method == "GET":
         msg = request.session.pop('forgot_password_msg', '')
         return render(request, "auth/login.html", {"msg": msg})
 
-    if not User.objects.filter(username=request.POST['username'].lower()).exists():
-        return render(request,"auth/login.html",{"msg":"user Does not exist"})
-
-
-    user = User.objects.get(username=request.POST['username'].lower())
-
-    if not check_password(request.POST['password'],user.password):
+    username = request.POST['username'].lower()
+    password = request.POST['password']
+    
+    # Try to authenticate with standard Django auth
+    user = authenticate(request, username=username, password=password)
+    
+    if user is not None:
+        auth_login(request, user)
+        request.session["username"] = user.username # Keep for backward compatibility if needed temporarily
+        return redirect("dashboard")
+    else:
         return render(request,"auth/login.html",{"msg":"Invalid Credential"})
-
-    request.session["username"] = user.username
-    return redirect("dashboard")
 
 def signup(request):
     if request.method == "GET":
@@ -97,12 +101,17 @@ def signup(request):
         del request.session['email']   
 
         try:
-            User.objects.create(
+            # Create User
+            user = User.objects.create_user(
                 username=username,
-                password=make_password(password),
-                name=name,
                 email=email,
+                password=password,
+                first_name=name
             )
+            
+            # Create UserProfile
+            UserProfile.objects.create(user=user)
+            
             return render(request, "auth/login.html", {"msg": "User Created. Login to Continue"})
         except Exception as e:
             traceback.print_exc()
@@ -111,11 +120,11 @@ def signup(request):
             return render(request, "auth/signup.html",{"msg":str(e)})
 
 def logout(request):
+    auth_logout(request)
     try:
         del request.session['username']
     except KeyError:
-        pass  # 'username' key may not be present in the session
-
+        pass
     return redirect('index')
 
 def forgotPassword(request):
@@ -134,7 +143,7 @@ def forgotPassword(request):
             recipient_list = [user.email]
             send_mail(sub, message, from_email, recipient_list)
 
-            user.password = make_password(new_password)
+            user.set_password(new_password)
             user.save()
 
             masked_email = mask_email(user.email)
@@ -158,7 +167,7 @@ def changePassword(request, user):
         new_password = request.POST.get('password', '')
         confirm_password = request.POST.get('c_password', '')
 
-        if not check_password(old_password, user.password):
+        if not user.check_password(old_password):
             messages.error(request, f"Old Password Incorrect")
             return redirect('profile')
 
@@ -170,8 +179,12 @@ def changePassword(request, user):
             messages.error(request, f"Confirm Password Should Match")
             return redirect('profile')
 
-        user.password = make_password(new_password)
+        user.set_password(new_password)
         user.save()
+        
+        # Keep the user logged in after password change
+        auth_login(request, user)
+        
         messages.info(request, f"Password Updated Succesfully !!!")
         return redirect('profile')
     except:
@@ -257,25 +270,26 @@ def authenticate_user(request):
     from django.core import signing
 
     try:
-        if 'username' in request.session:
-            username = request.session.get('username')
-        encrypted = request.GET.get("session_key")
-        if not encrypted:
-            return JsonResponse(data={"status": 400, "validate": False, "error": "Missing session_key"}, status=400)
+        if request.user.is_authenticated:
+            user = request.user
+        else:
+            encrypted = request.GET.get("session_key")
+            if not encrypted:
+                return JsonResponse(data={"status": 400, "validate": False, "error": "Missing session_key"}, status=400)
 
-        data = security_service.decrypt_text(encrypted)
+            data = security_service.decrypt_text(encrypted)
 
-        # Get the user
-        user = User.objects.filter(username=data['username'], id=data["user_id"]).first()
-        if not user:
-            return JsonResponse(data={"status": 404, "validate": False, "error": "User not found"}, status=404)
+            # Get the user
+            user = User.objects.filter(username=data['username'], id=data["user_id"]).first()
+            if not user:
+                return JsonResponse(data={"status": 404, "validate": False, "error": "User not found"}, status=404)
         
         # Build and return the response
         return JsonResponse(data={
             "status": 200,
             "validate": True,
             "username": user.username,
-            "name": user.name,
+            "name": user.get_full_name(),
             "email": user.email
         })
 
