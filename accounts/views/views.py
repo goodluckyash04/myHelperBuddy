@@ -320,7 +320,7 @@ def index(request):
     Returns:
         HttpResponse: Rendered landing page or redirect to dashboard.
     """
-    if request.session.get("username"):
+    if request.user.is_authenticated:
         return redirect("dashboard")
 
     # Get active modules from database for landing page
@@ -521,7 +521,7 @@ def update_profile(request):
     # Handle name update
     new_name = request.POST.get("name")
     if new_name and new_name.strip():
-        user.name = new_name.strip()
+        user.first_name, user.last_name = new_name.rsplit(" ", 1)
         user.save()
 
     # Handle profile picture upload

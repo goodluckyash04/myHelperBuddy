@@ -21,6 +21,7 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
+    path('accounts/', include('allauth.urls')),  # Allauth URLs for OAuth
     path('',include("accounts.urls"))
 ]
 

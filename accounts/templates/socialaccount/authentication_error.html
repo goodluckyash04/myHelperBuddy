@@ -1,0 +1,70 @@
+{% extends 'index.html' %}
+{% load static %}
+{% block mainbody %}
+<div style="min-height: 90vh; display: flex; align-items: center; justify-content: center;">
+  
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
+
+        <div class="p-4 rounded shadow-sm" style="background: white;">
+
+          <h2 class="text-center mb-3">
+            <a class="text-decoration-none" style="color: var(--primary); font-family: 'Rubik Vinyl', cursive; font-weight: 500; font-size: 2.5rem;" href="/">MyHelperBuddy</a>
+          </h2>
+          <p class="fs-5 text-center mb-4" style="color: var(--primary); font-weight: 500;">Create Account</p>
+
+          <div class="text-center mb-3">
+            <img src="{{ account.get_avatar_url }}" alt="Profile" class="rounded-circle" style="width: 80px; height: 80px; object-fit: cover;" onerror="this.style.display='none'">
+          </div>
+
+          <p class="text-center mb-3">
+            <strong>{{ account.extra_data.name }}</strong><br>
+            <small class="text-muted">{{ account.extra_data.email }}</small>
+          </p>
+
+          <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+              <label for="username" class="form-label" style="font-weight: 500;">Choose a username</label>
+              <input
+                type="text"
+                placeholder="Username"
+                class="form-control form-control-lg"
+                name="username"
+                id="username"
+                value="{{ form.username.value|default:'' }}"
+                required
+                style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
+              />
+              {% if form.username.errors %}
+                <small class="text-danger">{{ form.username.errors.0 }}</small>
+              {% endif %}
+            </div>
+
+            <div class="d-grid mb-3">
+              <button
+                type="submit"
+                class="btn btn-primary btn-lg"
+                style="background-color: var(--primary); border: none; border-radius: 0.5rem; font-weight: 600;"
+              >
+                Create Account
+              </button>
+            </div>
+          </form>
+
+          <div class="text-center">
+            <a href="/login" class="text-secondary text-decoration-none" style="font-weight: 500;">
+              <i class="fa-solid fa-arrow-left"></i> Back to Login
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock mainbody %}

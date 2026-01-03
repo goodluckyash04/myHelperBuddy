@@ -38,3 +38,8 @@ django-compressor==4.4
 
 # Image processing (for PWA icons and image handling)
 Pillow==10.1.0
+
+# OAuth and Social Authentication
+django-allauth==0.57.0
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0
