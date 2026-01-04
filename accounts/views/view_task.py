@@ -20,7 +20,7 @@ from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonRes
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 
-from accounts.models import Task
+from accounts.models import Task, TaskCategory, TaskTag
 
 
 # ============================================================================
@@ -93,15 +93,57 @@ def addTask(request: HttpRequest) -> HttpResponse:
     
     task_data = request.POST
     
-    # Create task
-    Task.objects.create(
+    # Import datetime for date parsing
+    from datetime import datetime
+    
+    # Get and parse dates - convert string to date object
+    complete_by_date = task_data.get("complete_by_date")
+    if complete_by_date:
+        try:
+            complete_by_date = datetime.strptime(complete_by_date, "%Y-%m-%d").date()
+        except ValueError:
+            complete_by_date = None
+    else:
+        complete_by_date = None
+    
+    start_date = task_data.get("start_date")
+    if start_date:
+        try:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        except ValueError:
+            start_date = None
+    else:
+        start_date = None
+    
+    estimated_hours = task_data.get("estimated_hours") or None
+    category_id = task_data.get("category") or None
+    
+    # Get category object if provided
+    category = None
+    if category_id:
+        try:
+            category = TaskCategory.objects.get(id=category_id, created_by=user)
+        except TaskCategory.DoesNotExist:
+            category = None
+    
+    # Create task (priority_score will be auto-calculated on save)
+    task = Task.objects.create(
         priority=task_data.get("priority", "Medium"),
         name=task_data.get("name", ""),
-        complete_by_date=task_data.get("complete_by_date"),
+        complete_by_date=complete_by_date,
+        start_date=start_date,
         description=task_data.get("description", ""),
-        status="Pending",
+        estimated_hours=estimated_hours,
+        status=task_data.get("status", "Pending"),
+        category=category,
         created_by=user
     )
+    
+    # Handle tags (many-to-many relationship)
+    tag_ids = request.POST.getlist("tags")
+    if tag_ids:
+        tags = TaskTag.objects.filter(id__in=tag_ids, created_by=user)
+        task.tags.set(tags)
     
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
@@ -137,9 +179,15 @@ def currentMonthTaskReport(request: HttpRequest) -> HttpResponse:
         is_deleted=False
     ).select_related('created_by').order_by('complete_by_date')
     
+    # Get user's categories and tags for modal
+    categories = TaskCategory.objects.filter(created_by=user, is_deleted=False).order_by('display_order', 'name')
+    tags = TaskTag.objects.filter(created_by=user).order_by('name')
+    
     context = {
         "user": user,
-        "taskData": tasks
+        "taskData": tasks,
+        "categories": categories,
+        "tags": tags
     }
     
     return render(request, "task/tasks.html", context)
@@ -169,9 +217,15 @@ def taskReports(request: HttpRequest) -> HttpResponse:
         'complete_by_date'
     )
     
+    # Get user's categories and tags for modal
+    categories = TaskCategory.objects.filter(created_by=user, is_deleted=False).order_by('display_order', 'name')
+    tags = TaskTag.objects.filter(created_by=user).order_by('name')
+    
     context = {
         'user': user,
-        'taskData': tasks
+        'taskData': tasks,
+        'categories': categories,
+        'tags': tags
     }
     
     return render(request, 'task/taskReport.html', context)
@@ -204,18 +258,68 @@ def editTask(request: HttpRequest, id: int) -> HttpResponse:
             'id': task.id,
             'priority': task.priority,
             'name': task.name,
-            'complete_by_date': task.complete_by_date,
-            'description': task.description
+            'complete_by_date': str(task.complete_by_date) if task.complete_by_date else "",
+            'start_date': str(task.start_date) if task.start_date else "",
+            'description': task.description,
+            'estimated_hours': float(task.estimated_hours) if task.estimated_hours else None,
+            'status': task.status,
+            'category': task.category.id if task.category else None,
+            'tags': list(task.tags.values_list('id', flat=True))
         }
         return JsonResponse(task_dict)
     
     # POST: Update task
-    # Update task fields from POST data
-    for key, value in request.POST.items():
-        if hasattr(task, key) and key != 'id':
-            setattr(task, key, value)
+    user = request.user
+    task_data = request.POST
+    
+    # Update basic fields
+    task.priority = task_data.get("priority", task.priority)
+    task.name = task_data.get("name", task.name)
+    task.description = task_data.get("description", task.description)
+    task.status = task_data.get("status", task.status)
+    
+    # Update dates - convert string to date object
+    from datetime import datetime
+    
+    complete_by_date = task_data.get("complete_by_date")
+    if complete_by_date:
+        try:
+            # Parse the date string to a date object
+            task.complete_by_date = datetime.strptime(complete_by_date, "%Y-%m-%d").date()
+        except ValueError:
+            pass  # Keep existing date if parsing fails
+    
+    start_date = task_data.get("start_date")
+    if start_date:
+        try:
+            task.start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+    
+    # Update estimated hours
+    estimated_hours = task_data.get("estimated_hours")
+    if estimated_hours:
+        task.estimated_hours = estimated_hours
+    
+    # Update category
+    category_id = task_data.get("category")
+    if category_id:
+        try:
+            task.category = TaskCategory.objects.get(id=category_id, created_by=user)
+        except TaskCategory.DoesNotExist:
+            pass
+    else:
+        task.category = None
     
     task.save()
+    
+    # Handle tags (many-to-many relationship)
+    tag_ids = request.POST.getlist("tags")
+    if tag_ids:
+        tags = TaskTag.objects.filter(id__in=tag_ids, created_by=user)
+        task.tags.set(tags)
+    else:
+        task.tags.clear()
     
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 

@@ -128,44 +128,17 @@ class Transaction(models.Model):
         ]
 
 
-class Task(models.Model):
-    PRIORITY_CHOICES = [
-        ("Low", _("Low")),
-        ("Medium", _("Medium")),
-        ("High", _("High")),
-    ]
-    STATUS_CHOICES = [
-        ("Pending", _("Pending")),
-        ("Completed", _("Completed")),
-    ]
+# Import enhanced task models from separate file
+from accounts.task_models import (
+    TaskCategory,
+    TaskTag,
+    RecurringPattern,
+    Task,
+    TaskTemplate,
+    TimeLog,
+    TaskAttachment,
+)
 
-    priority = models.CharField(max_length=50, choices=PRIORITY_CHOICES, blank=True)
-    name = models.CharField(max_length=100)
-    complete_by_date = models.DateField()
-    description = models.TextField(max_length=500, blank=True)
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="Pending")
-    completed_on = models.DateField(blank=True, null=True)
-    is_deleted = models.BooleanField(default=False)
-    deleted_at = models.DateField(blank=True, null=True)
-    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = _("Task")
-        verbose_name_plural = _("Tasks")
-        indexes = [
-            models.Index(fields=['created_by']),
-            models.Index(fields=['status']),
-            models.Index(fields=['complete_by_date']),
-            models.Index(fields=['is_deleted']),
-            # Composite indexes
-            models.Index(fields=['created_by', 'is_deleted']),
-            models.Index(fields=['created_by', 'status']),
-        ]
 
 
 class LedgerTransaction(models.Model):

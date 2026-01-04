@@ -1,56 +1,249 @@
 {% extends 'header.html' %}
 {% load static %}
 {% block body %}
-<div class="container">
-    <h2 class="text-center  mt-3" style="color: var(--primary);font-family: dancing script">Tasks Pending Till Current Month-End</h2>
+<div class="container-fluid px-4">
+    <h2 class="text-center mt-3 mb-4" style="color: var(--primary);font-family: dancing script">
+        Tasks Pending Till Current Month-End
+    </h2>
 
-    <!-- Report Button Separated from Table -->
-    <div class="my-3 text-end">
-        <a href="/taskReports/" class="btn custom-btn-primary">
-            <i class="fa-solid fa-chart-line"></i> Task Reports
-        </a>
+    <!-- Filters and Actions Row -->
+    <div class="row mb-3 align-items-center">
+        <div class="col-md-6">
+            <div class="d-flex gap-2 flex-wrap">
+                <!-- Category Filter -->
+                <select class="form-select form-select-sm" id="categoryFilter" style="width: auto;">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                        <option value="{{ cat.id }}" style="border-left: 4px solid {{ cat.color }}; padding-left: 8px;">
+                            {{ cat.icon|default:"📁" }} {{ cat.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <!-- Priority Filter -->
+                <select class="form-select form-select-sm" id="priorityFilter" style="width: auto;">
+                    <option value="">All Priorities</option>
+                    <option value="High">🔴 High</option>
+                    <option value="Medium">🟡 Medium</option>
+                    <option value="Low">🟢 Low</option>
+                </select>
+
+                <!-- Tag Filter -->
+                <select class="form-select form-select-sm" id="tagFilter" style="width: auto;">
+                    <option value="">All Tags</option>
+                    {% for tag in tags %}
+                        <option value="{{ tag.id }}">🏷️ {{ tag.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <button class="btn btn-sm btn-outline-secondary" onclick="clearFilters()">
+                    <i class="fa-solid fa-filter-circle-xmark"></i> Clear
+                </button>
+            </div>
+        </div>
+        <div class="col-md-6 text-end">
+            <div class="d-flex gap-2 justify-content-end">
+                <a href="/manageCategories/" class="btn btn-sm btn-outline-primary">
+                    <i class="fa-solid fa-folder"></i> Categories
+                </a>
+                <a href="/manageTags/" class="btn btn-sm btn-outline-success">
+                    <i class="fa-solid fa-tags"></i> Tags
+                </a>
+                <a href="/taskReports/" class="btn btn-sm custom-btn-primary">
+                    <i class="fa-solid fa-chart-line"></i> All Tasks
+                </a>
+            </div>
+        </div>
     </div>
 
-    <div class="col-12 table-responsive">
-        <table class="table table-striped table-hover table-sm">
-            <thead class="sticky-top bg-white shadow-sm">
+    <!-- Tasks Table -->
+    <div class="table-responsive" style="max-height: 70vh;">
+        <table class="table table-striped table-hover">
+            <thead class="sticky-top bg-light shadow-sm">
                 <tr>
-                    <th scope="col">Sr No.</th>
-                    <th scope="col">Priority</th>
-                    <th scope="col">Complete by</th>
-                    <th scope="col">Title</th>
-                    <th scope="col">Description</th>
-                    <th scope="col">Complete</th>
-                    <th scope="col">Delete</th>
+                    <th scope="col" style="width: 50px;">#</th>
+                    <th scope="col" style="width: 80px;">Score</th>
+                    <th scope="col" style="width: 100px;">Priority</th>
+                    <th scope="col" style="width: 150px;">Category</th>
+                    <th scope="col">Task</th>
+                    <th scope="col" style="width: 150px;">Tags</th>
+                    <th scope="col" style="width: 120px;">Due Date</th>
+                    <th scope="col" style="width: 100px;" class="text-center">Actions</th>
                 </tr>
             </thead>
-            <tbody style="max-height: 400px; overflow-y: auto;">
+            <tbody id="taskTableBody">
             {% if taskData %}
-                {% for i in taskData %}
-                <tr>
+                {% for task in taskData %}
+                <tr data-category="{{ task.category.id|default:'' }}" 
+                    data-priority="{{ task.priority }}"
+                    data-tags="{% for tag in task.tags.all %}{{ tag.id }},{% endfor %}">
+                    
                     <th scope="row">{{ forloop.counter }}</th>
-                    <td>{{ i.priority }}</td>
-                    <td>{{ i.complete_by_date | date:"d M, Y" }}</td>
-                    <td>{{ i.name }}</td>
-                    <td>{{ i.description }}</td>
-                    <td><a href="{% url 'taskAction' i.id 'complete' %}"><i class="fa-solid text-success fa-check-circle"></i></a></td>
-                    <td><a href="{% url 'taskAction' i.id 'delete' %}"><i class="fa-solid text-danger fa-trash-alt"></i></a></td>
+                    
+                    <!-- Priority Score -->
+                    <td>
+                        <span class="badge {% if task.priority_score >= 50 %}bg-danger{% elif task.priority_score >= 30 %}bg-warning{% else %}bg-success{% endif %} rounded-pill">
+                            {{ task.priority_score }}
+                        </span>
+                    </td>
+                    
+                    <!-- Priority -->
+                    <td>
+                        {% if task.priority == 'High' %}
+                            <span class="badge bg-danger">🔴 High</span>
+                        {% elif task.priority == 'Medium' %}
+                            <span class="badge bg-warning text-dark">🟡 Medium</span>
+                        {% else %}
+                            <span class="badge bg-success">🟢 Low</span>
+                        {% endif %}
+                    </td>
+                    
+                    <!-- Category -->
+                    <td>
+                        {% if task.category %}
+                            <span class="badge" style="background-color: {{ task.category.color }}20; border-left: 3px solid {{ task.category.color }}; color: #333;">
+                                {{ task.category.icon|default:"📁" }} {{ task.category.name }}
+                            </span>
+                        {% else %}
+                            <span class="text-muted small">—</span>
+                        {% endif %}
+                    </td>
+                    
+                    <!-- Task Title & Description -->
+                    <td>
+                        <div>
+                            <strong>{{ task.name }}</strong>
+                            {% if task.description %}
+                                <br><small class="text-muted">{{ task.description|truncatewords:10 }}</small>
+                            {% endif %}
+                            {% if task.estimated_hours %}
+                                <br><small class="text-info"><i class="fa-solid fa-clock"></i> ~{{ task.estimated_hours }}h</small>
+                            {% endif %}
+                        </div>
+                    </td>
+                    
+                    <!-- Tags -->
+                    <td>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for tag in task.tags.all %}
+                                <span class="badge rounded-pill" style="background-color: {{ tag.color }}20; color: {{ tag.color }}; border: 1px solid {{ tag.color }};">
+                                    {{ tag.name }}
+                                </span>
+                            {% empty %}
+                                <span class="text-muted small">—</span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    
+                    <!-- Due Date -->
+                    <td>
+                        {% if task.complete_by_date %}
+                            {% if task.is_overdue %}
+                                <span class="text-danger fw-bold">
+                                    <i class="fa-solid fa-exclamation-triangle"></i>
+                                    {{ task.complete_by_date|date:"d M, Y" }}
+                                </span>
+                            {% else %}
+                                <span>{{ task.complete_by_date|date:"d M, Y" }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    
+                    <!-- Actions -->
+                    <td class="text-center">
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{% url 'taskAction' task.id 'complete' %}" 
+                               class="btn btn-outline-success" title="Mark Complete">
+                                <i class="fa-solid fa-check"></i>
+                            </a>
+                            <a href="" data-bs-toggle="modal" data-bs-target="#taskmodal" 
+                               onclick="openModalAndGetTask({{ task.id }})"
+                               class="btn btn-outline-primary" title="Edit">
+                                <i class="fa-solid fa-edit"></i>
+                            </a>
+                            <a href="{% url 'taskAction' task.id 'delete' %}" 
+                               class="btn btn-outline-danger" title="Delete"
+                               onclick="return confirm('Are you sure you want to delete this task?')">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="7" class="text-center">No pending task for this month</td>
+                    <td colspan="8" class="text-center py-5">
+                        <i class="fa-solid fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">No pending tasks for this month. Great job! 🎉</p>
+                    </td>
                 </tr>
             {% endif %}
             </tbody>
         </table>
     </div>
-</div> 
+</div>
+
+{% include 'task/taskModal.html' %}
 {% include 'floating_button_individual.html' with m_type='task' %}
 {% endblock body %}
 
 {% block script %}
-
 <script src="{% static 'js/task.js' %}"></script>
 
+<script>
+// Filter functionality
+function clearFilters() {
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('priorityFilter').value = '';
+    document.getElementById('tagFilter').value = '';
+    filterTasks();
+}
+
+function filterTasks() {
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const priorityFilter = document.getElementById('priorityFilter').value;
+    const tagFilter = document.getElementById('tagFilter').value;
+    
+    const rows = document.querySelectorAll('#taskTableBody tr');
+    
+    rows.forEach(row => {
+        const rowCategory = row.dataset.category || '';
+        const rowPriority = row.dataset.priority || '';
+        const rowTags = row.dataset.tags || '';
+        
+        let showRow = true;
+        
+        // Category filter
+        if (categoryFilter && rowCategory !== categoryFilter) {
+            showRow = false;
+        }
+        
+        // Priority filter
+        if (priorityFilter && rowPriority !== priorityFilter) {
+            showRow = false;
+        }
+        
+        // Tag filter
+        if (tagFilter && !rowTags.includes(tagFilter)) {
+            showRow = false;
+        }
+        
+        row.style.display = showRow ? '' : 'none';
+    });
+}
+
+// Attach filter event listeners
+document.getElementById('categoryFilter').addEventListener('change', filterTasks);
+document.getElementById('priorityFilter').addEventListener('change', filterTasks);
+document.getElementById('tagFilter').addEventListener('change', filterTasks);
+
+// Reset modal on button click
+document.querySelector('[data-bs-target="#taskmodal"]').addEventListener('click', function(e) {
+    if (e.target.closest('.floating-button')) {
+        resetTaskModal();
+    }
+});
+</script>
 {% endblock script %}

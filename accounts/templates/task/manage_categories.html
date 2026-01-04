@@ -1,0 +1,179 @@
+{% extends 'header.html' %}
+{% load static %}
+{% block body %}
+
+<div class="container-fluid px-4 py-3">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 style="color: var(--primary);font-family: dancing script;">
+      <i class="fa-solid fa-folder"></i> Manage Categories
+    </h2>
+    <div>
+      <button class="btn custom-btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="resetCategoryModal()">
+        <i class="fa-solid fa-plus"></i> New Category
+      </button>
+      <a href="/taskReports/" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back to Tasks
+      </a>
+    </div>
+  </div>
+
+  <!-- Categories Grid -->
+  <div class="row g-3">
+    {% for category in categories %}
+    <div class="col-md-6 col-lg-4">
+      <div class="card shadow-sm h-100" style="border-left: 4px solid {{ category.color }};">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <div class="flex-grow-1">
+              <h5 class="card-title mb-1">
+                <span style="font-size: 1.5rem;">{{ category.icon|default:"📁" }}</span>
+                {{ category.name }}
+              </h5>
+              {% if category.description %}
+                <p class="card-text text-muted small">{{ category.description }}</p>
+              {% endif %}
+            </div>
+            <div class="btn-group btn-group-sm" role="group">
+              <button class="btn btn-outline-primary" 
+                      data-bs-toggle="modal" 
+                      data-bs-target="#categoryModal" 
+                      onclick="editCategory({{ category.id }}, '{{ category.name }}', '{{ category.description }}', '{{ category.color }}', '{{ category.icon }}', {{ category.display_order }})">
+                <i class="fa-solid fa-edit"></i>
+              </button>
+              <a href="{% url 'deleteCategory' category.id %}" 
+                 class="btn btn-outline-danger"
+                 onclick="return confirm('Delete category \'{{ category.name }}\'? Tasks will be uncategorized.')">
+                <i class="fa-solid fa-trash"></i>
+              </a>
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <span class="badge rounded-pill" style="background-color: {{ category.color }}20; color: {{ category.color }}; border: 1px solid {{ category.color }};">
+              {{ category.color }}
+            </span>
+            <small class="text-muted">
+              <i class="fa-solid fa-tasks"></i> {{ category.get_task_count }} task{{ category.get_task_count|pluralize }}
+            </small>
+            <small class="text-muted">
+              Order: {{ category.display_order }}
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+      <div class="text-center py-5">
+        <i class="fa-solid fa-folder-open fa-4x text-muted mb-3"></i>
+        <h4 class="text-muted">No Categories Yet</h4>
+        <p class="text-muted">Create your first category to organize your tasks!</p>
+        <button class="btn custom-btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="resetCategoryModal()">
+          <i class="fa-solid fa-plus"></i> Create First Category
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="categoryModalLabel">Add Category</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form action="/addCategory/" method="post" id="categoryForm">
+          {% csrf_token %}
+          
+          <div class="mb-3">
+            <label for="categoryName" class="form-label">
+              <i class="fa-solid fa-tag"></i> Category Name <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control" id="categoryName" name="name" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="categoryDescription" class="form-label">
+              <i class="fa-solid fa-align-left"></i> Description
+            </label>
+            <textarea class="form-control" id="categoryDescription" name="description" rows="2"></textarea>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="categoryColor" class="form-label">
+                <i class="fa-solid fa-palette"></i> Color
+              </label>
+              <input type="color" class="form-control form-control-color w-100" id="categoryColor" name="color" value="#3B82F6">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label for="categoryOrder" class="form-label">
+                <i class="fa-solid fa-sort"></i> Display Order
+              </label>
+              <input type="number" class="form-control" id="categoryOrder" name="display_order" value="0" min="0">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="categoryIcon" class="form-label">
+              <i class="fa-solid fa-icons"></i> Icon (emoji)
+            </label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="categoryIcon" name="icon" placeholder="📁" maxlength="10">
+              <button type="button" class="btn btn-outline-secondary" onclick="showIconPicker()">
+                <i class="fa-solid fa-smile"></i> Pick
+              </button>
+            </div>
+            <small class="text-muted">Common: 💼 📊 🏠 💪 📚 🎯 ⚡ 🔧 💡 🎨</small>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn custom-btn-primary" id="categorySaveBtn">
+              <i class="fa-solid fa-save"></i> Save Category
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock body %}
+
+{% block script %}
+<script>
+function resetCategoryModal() {
+  document.getElementById('categoryForm').action = '/addCategory/';
+  document.getElementById('categoryModalLabel').textContent = 'Add Category';
+  document.getElementById('categorySaveBtn').innerHTML = '<i class="fa-solid fa-save"></i> Save Category';
+  document.getElementById('categoryForm').reset();
+  document.getElementById('categoryColor').value = '#3B82F6';
+  document.getElementById('categoryOrder').value = '0';
+}
+
+function editCategory(id, name, description, color, icon, order) {
+  document.getElementById('categoryForm').action = `/editCategory/${id}`;
+  document.getElementById('categoryModalLabel').textContent = 'Edit Category';
+  document.getElementById('categorySaveBtn').innerHTML = '<i class="fa-solid fa-save"></i> Update Category';
+  document.getElementById('categoryName').value = name;
+  document.getElementById('categoryDescription').value = description || '';
+  document.getElementById('categoryColor').value = color;
+  document.getElementById('categoryIcon').value = icon || '';
+  document.getElementById('categoryOrder').value = order;
+}
+
+function showIconPicker() {
+  const icons = ['📁', '💼', '📊', '🏠', '💪', '📚', '🎯', '⚡', '🔧', '💡', '🎨', '🎬', '🎮', '🎵', '🍕', '✈️', '🚀', '💰', '❤️', '⭐'];
+  const icon = prompt('Enter an emoji or pick one:\n\n' + icons.join(' '));
+  if (icon) {
+    document.getElementById('categoryIcon').value = icon;
+  }
+}
+</script>
+{% endblock script %}
