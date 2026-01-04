@@ -1,0 +1,50 @@
+<!-- Financial Dashboard Overview -->
+<div class="row mx-3 mb-4 g-3">
+
+  <!-- Total Outstanding -->
+  <div class="col-md-4 col-sm-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body text-center p-4" style="background: linear-gradient(135deg, #8B5CF620 0%, #8B5CF610 100%);">
+        <i class="fa-solid fa-wallet fa-2x mb-2" style="color: #8B5CF6;"></i>
+        <h3 class="mb-1" style="font-weight: 700;">₹ {{ stats.total_outstanding|floatformat:0 }}</h3>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Total Outstanding</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Instruments -->
+  <div class="col-md-4 col-sm-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body text-center p-4" style="background: linear-gradient(135deg, #3B82F620 0%, #3B82F610 100%);">
+        <i class="fa-solid fa-list-check fa-2x mb-2" style="color: #3B82F6;"></i>
+        <h3 class="mb-1" style="font-weight: 700;">{{ stats.active_count }}</h3>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Active Instruments</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Due This Month -->
+  <div class="col-md-4 col-sm-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-body text-center p-4" style="background: linear-gradient(135deg, #F59E0B20 0%, #F59E0B10 100%);">
+        <i class="fa-solid fa-calendar-days fa-2x mb-2" style="color: #F59E0B;"></i>
+        <h3 class="mb-1" style="font-weight: 700;">₹ {{ stats.due_this_month|floatformat:0 }}</h3>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Due This Month</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overdue (if any) -->
+  {% if stats.overdue_count > 0 %}
+  <div class="col-md-4 col-sm-6">
+    <div class="card shadow-sm h-100 border-danger">
+      <div class="card-body text-center p-4" style="background: linear-gradient(135deg, #EF444420 0%, #EF444410 100%);">
+        <i class="fa-solid fa-triangle-exclamation fa-2x mb-2" style="color: #EF4444;"></i>
+        <h3 class="mb-1 text-danger" style="font-weight: 700;">{{ stats.overdue_count }}</h3>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Overdue</p>
+        <small class="text-danger">₹ {{ stats.overdue_amount|floatformat:0 }}</small>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>

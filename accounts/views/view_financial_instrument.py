@@ -24,6 +24,7 @@ from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import F, Q, Sum
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from datetime import date
 
 from accounts.models import FinancialProduct, Transaction
 
@@ -61,6 +62,107 @@ def desired_date(start_date: str, months_offset: int) -> str:
     
     desired_date_obj = datetime.datetime(desired_year, desired_month, current_day)
     return desired_date_obj.strftime('%Y-%m-%d')
+
+
+def calculate_finance_stats(user):
+    """
+    Calculate financial statistics for dashboard.
+    
+    Args:
+        user: Django user object
+        
+    Returns:
+        dict: Financial statistics including totals, counts, and due amounts
+    """
+    today = date.today()
+    
+    # Get all active products
+    products = FinancialProduct.objects.filter(
+        created_by=user,
+        is_deleted=False,
+        status="Open"
+    )
+    
+    # Initialize stats
+    stats = {
+        'total_outstanding': 0,
+        'monthly_payment': 0,
+        'active_count': products.count(),
+        'due_this_month': 0,
+        'due_this_week': 0,
+        'completion_percentage': 0,
+        'next_payment_date': None,
+        'next_payment_amount': 0,
+        'overdue_count': 0,
+        'overdue_amount': 0,
+    }
+    
+    if not products.exists():
+        return stats
+    
+    # Calculate totals
+    total_amount = 0
+    total_paid = 0
+    next_payments = []
+    
+    for product in products:
+        # Get all transactions for this product
+        transactions = Transaction.objects.filter(
+            source=product.id,
+            is_deleted=False
+        )
+        
+        # Calculate remaining
+        paid_amount = sum(
+            trn.amount for trn in transactions if trn.status == "Completed"
+        )
+        total_paid += paid_amount
+        total_amount += product.amount
+        
+        remaining = product.amount - paid_amount
+        stats['total_outstanding'] += remaining
+        
+        # Find next payment
+        pending_transactions = [
+            trn for trn in transactions
+            if trn.status == "Pending"
+        ]
+        
+        if pending_transactions:
+            # Sort by date
+            pending_transactions.sort(key=lambda x: x.date)
+            next_trn = pending_transactions[0]
+            next_payments.append((next_trn.date, next_trn.amount))
+            
+            # Check if due this month
+            if next_trn.date.month == today.month and next_trn.date.year == today.year:
+                stats['due_this_month'] += next_trn.amount
+            
+            # Check if due this week (next 7 days)
+            days_until = (next_trn.date - today).days
+            if 0 <= days_until <= 7:
+                stats['due_this_week'] += next_trn.amount
+            
+            # Check if overdue
+            if next_trn.date < today:
+                stats['overdue_count'] += 1
+                stats['overdue_amount'] += next_trn.amount
+    
+    # Find earliest next payment
+    if next_payments:
+        next_payments.sort()
+        stats['next_payment_date'] = next_payments[0][0]
+        stats['next_payment_amount'] = next_payments[0][1]
+    
+    # Calculate average monthly payment (estimated)
+    if stats['active_count'] > 0:
+        stats['monthly_payment'] = stats['total_outstanding'] / max(stats['active_count'], 1)
+    
+    # Calculate completion percentage
+    if total_amount > 0:
+        stats['completion_percentage'] = round((total_paid / total_amount) * 100, 1)
+    
+    return stats
 
 
 # ============================================================================
@@ -196,19 +298,36 @@ def finance_details(request: HttpRequest) -> HttpResponse:
     user = request.user
     
     try:
+        # Get filter parameters
         search_query = request.GET.get('search', '').strip()
+        type_filter = request.GET.get('type', '').strip()
+        status_filter = request.GET.get('status', '').strip()
+        sort_option = request.GET.get('sort', 'started_on').strip()
+        
+        # Base query
         query = Q(created_by=user, is_deleted=False)
         
+        # Apply search filter
         if search_query:
             query &= Q(name__icontains=search_query) | Q(type=search_query)
+        
+        # Apply type filter
+        if type_filter:
+            query &= Q(type=type_filter)
+        
+        # Apply status filter
+        if status_filter:
+            query &= Q(status=status_filter)
+        
+        # Determine sort field
+        valid_sorts = ['name', '-name', 'amount', '-amount', 'started_on', '-started_on']
+        if sort_option not in valid_sorts:
+            sort_option = 'started_on'
         
         # Get products with optimized query
         products = FinancialProduct.objects.filter(query).select_related(
             'created_by'
-        ).order_by(
-            F('status').desc(),  # Open status first
-            'name'
-        )
+        ).order_by(sort_option)
         
         # Calculate remaining amounts for each product
         for product in products:
@@ -221,11 +340,46 @@ def finance_details(request: HttpRequest) -> HttpResponse:
             ]
             product.remaining_amount = sum(trn.amount for trn in remaining_transactions)
             product.remaining_installments = len(remaining_transactions)
+            
+            # Calculate completion percentage for progress bar
+            paid_count = sum(1 for trn in installments if trn.status == "Completed")
+            total_count = installments.count()
+            product.completion_percentage = round((paid_count / total_count) * 100) if total_count > 0 else 0
+            
+            # Determine status badge
+            if product.status == "Closed":
+                product.badge_status = "Paid"
+                product.badge_class = "bg-secondary"
+            elif remaining_transactions:
+                # Check if next payment is due
+                today = date.today()
+                next_payment = min(remaining_transactions, key=lambda x: x.date)
+                days_until = (next_payment.date - today).days
+                
+                if days_until < 0:
+                    product.badge_status = "Overdue"
+                    product.badge_class = "bg-danger"
+                elif days_until <= 7:
+                    product.badge_status = "Due Soon"
+                    product.badge_class = "bg-warning text-dark"
+                else:
+                    product.badge_status = "On Track"
+                    product.badge_class = "bg-success"
+                    
+                product.next_payment_date = next_payment.date
+                product.next_payment_amount = next_payment.amount
+            else:
+                product.badge_status = "On Track"
+                product.badge_class = "bg-success"
+        
+        # Calculate dashboard statistics
+        stats = calculate_finance_stats(user)
         
         context = {
             'details': products,
             'search_query': search_query,
-            'user': user
+            'user': user,
+            'stats': stats
         }
         
         return render(request, 'financial_instrument/financeHome.html', context)

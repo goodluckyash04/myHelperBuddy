@@ -1,0 +1,24 @@
+<!-- Notification Banner for Overdue/Due Soon Payments -->
+{% if stats.overdue_count > 0 or stats.due_this_week > 0 %}
+<div class="mx-3 mt-3">
+  {% if stats.overdue_count > 0 %}
+  <div class="alert alert-danger d-flex align-items-center shadow-sm" role="alert">
+    <i class="fa-solid fa-triangle-exclamation fa-2x me-3"></i>
+    <div class="flex-grow-1">
+      <h6 class="alert-heading mb-1">⚠️ <strong>{{ stats.overdue_count }}</strong> Overdue Payment{{ stats.overdue_count|pluralize }}</h6>
+      <p class="mb-0">Total overdue amount: <strong>₹ {{ stats.overdue_amount|floatformat:0 }}</strong></p>
+    </div>
+    <a href="#openFinance" class="btn btn-sm btn-danger">View Details</a>
+  </div>
+  {% elif stats.due_this_week > 0 %}
+  <div class="alert alert-warning d-flex align-items-center shadow-sm" role="alert">
+    <i class="fa-solid fa-calendar-days fa-2x me-3"></i>
+    <div class="flex-grow-1">
+      <h6 class="alert-heading mb-1">📅  Payments Due This Week</h6>
+      <p class="mb-0">Total amount due: <strong>₹ {{ stats.due_this_week|floatformat:0 }}</strong></p>
+    </div>
+    <a href="#openFinance" class="btn btn-sm btn-warning">View Details</a>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
