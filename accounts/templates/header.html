@@ -2,7 +2,7 @@
 {% load static %}
 {% block header %}
 
-<nav class="navbar navbar-expand-lg navbar-light shadow p-2 mb-2 fixed-top" style="background: var(--primary); z-index: 999;">
+<nav class="navbar navbar-expand-lg navbar-light shadow p-2 mb-2 fixed-top" style="background: var(--primary); z-index: 999; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px">
   <div class="container-fluid nav-text">
     <!-- Logo -->
     <a class="navbar-brand " href="/dashboard/">
@@ -24,7 +24,7 @@
           <a class="nav-link " href="/about/">About</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="/profile/"> {{ user.name }}</a>
+          <a class="nav-link " href="/profile/"> {{ user.first_name }} {{ user.last_name }}</a>
         </li>
         <li class="nav-item">
           <a class="nav-link " href="/logout/"> <i class="fa-solid fa-right-from-bracket"></i></a></a>

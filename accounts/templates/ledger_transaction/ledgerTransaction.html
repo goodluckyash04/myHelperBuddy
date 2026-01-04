@@ -68,8 +68,8 @@
             </tr>
           </thead>
           <tbody>
-            {% if ledger_trn %}
-              {% for i in ledger_trn %}
+            {% if transaction_data %}
+              {% for i in transaction_data %}
                 <tr>
                   <td><input type="checkbox" name="record_ids" value="{{ i.id }}"></td>
                   <td scope="row">{{ forloop.counter }}</td>

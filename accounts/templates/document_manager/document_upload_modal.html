@@ -1,0 +1,254 @@
+<style>
+  /* nicer dropzone focus/drag state */
+  #dropzone {
+    cursor: pointer;
+    transition: border-color 0.15s, background-color 0.15s;
+  }
+  #dropzone:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.15rem rgba(25, 135, 84, 0.12);
+  }
+  #dropzone.dragover {
+    border-color: var(--bs-primary);
+    background: rgba(13, 110, 253, 0.03);
+  }
+
+  /* subtle gradient for icon circle */
+  .bg-gradient-light {
+    background: linear-gradient(180deg, #ffffff, #f8f9fa);
+  }
+
+  /* truncate filename in preview */
+  #fileName {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    background: #f1f3f5;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: #212529;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    cursor: default;
+  }
+  .tag-chip .remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+  }
+  .tag-chip .remove:hover {
+    color: rgba(0, 0, 0, 0.8);
+  }
+  .tag-chip.clickable {
+    cursor: pointer;
+  }
+  #tagInputWrap:focus-within {
+    box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.08);
+  }
+</style>
+<div
+  class="modal fade"
+  id="fileUploadModal"
+  tabindex="-1"
+  aria-labelledby="fileUploadLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0"></div>
+
+      <div class="modal-body pt-2 pb-3">
+        <form
+          id="uploadForm"
+          method="post"
+          enctype="multipart/form-data"
+          action="/upload-document/"
+          novalidate
+        >
+          {% csrf_token %}
+
+          <!-- Dropzone -->
+          <div
+            id="dropzone"
+            class="rounded-3 border border-2 p-3 text-center mb-3"
+            role="button"
+            tabindex="0"
+            aria-describedby="dropHelp"
+          >
+            <div class="d-flex flex-column align-items-center">
+              <div
+                class="bg-gradient-light rounded-circle d-flex align-items-center justify-content-center mb-2"
+                style="width: 56px; height: 56px"
+              >
+                <i
+                  class="bi bi-cloud-upload-fill fs-3"
+                  style="color: var(--primary)"
+                ></i>
+              </div>
+
+              <div class="fw-semibold">Drop or select a file</div>
+              <div class="small text-muted">
+                PNG, JPG, PDF, DOCX, XLSX, TXT, ZIP — Max
+                <span id="maxSizeLabel">10 MB</span>
+              </div>
+
+              <button
+                type="button"
+                id="chooseFileBtn"
+                class="btn btn-link btn-sm mt-2"
+                style="color: var(--primary)"
+              >
+                Choose a file
+              </button>
+
+              <!-- hidden file input -->
+              <input type="file" id="fileInput" name="file" class="d-none" />
+            </div>
+          </div>
+
+          <!-- chosen file preview -->
+          <div id="fileDetails" class="d-none mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <div class="flex-shrink-0">
+                <div
+                  class="bg-light rounded p-2 text-center"
+                  style="width: 46px; height: 46px"
+                >
+                  <i
+                    id="fileIcon"
+                    class="bi bi-file-earmark-fill fs-4 text-muted"
+                  ></i>
+                </div>
+              </div>
+              <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div class="me-2">
+                    <div
+                      class="fw-semibold text-truncate"
+                      id="fileName"
+                      style="max-width: 200px"
+                    ></div>
+                    <div class="small text-muted" id="fileMeta"></div>
+                  </div>
+                  <button
+                    type="button"
+                    id="clearFileBtn"
+                    class="btn btn-sm btn-outline-secondary ms-2"
+                    title="Remove file"
+                  >
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- password input with visibility toggle -->
+          <div class="mb-3">
+            <label for="download_password" class="form-label small mb-1">
+              Download password (optional)
+            </label>
+
+            <div class="input-group input-group-sm">
+              <input
+                type="password"
+                name="download_password"
+                id="download_password"
+                class="form-control pwd-toggle-input"
+                placeholder="Optional: password to protect downloads"
+                autocomplete="new-password"
+                aria-label="Download password"
+              />
+              <button
+                class="btn btn-outline-secondary btn-toggle-pwd"
+                type="button"
+                aria-label="Toggle password visibility"
+                title="Show password"
+                aria-pressed="false"
+              >
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+
+            <div class="form-text small">Leave blank for no password.</div>
+          </div>
+
+          <!-- Tag input -->
+          <div class="mb-3">
+            <label for="keywords" class="form-label small"
+              >Keywords / tags (optional)</label
+            >
+
+            <div
+              id="tagInputWrap"
+              class="form-control p-1 d-flex flex-wrap align-items-center"
+              style="min-height: 44px; gap: 0.35rem"
+            >
+              <div
+                id="tagChips"
+                class="d-flex flex-wrap align-items-center"
+              ></div>
+              <input
+                id="tagInput"
+                type="text"
+                class="border-0 flex-grow-1"
+                style="min-width: 120px; outline: none"
+                placeholder="Add tags (press Enter / comma)"
+              />
+            </div>
+
+            <input type="hidden" name="keywords" id="keywords" />
+            <div class="form-text small">Tags are saved in lowercase.</div>
+          </div>
+
+          <!-- progress & messages -->
+          <div id="uploadFeedback" class="mb-2 d-none">
+            <div class="progress" style="height: 8px">
+              <div
+                id="uploadProgress"
+                class="progress-bar"
+                role="progressbar"
+                style="width: 0%"
+              ></div>
+            </div>
+            <div id="uploadMsg" class="small text-muted mt-1"></div>
+          </div>
+
+          <!-- actions -->
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <button
+                id="submitBtn"
+                type="submit"
+                class="btn custom-btn-primary btn-sm"
+                disabled
+              >
+                <i class="bi bi-upload me-1"></i> Upload
+              </button>
+              <button
+                type="button"
+                class="btn btn-light btn-sm ms-2"
+                data-bs-dismiss="modal"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

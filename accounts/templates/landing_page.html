@@ -2,64 +2,93 @@
 {% load static %}
 {% block mainbody %}
 
-<style>
-  h3, h4 {
-    color: var(--primary) ;
-  }
-  h2 {
-    font-family: "dancing script";
-    color: var(--primary)
-  }
-  i{
-    color: #8f8868;
-  }
- 
-</style>
+<link rel="stylesheet" href="{% static 'css/landing_page.css' %}">
 
-<section class="hero text-center py-5" style="background-color: #b0a36f; color: white;">
-  <div class="container">
-    <h1 class="display-4 mb-3">Welcome to myHelperBuddy</h1>
-    <p class="lead mb-4">The all-in-one tool to manage your finances, tasks, and everything in between, seamlessly.</p>
-    <a href="/dashboard/" class="btn custom-btn-primary btn-lg">Get Started</a>
+<!-- Modern Hero Section -->
+<section class="modern-hero">
+  <div class="hero-container">
+    <div class="hero-badge">Welcome to the Future of Finance</div>
+    <h1 class="hero-title">
+      Simplify Your Life with
+      <span class="gradient-text">myHelperBuddy</span>
+    </h1>
+    <p class="hero-description">
+      The all-in-one intelligent platform for managing transactions, loans, tasks, and documents with ease and security.
+    </p>
+    <div class="hero-cta">
+      <a href="/signup/" class="btn-modern-primary">
+        Get Started Free
+        <i class="fas fa-arrow-right"></i>
+      </a>
+      <a href="/login" class="btn-modern-ghost">Sign In</a>
+    </div>
   </div>
+  
+  <!-- Floating Elements -->
+  <div class="float-element float-1"></div>
+  <div class="float-element float-2"></div>
+  <div class="float-element float-3"></div>
 </section>
 
-<section class="features py-5">
-  <div class="container text-center">
-    <h2 class="mb-4">What We Offer</h2>
-    <div class="row justify-content-center">
+<!-- Feature Highlights -->
+<section class="features-modern">
+  <div class="container-modern">
+    <div class="section-head">
+      <span class="section-label">Features</span>
+      <h2 class="section-title">Everything You Need, All In One Place</h2>
+    </div>
+    
+    <div class="features-grid-modern">
       {% for item in data %}
-      <div class="col-md-6 mb-4">
-        <div class="card shadow-sm border-0 rounded h-100 p-2">
-          <i class="fas {{item.icon}} fa-3x mb-3"></i>
-          <h3>{{item.title}}</h3>
-          <p>{{item.description}}</p>
+      <div class="feature-card-modern">
+        <div class="feature-icon-modern">
+          <i class="fas {{ item.icon }}"></i>
         </div>
+        <h3 class="feature-name">{{ item.title }}</h3>
+        <p class="feature-detail">{{ item.description }}</p>
       </div>
       {% endfor %}
     </div>
   </div>
 </section>
 
-<section class="why-choose py-5" style="background-color: #f7f7f7;">
-  <div class="container text-center">
-    <h2 class="mb-4">Why Choose myHelperBuddy?</h2>
-    <p class="lead">Effortlessly track your finances, tasks, and more with a simple, intuitive tool that adapts to your needs.</p>
-    <div class="row justify-content-center">
-      <div class="col-md-4 mb-4">
-        <h4 class="mb-3">Centralized Platform</h4>
-        <p>All your daily activities—financial records, task management, and more—are organized in one easy-to-use platform.</p>
+<!-- Benefits Section -->
+<section class="benefits-section">
+  <div class="container-modern">
+    <div class="benefits-grid">
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h4>Bank-Grade Security</h4>
+        <p>Your data is encrypted and protected with industry-leading security standards.</p>
       </div>
-      <div class="col-md-4 mb-4">
-        <h4 class="mb-3">Seamless Integration</h4>
-        <p>Track everything in real-time. With automated updates, you won’t miss important deadlines or payments.</p>
+      
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <i class="fas fa-sync-alt"></i>
+        </div>
+        <h4>Real-Time Sync</h4>
+        <p>All your information updates instantly across all modules and devices.</p>
       </div>
-      <div class="col-md-4 mb-4">
-        <h4 class="mb-3">Secure & Private</h4>
-        <p>Your data is stored securely with us. We take your privacy seriously and ensure your financial details stay protected.</p>
+      
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <h4>Smart Analytics</h4>
+        <p>Get insights into your spending patterns and financial health.</p>
       </div>
     </div>
-    <a href="/dashboard/" class="btn custom-btn-primary btn-lg mt-4">Start Managing Today</a>
+  </div>
+</section>
+
+<!-- CTA Footer -->
+<section class="cta-modern">
+  <div class="cta-content-modern">
+    <h2>Ready to Take Control?</h2>
+    <p>Join thousands of users who've simplified their financial management</p>
+    <a href="/signup/" class="btn-cta-large">Start Your Free Journey</a>
   </div>
 </section>
 
