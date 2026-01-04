@@ -30,7 +30,7 @@ class EmailService:
     
     def __init__(self):
         """Initialize email service with environment configuration."""
-        self.email_service_enabled = (settings.EMAIL_SERVICE == "1")
+        pass
     
     def send_email(
         self,
@@ -67,7 +67,7 @@ class EmailService:
             ...     is_html=True
             ... )
         """
-        if not self.email_service_enabled:
+        if not settings.EMAIL_SERVICE:
             print(f"[Email Service Offline] {subject} - Email not sent")
             return False
         

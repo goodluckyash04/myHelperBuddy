@@ -6,13 +6,9 @@ from decouple import config
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Create logs directory if not exists
-log_dir = BASE_DIR / "logs"
-log_dir.mkdir(exist_ok=True)
-
 # Security settings
 SECRET_KEY = config("SECRET_KEY")
-DEBUG = config("DEBUG", default="True", cast=lambda v: v.lower() in ("true", "1", "yes"))
+DEBUG = config("DEBUG", default=True, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="*").split(",") if not DEBUG else ["*"]
 
 # Application definition
@@ -167,13 +163,12 @@ LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/login'
 
 # Admin and user access controls
-ADMIN = config('ADMIN')
 ADMIN_EMAIL = config('ADMIN_EMAIL')
-ADMIN_ACCESS = bool(config('ADMIN_ACCESS'))
+ADMIN_ACCESS = config('ADMIN_ACCESS', default=False, cast=bool)
 
 # Site configuration
 SITE_URL = config('SITE_URL')
-EMAIL_SERVICE = config('EMAIL_SERVICE')
+EMAIL_SERVICE = config('EMAIL_SERVICE', default=False, cast=bool)
 STREAMLIT_URL = config('STREAMLIT_URL')
 
 # Google Drive API settings
