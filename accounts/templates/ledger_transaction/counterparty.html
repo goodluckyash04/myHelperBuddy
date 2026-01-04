@@ -2,43 +2,70 @@
 {% load static %}
 {% block body %}
 
-<h3 class="text-center my-3" style="color: var(--primary-dark-secondary);font-family: dancing script;" >Ledger Summary</h3>
-<div class="row mx-3 mt-3 table-responsive">
-  <table id="myTable" class="table table-hover table-striped">
-    <thead class="sticky-header bg-light">
-      <tr>
-        <th>Sr. No.</th>
-        <th scope="col">COUNTER PARTY</th>
-        <th scope="col">VIEW</th>
-        <th scope="col">TOTAL(₹.)</th>
-        <th scope="col">RECEIVABLES(₹.)</th>
-        <th scope="col">PAYABLE(₹.)</th>
-      </tr>
-    </thead>
-    <tbody style="max-height: 70vh; overflow-y: auto;" >
-      {% if receivables_payables %}
-      {% for i in receivables_payables %}
-      <tr>
-        <td scope="row">{{ forloop.counter }}</td>
-        <td ondblclick="openModal({{ forloop.counter }})"  >
-          <span id="counterparty-{{ forloop.counter }}" class="editable-cell"  data-counterparty="{{ i.counterparty }}">
-            {{ i.counterparty }}
-          </span>
-        </td>
-        <td><a class="btn text-decoration-none" style="color: var(--primary);" href="/ledger-transaction/{{ i.counterparty }}"><i class="fa-solid fa-book"></i></a></td>
-        <td class="{% if i.total > 0 %}text-success{% else %}text-danger{% endif %}">{{ i.total }}</td>
-        <td>{{ i.total_receivable }}</td>
-        <td>{{ i.total_payable }}</td>
-      </tr>
-      {% endfor %}
-      {% else %}
-      <tr>
-        <td colspan="8" class="text-center">No Records found</td>
-      </tr>
-      {% endif %}
-    </tbody>
-  </table>
+<h3 class="text-center my-4" style="color: var(--primary-dark-secondary); font-family: 'Dancing Script', cursive; font-weight: bold;">Ledger Summary</h3>
+
+<div class="card border-0 shadow-sm mx-3 mb-4" style="border-radius: 12px; overflow: hidden;">
+  <div class="table-responsive" style="max-height: 70vh;">
+    <table id="myTable" class="table table-hover align-middle mb-0">
+      <thead class="bg-light sticky-top" style="z-index: 1;">
+        <tr>
+          <th class="ps-3 text-secondary text-uppercase fw-bold" width="60" style="font-size: 0.75rem;">#</th>
+          <th class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Counter Party</th>
+          <th class="text-center text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Actions</th>
+          <th class="text-end text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Net Balance (₹)</th>
+          <th class="text-end text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Total Receivable (₹)</th>
+          <th class="text-end text-secondary text-uppercase fw-bold pe-3" style="font-size: 0.75rem;">Total Payable (₹)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if receivables_payables %}
+        {% for i in receivables_payables %}
+        <tr>
+          <td class="ps-3 text-muted">{{ forloop.counter }}</td>
+          <td>
+            <div class="d-flex align-items-center">
+              <div class="avatar-sm bg-light-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 32px; height: 32px;">
+                <i class="fa-solid fa-user" style="color: var(--primary);"></i>
+              </div>
+              <span id="counterparty-{{ forloop.counter }}" 
+                    class="fw-bold text-dark cursor-pointer editable-cell" 
+                    data-counterparty="{{ i.counterparty }}"
+                    ondblclick="openModal({{ forloop.counter }})"
+                    title="Double click to edit name">
+                {{ i.counterparty }}
+              </span>
+            </div>
+          </td>
+          <td class="text-center">
+            <a href="/ledger-transaction/{{ i.counterparty }}" class="btn btn-sm custom-btn-primary rounded-pill px-3">
+              <i class="fa-solid fa-book-open me-1"></i> View
+            </a>
+          </td>
+          <td class="text-end fw-bold font-monospace {% if i.total > 0 %}text-success{% elif i.total < 0 %}text-danger{% else %}text-muted{% endif %}">
+            {{ i.total }}
+          </td>
+          <td class="text-end text-info fw-medium font-monospace">{{ i.total_receivable }}</td>
+          <td class="text-end text-danger fw-medium font-monospace pe-3">{{ i.total_payable }}</td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center py-5 text-muted">
+             <i class="fa-solid fa-folder-open fa-3x mb-3 opacity-50"></i>
+             <p>No ledger records found</p>
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
 </div>
+
+<style>
+.bg-light-primary { background-color: rgba(13, 110, 253, 0.1); }
+.cursor-pointer { cursor: pointer; }
+.table thead th { border-bottom: 2px solid #edf2f9; }
+</style>
 
 <!-- Modal -->
 <div class="modal" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">

@@ -1,111 +1,212 @@
-<!-- Add Reminder Modal -->
- {% load static %}
-<div
-  class="modal fade"
-  id="reminderModal"
-  tabindex="-1"
-  aria-labelledby="reminderModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog modal-dialog-centered">
+<!-- Enhanced Add Reminder Modal -->
+{% load static %}
+<style>
+/* Reminder Modal Custom Styling */
+.reminder-type-btn {
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.reminder-type-btn.active {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: white;
+    border-color: var(--primary);
+    transform: scale(1.05);
+}
+
+.priority-btn {
+    transition: all 0.3s ease;
+    border: 3px solid transparent;
+    font-weight: 600;
+}
+
+.priority-btn.active {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.priority-btn.critical { border-color: #EF4444; color: #EF4444; }
+.priority-btn.critical.active { background: #EF4444; color: white; }
+
+.priority-btn.high { border-color: #F59E0B; color: #F59E0B; }
+.priority-btn.high.active { background: #F59E0B; color: white; }
+
+.priority-btn.medium { border-color: #FBBF24; color: #FBBF24; }
+.priority-btn.medium.active { background: #FBBF24; color: white; }
+
+.priority-btn.low { border-color: #3B82F6; color: #3B82F6; }
+.priority-btn.low.active { background: #3B82F6; color: white; }
+
+.weekday-checkbox {
+    display: none;
+}
+
+.weekday-label {
+    display: inline-block;
+    padding: 8px 16px;
+    border: 2px solid #DEE2E6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.weekday-checkbox:checked + .weekday-label {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+</style>
+
+<div class="modal fade" id="reminderModal" tabindex="-1" aria-labelledby="reminderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title fs-5" id="reminderModalLabel">Reminder</h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
+      <div class="modal-header" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white;">
+        <h5 class="modal-title" id="reminderModalLabel" style="font-family: 'Dancing Script';">
+          <i class="fa-solid fa-bell"></i> Create Smart Reminder
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
+      
+      <div class="modal-body p-4">
         <form action="/create-reminder/" method="post" id="reminderForm">
           {% csrf_token %}
 
           <!-- Reminder Title -->
           <div class="mb-3">
-            <label for="title" class="form-label">Reminder Title</label>
-            <input
-              type="text"
-              class="form-control shadow-sm"
-              name="title"
-              id="title"
-              placeholder="Enter reminder title"
-              required
-            />
+            <label for="title" class="form-label fw-bold">
+              <i class="fa-solid fa-heading"></i> Title
+            </label>
+            <input type="text" class="form-control" name="title" id="title" placeholder="Enter reminder title" required />
           </div>
 
-          <!-- Reminder Description -->
-          <div class="form-floating mb-3">
-            <textarea
-              class="form-control shadow-sm"
-              name="description"
-              id="description"
-              placeholder="Enter reminder details"
-              style="height: 100px"
-              required
-            ></textarea>
-            <label for="description">Reminder Detail</label>
-          </div>
-
-          <!-- Reminder Start Date -->
+          <!-- Priority Picker -->
           <div class="mb-3">
-            <label for="reminder_date" class="form-label">Reminder Date</label>
-            <input
-              type="date"
-              class="form-control shadow-sm"
-              name="reminder_date"
-              id="reminder_date"
-              required
-            />
+            <label class="form-label fw-bold">
+              <i class="fa-solid fa-star"></i> Priority
+            </label>
+            <div class="d-flex gap-2 flex-wrap">
+              <button type="button" class="btn priority-btn critical" data-priority="critical">
+                🔴 Critical
+              </button>
+              <button type="button" class="btn priority-btn high" data-priority="high">
+                🟠 High
+              </button>
+              <button type="button" class="btn priority-btn medium active" data-priority="medium">
+                🟡 Medium
+              </button>
+              <button type="button" class="btn priority-btn low" data-priority="low">
+                🔵 Low
+              </button>
+            </div>
+            <input type="hidden" name="priority" id="priorityInput" value="medium" />
           </div>
 
-          <!-- Frequency Selection -->
           <div class="mb-3">
-            <label for="frequency" class="form-label">Frequency</label>
-            <select
-              class="form-select shadow-sm"
-              name="frequency"
-              id="frequency"
-              aria-label="Select reminder frequency"
-              required
-            >
-              <option value="" disabled selected>-- Select Frequency --</option>
-              <option value="daily">Daily</option>
-              <option value="monthly">Monthly</option>
-              <option value="yearly">Yearly</option>
-              <option value="custom">Custom</option>
-            </select>
+            <label class="form-label fw-bold">
+              <i class="fa-solid fa-repeat"></i> Type
+            </label>
+            <div class="btn-group w-100 d-flex flex-wrap" role="group">
+              <input type="radio" class="btn-check" name="reminder_type" id="typeOnce" value="one_time" checked />
+              <label class="btn btn-outline-primary btn-sm reminder-type-btn" for="typeOnce">📌 Once</label>
+
+              <input type="radio" class="btn-check" name="reminder_type" id="typeDaily" value="daily" />
+              <label class="btn btn-outline-primary btn-sm reminder-type-btn" for="typeDaily">🔁 Daily</label>
+
+              <input type="radio" class="btn-check" name="reminder_type" id="typeWeekly" value="weekly" />
+              <label class="btn btn-outline-primary btn-sm reminder-type-btn" for="typeWeekly">📅 Weekly</label>
+
+              <input type="radio" class="btn-check" name="reminder_type" id="typeMonthly" value="monthly" />
+              <label class="btn btn-outline-primary btn-sm reminder-type-btn" for="typeMonthly">📆 Monthly</label>
+
+              <input type="radio" class="btn-check" name="reminder_type" id="typeYearly" value="yearly" />
+              <label class="btn btn-outline-primary btn-sm reminder-type-btn" for="typeYearly">🎂 Yearly</label>
+
+              <input type="radio" class="btn-check" name="reminder_type" id="typeCustom" value="custom" />
+              <label class="btn btn-outline-primary btn-sm reminder-type-btn" for="typeCustom">🔄 Custom</label>
+            </div>
           </div>
 
-          <!-- Custom Repeat Days (only visible if Custom frequency is selected) -->
-          <div
-            class="mb-3"
-            id="customRepeatDaysContainer"
-            style="display: none"
-          >
-            <label for="custom_repeat_days" class="form-label"
-              >Custom Repeat (Days)</label
-            >
-            <input
-              type="number"
-              class="form-control"
-              name="custom_repeat_days"
-              id="custom_repeat_days"
-              placeholder="Enter number of days"
-              min="1"
-            />
+          <!-- Date & Time -->
+          <div class="row mb-3">
+            <div class="col-md-8">
+              <label for="reminder_date" class="form-label fw-bold">
+                <i class="fa-solid fa-calendar"></i> Date
+              </label>
+              <input type="date" class="form-control" name="reminder_date" id="reminder_date" required />
+            </div>
+            <div class="col-md-4">
+              <label for="reminder_time" class="form-label fw-bold">
+                <i class="fa-solid fa-clock"></i> Time
+              </label>
+              <input type="time" class="form-control" name="reminder_time" id="reminder_time" />
+            </div>
+          </div>
+
+          <!-- Weekly Selector (hidden by default) -->
+          <div class="mb-3" id="weeklySelector" style="display: none;">
+            <label class="form-label fw-bold">Select Days</label>
+            <div class="d-flex gap-2 flex-wrap">
+              <input type="checkbox" class="weekday-checkbox" name="weekdays" id="mon" value="0" />
+              <label for="mon" class="weekday-label">Mon</label>
+
+              <input type="checkbox" class="weekday-checkbox" name="weekdays" id="tue" value="1" />
+              <label for="tue" class="weekday-label">Tue</label>
+
+              <input type="checkbox" class="weekday-checkbox" name="weekdays" id="wed" value="2" />
+              <label for="wed" class="weekday-label">Wed</label>
+
+              <input type="checkbox" class="weekday-checkbox" name="weekdays" id="thu" value="3" />
+              <label for="thu" class="weekday-label">Thu</label>
+
+              <input type="checkbox" class="weekday-checkbox" name="weekdays" id="fri" value="4" />
+              <label for="fri" class="weekday-label">Fri</label>
+
+              <input type="checkbox" class="weekday-checkbox" name="weekdays" id="sat" value="5" />
+              <label for="sat" class="weekday-label">Sat</label>
+
+              <input type="checkbox" class="weekday-checkbox" name="weekdays" id="sun" value="6" />
+              <label for="sun" class="weekday-label">Sun</label>
+            </div>
+          </div>
+
+          <!-- Monthly Selector (hidden by default) -->
+          <div class="mb-3" id="monthlySelector" style="display: none;">
+            <label class="form-label fw-bold">Select Days of Month</label>
+            <div class="d-flex gap-1 flex-wrap">
+              <!-- Days 1-31 checkboxes -->
+              <script>
+                for (let i = 1; i <= 31; i++) {
+                  document.write(`
+                    <input type="checkbox" class="weekday-checkbox" name="month_days" id="day${i}" value="${i}" />
+                    <label for="day${i}" class="weekday-label" style="padding: 4px 8px; font-size: 0.85rem;">${i}</label>
+                  `);
+                }
+              </script>
+            </div>
+          </div>
+
+          <!-- Custom Repeat Days -->
+          <div class="mb-3" id="customRepeatContainer" style="display: none;">
+            <label for="custom_repeat_days" class="form-label fw-bold">Repeat Every (days)</label>
+            <input type="number" class="form-control" name="custom_repeat_days" id="custom_repeat_days" placeholder="Enter number of days" min="1" />
+          </div>
+
+          <!-- Description -->
+          <div class="mb-3">
+            <label for="description" class="form-label fw-bold">
+              <i class="fa-solid fa-align-left"></i> Description (Optional)
+            </label>
+            <textarea class="form-control" name="description" id="description" rows="3" placeholder="Add details..."></textarea>
           </div>
 
           <!-- Submit Button -->
-          <div class="d-flex justify-content-center">
-          <button
-            type="submit"
-            id="submitButton"
-            class="btn custom-btn-primary w-100 shadow-sm"
-          >
-            <i class="fa-solid fa-plus-circle"></i> Add Reminder
-          </button>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+              Cancel
+            </button>
+            <button type="submit" class="btn custom-btn-primary">
+              <i class="fa-solid fa-plus-circle"></i> Create Reminder
+            </button>
           </div>
         </form>
       </div>
@@ -113,5 +214,35 @@
   </div>
 </div>
 
-<!-- Optional: JavaScript for Frequency Selection -->
-<script src="{% static 'js/reminder.js' %}"></script>
+<script>
+// Priority selection
+document.querySelectorAll('.priority-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    document.getElementById('priorityInput').value = this.getAttribute('data-priority');
+  });
+});
+
+// Type selection - Show/hide relevant selectors
+document.querySelectorAll('input[name="reminder_type"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    // Hide all pattern selectors
+    document.getElementById('weeklySelector').style.display = 'none';
+    document.getElementById('monthlySelector').style.display = 'none';
+    document.getElementById('customRepeatContainer').style.display = 'none';
+
+    // Show relevant selector based on type
+    if (this.value === 'weekly') {
+      document.getElementById('weeklySelector').style.display = 'block';
+    } else if (this.value === 'monthly') {
+      document.getElementById('monthlySelector').style.display = 'block';
+    } else if (this.value === 'custom') {
+      document.getElementById('customRepeatContainer').style.display = 'block';
+    }
+  });
+});
+
+// Set default date to today
+document.getElementById('reminder_date').valueAsDate = new Date();
+</script>

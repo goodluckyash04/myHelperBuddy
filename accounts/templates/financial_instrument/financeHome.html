@@ -2,145 +2,286 @@
 {% load static %}
 {% block body %}
 <style>
-    .card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+/* Card Animations & Hover Effects */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
 }
 
 .card-body {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.2s ease;
 }
 
-.card-body:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+/* Progress Bar Animations */
+.progress {
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
 }
 
+.progress-bar {
+    transition: width 0.6s ease;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+}
+
+/* Badge Enhancements */
+.badge {
+    font-weight: 600;
+    transition: transform 0.2s ease;
+}
+
+.badge:hover {
+    transform: scale(1.05);
+}
+
+/* Button Enhancements */
+.btn {
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Search Input Enhancement */
+.form-control:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.2rem rgba(94, 134, 1, 0.25);
+}
+
+/* Status Badge Pulse Animations */
+.badge.bg-danger {
+    animation: pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
+.badge.bg-warning {
+    animation: pulse-yellow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-yellow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); }
+    50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+}
+
+/* Smooth Scroll */
+ html {
+    scroll-behavior: smooth;
+}
+
+/* Empty State Animation */
+.empty-state {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive - Disable animations on mobile */
+@media (max-width: 768px) {
+    .card:hover { transform: none; }
+    .btn:hover { transform: none; }
+}
 </style>
-<div class="row justify-content-between mt-3 mx-3">
-    <div class="d-flex col-md-6 col-sm-6">
-        <button id="currentlyOpenBtn" class="btn custom-btn-primary my-2 border-0 rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#openFinance" aria-expanded="true" aria-controls="openFinance">
-            Currently Open
+<!-- Page Header with Search -->
+<div class="container-fluid px-4 py-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 style="color: var(--primary); font-family: 'Dancing Script';">
+      <i class="fa-solid fa-landmark"></i> Financial Instruments
+    </h2>
+    <form action="/finance-details" method="get" class="d-flex" role="search" style="width: 350px;">
+      <div class="input-group">
+        <input class="form-control rounded-pill" name="search" type="search" value="{{search_query}}" placeholder="Search instruments..." aria-label="Search">
+        <button class="btn custom-btn-primary rounded-pill ms-1" type="submit">
+          <i class="fa-solid fa-magnifying-glass"></i>
         </button>
-        <button id="closedBtn" class="btn custom-btn-danger my-2 border-0 rounded-pill mx-2" type="button" data-bs-toggle="collapse" data-bs-target="#closedFinance" aria-expanded="false" aria-controls="closedFinance">
-            Closed
-        </button>
-        <a href="/finance-details" class="btn btn-light my-2 fs-4 border-0 rounded-circle">
-            <i class="fa-solid fa-xmark text-secondary"></i>
-        </a>
-    </div>
-    <form action="/finance-details" method="get" class="d-flex my-2 col-md-4 col-sm-4" role="search">
-        <div class="input-group">
-            <input class="form-control rounded-pill" name="search" type="search" value="{{search_query}}" placeholder="Search" aria-label="Search">
-            <button class="btn custom-btn-primary rounded-pill ms-1" type="submit">
-                <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
-        </div>
+      </div>
     </form>
+  </div>
 </div>
 
-<div class="collapse show" id="openFinance">
-    <div class="row m-3">
+<!-- Include Dashboard Stats -->
+{% include 'financial_instrument/dashboard_stats.html' %}
+
+<!-- Include Notification Banner -->
+{% include 'financial_instrument/notification_banner.html' %}
+
+<!-- Include Advanced Filters -->
+{% include 'financial_instrument/advanced_filters.html' %}
+
+<!-- All Instruments Grid (Filtered) -->
+<div class="container-fluid px-4">
+  <div class="row g-3">
         {% for i in details %}
         {% if i.status == "Open" %}
-        <div class="col-12 col-md-3 mb-3">
-            <a class="text-decoration-none" href="/fetch-financial-transaction/{{ i.id }}">
-                <div class="card shadow rounded-3">
-                    <div class="card-body p-4" style="background: rgba(94, 134, 1, 0.108)">
-                        <div class="d-flex justify-content-between">
-                            <h5 class="card-title text-start" style="color: var(--primary-dark-four); font-size: 1.2rem; font-weight: 600;">
-                                {{ i.name | title | truncatechars:25 }}
-                            </h5>
-                            <a href="" data-bs-toggle="modal" data-bs-target="#financeModal" onclick="openModalAndGetInstrument({{ i.id }})" class="btn border-0 p-0 fs-5 text-primary" aria-label="Edit">
-                                <i class="fa-regular fa-pen-to-square" style="color: var(--primary-dark-secondary);" ></i>                            </a>
+        <div class="col-12 col-md-4 col-lg-3 mb-3">
+            <div class="card shadow-sm rounded-3 h-100" style="border-left: 4px solid {% if i.type == 'Loan' %}#8B5CF6{% elif i.type == 'SIP' %}#10B981{% else %}#F59E0B{% endif %};">
+                <div class="card-body p-3">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1" style="font-weight: 700; font-size: 1rem;">
+                                {% if i.type == "Loan" %}
+                                <i class="fa-solid fa-landmark" style="color: #8B5CF6;"></i>
+                                {% elif i.type == "SIP" %}
+                                <i class="fa-solid fa-chart-line" style="color: #10B981;"></i>
+                                {% else %}
+                                <i class="fa-solid fa-bolt" style="color: #F59E0B;"></i>
+                                {% endif %}
+                                {{ i.name | title | truncatechars:22 }}
+                            </h6>
+                            <small class="text-muted">{{ i.type }}</small>
                         </div>
-        
-                        <div class="d-flex justify-content-between text-secondary">
-                            <p class="card-text col-6 text-start" style="font-size: 0.9rem;">
-                                {{ i.started_on | date:"d M Y" }} | {{ i.status }}
-                            </p>
-                            <p class="card-text col-5 text-end" style="font-size: 0.9rem;">₹ {{ i.remaining_amount }} | {{ i.remaining_installments }}</p>
-                        </div>
-        
-                        <div class="d-flex justify-content-between mt-3">
-                            <div class="d-flex align-items-center">
-                                <a class="btn p-0 fs-5 text-start" aria-label="Loan Type">
-                                    {% if i.type == "Loan" %}
-                                    <i class="fa-solid fa-landmark" style="color: #7c135b;"></i>
-                                    {% elif i.type == "Split" %}
-                                    <i class="fa-solid fa-bolt" style="color: var(--primary)"></i>
-                                    {% else %}
-                                    <i class="fa-solid fa-hand-holding-dollar" style="color: #367864;"></i>
-                                    {% endif %}
-                                </a>
-                            </div>
-                            <div class="d-flex align-items-center">
+                        <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#financeModal" onclick="openModalAndGetInstrument({{ i.id }})" aria-label="Edit">
+                            <i class="fa-solid fa-edit"></i>
+                        </button>
+                    </div>
 
-                                <a href="/update-instrument-status/{{ i.id }}" class="btn p-0 fs-5 text-warning" aria-label="Closed Status">
-                                    <i class="fa-solid fa-lock" style="color: #e24081;"></i>
-                                </a>
-                                <a href="/remove-instrument/{{ i.id }}" class="btn p-0 fs-5 text-danger" aria-label="Delete Instrument">
-                                    <i class="fa-solid fa-trash"></i>
-                                </a>
+                    <!-- Status Badge -->
+                    <div class="mb-2">
+                        <span class="badge {{ i.badge_class }} px-2 py-1" style="font-size: 0.75rem;">
+                            {% if i.badge_status == "Overdue" %}⚠️{% elif i.badge_status == "Due Soon" %}📅{% elif i.badge_status == "Paid" %}✅{% else %}✓{% endif %}
+                            {{ i.badge_status }}
+                        </span>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">Progress</small>
+                            <small style="font-weight: 600;">{{ i.completion_percentage }}%</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ i.completion_percentage }}%; background: linear-gradient(90deg, {% if i.type == 'Loan' %}#8B5CF6{% elif i.type == 'SIP' %}#10B981{% else %}#F59E0B{% endif %} 0%, {% if i.type == 'Loan' %}#A78BFA{% elif i.type == 'SIP' %}#34D399{% else %}#FBBF24{% endif %} 100%);"
+                                 aria-valuenow="{{ i.completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
                             </div>
                         </div>
                     </div>
-                </div>
-            </a>
-        </div>
-        
-        {% endif %}
-        {% endfor %}
-    </div>
-</div>
 
-<div class="collapse" id="closedFinance">
-    <div class="row m-3">
-        {% for i in details %}
-        {% if i.status == "Closed" %}
-        <div class="col-12 col-md-3 mb-3">
-            <a class="text-decoration-none" href="/fetch-financial-transaction/{{ i.id }}">
-                <div class="card shadow rounded-3">
-                    <div class="card-body p-4" style="background: linear-gradient(to bottom right, #f5f5f5, #dcdcdc);">
+                    <!-- Amount Info -->
+                    <div class="mb-3">
                         <div class="d-flex justify-content-between">
-                            <h5 class="card-title text-start" style="color: var(--primary-dark-four); font-size: 1.2rem; font-weight: 600;">
-                                {{ i.name | title | truncatechars:25 }}
-                            </h5>
-                            <a href="" data-bs-toggle="modal" class="btn border-0 p-0 fs-5 text-muted" aria-label="View Details">
-                                <i class="fa-solid fa-eye"></i>
+                            <div>
+                                <small class="text-muted d-block">Outstanding</small>
+                                <strong style="font-size: 1.1rem;">₹ {{ i.remaining_amount|floatformat:0 }}</strong>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted d-block">Installments</small>
+                                <strong>{{ i.remaining_installments }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Next Payment -->
+                    {% if i.next_payment_date %}
+                    <div class="mb-3 p-2 rounded" style="background-color: rgba(0,0,0,0.03);">
+                        <small class="text-muted d-block">Next Payment</small>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span style="font-size: 0.85rem; font-weight: 600;">{{ i.next_payment_date|date:"d M Y" }}</span>
+                            <span style="font-weight: 700; color: {% if i.type == 'Loan' %}#8B5CF6{% elif i.type == 'SIP' %}#10B981{% else %}#F59E0B{% endif %};">₹ {{ i.next_payment_amount|floatformat:0 }}</span>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <a href="/fetch-financial-transaction/{{ i.id }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fa-solid fa-eye"></i> Details
+                        </a>
+                        <div>
+                            <a href="/update-instrument-status/{{ i.id }}" class="btn btn-sm btn-outline-secondary" title="Close">
+                                <i class="fa-solid fa-lock"></i>
+                            </a>
+                            <a href="/remove-instrument/{{ i.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete {{ i.name }}?')" title="Delete">
+                                <i class="fa-solid fa-trash"></i>
                             </a>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         
-                        <div class="d-flex justify-content-between text-secondary">
-                            <p class="card-text col-6 text-start" style="font-size: 0.9rem;">
-                                {{ i.started_on | date:"d M Y" }} | {{ i.status }}
-                            </p>
-                            <p class="card-text col-5 text-end" style="font-size: 0.9rem;">₹ {{ i.remaining_amount }} | {{ i.remaining_installments }}</p>
+        
+        {% elif i.status == "Closed" %}
+        <div class="col-12 col-md-4 col-lg-3 mb-3">
+            <div class="card shadow-sm rounded-3 h-100" style="border-left: 4px solid #6B7280; opacity: 0.85;">
+                <div class="card-body p-3" style="background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1 text-muted" style="font-weight: 700; font-size: 1rem;">
+                                <i class="fa-solid fa-check-circle" style="color: #6B7280;"></i>
+                                {{ i.name | title | truncatechars:22 }}
+                            </h6>
+                            <small class="text-muted">{{ i.type }} - Closed</small>
                         </div>
-        
-                        <div class="d-flex justify-content-between mt-3">
-                            <div class="d-flex align-items-center">
-                                <a class="btn p-0 fs-5 text-start" aria-label="Loan Type">
-                                     {% if i.type == "Loan" %}
-                                    <i class="fa-solid fa-landmark" style="color: #7c135b;"></i>
-                                    {% elif i.type == "Split" %}
-                                    <i class="fa-solid fa-bolt" style="color: var(--primary)"></i>
-                                    {% else %}
-                                    <i class="fa-solid fa-hand-holding-dollar" style="color: #367864;"></i>
-                                    {% endif %}
-                                </a>
-                            </div>
-                            <div class="d-flex align-items-center">
-                                <a href="/update-instrument-status/{{ i.id }}" class="btn p-0 fs-5 text-success" aria-label="Update Status">
-                                    <i class="fa-solid fa-lock-open"></i>
-                                </a>
-                                <a href="/remove-instrument/{{ i.id }}" class="btn p-0 fs-5 text-danger" aria-label="Delete Instrument">
-                                    <i class="fa-solid fa-trash"></i>
-                                </a>
-                            </div>
+                        <a href="/fetch-financial-transaction/{{ i.id }}" class="btn btn-link p-0 text-muted" aria-label="View">
+                            <i class="fa-solid fa-eye"></i>
+                        </a>
+                    </div>
+
+                    <!-- Completed Badge -->
+                    <div class="mb-2">
+                        <span class="badge bg-secondary px-2 py-1" style="font-size: 0.75rem;">
+                            ✅ Completed
+                        </span>
+                    </div>
+
+                    <!-- Progress Bar (100%) -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted">Progress</small>
+                            <small style="font-weight: 600; color: #10B981;">100%</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                    <!-- Start Date Info -->
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Started On</small>
+                        <span style="font-size: 0.95rem;">{{ i.started_on|date:"d M Y" }}</span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <a href="/fetch-financial-transaction/{{ i.id }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa-solid fa-eye"></i> View History
+                        </a>
+                        <div>
+                            <a href="/update-instrument-status/{{ i.id }}" class="btn btn-sm btn-outline-success" title="Reopen">
+                                <i class="fa-solid fa-lock-open"></i>
+                            </a>
+                            <a href="/remove-instrument/{{ i.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete {{ i.name }}?')" title="Delete">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
-            </a>
+            </div>
         </div>
         
         {% endif %}
