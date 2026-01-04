@@ -79,8 +79,11 @@ from .views.view_ledger_transaction import (
 from .views.view_reminder import (
     add_reminder,
     cancel_reminder,
+    dismiss_reminder,
     reminder_list,
+    snooze_reminder,
     todays_reminder,
+    update_reminder,
 )
 
 # ============================================================================
@@ -229,9 +232,12 @@ urlpatterns = [
     # Reminder Management
     # ========================================================================
     path("create-reminder/", add_reminder, name="add_reminder"),
+    path("update-reminder/<int:id>/", update_reminder, name="update_reminder"),
     path("view-today-reminder/", todays_reminder, name="todays-reminder"),
     path("view-reminder/", reminder_list, name="view-reminders"),
     path("cancel-reminder/<int:id>", cancel_reminder, name="cancel-reminder"),
+    path("snooze-reminder/<int:id>/<int:hours>/", snooze_reminder, name="snooze-reminder"),
+    path("dismiss-reminder/<int:id>/", dismiss_reminder, name="dismiss-reminder"),
     
     # ========================================================================
     # Document Management

@@ -32,18 +32,14 @@ from accounts.models import Reminder
 @login_required
 def add_reminder(request: HttpRequest) -> HttpResponse:
     """
-    Create a new reminder with specified frequency pattern.
+    Create a new reminder with smart types and priority.
     
-    Frequency Options:
-        - Daily: Repeats every day
-        - Monthly: Repeats on same day each month
-        - Yearly: Repeats on same date each year
-        - Custom: Repeats every N days (custom_repeat_days)
-    
-    Features:
-        - Duplicate detection (same title + date)
-        - Custom repeat interval support
-        - Auto-validation
+    Supports:
+        - 7 reminder types (one-time, daily, weekly, monthly, custom, linked)
+        - 4 priority levels (critical, high, medium, low)
+        - Weekly patterns with weekday selection
+        - Monthly patterns with day selection
+        - Linked to tasks or finance products
     
     Args:
         request: HTTP POST request with reminder details
@@ -61,8 +57,23 @@ def add_reminder(request: HttpRequest) -> HttpResponse:
     title = request.POST.get('title', '').strip()
     description = request.POST.get('description', '').strip()
     reminder_date_str = request.POST.get('reminder_date')
-    frequency = request.POST.get('frequency', Reminder.DAILY)
+    reminder_time_str = request.POST.get('reminder_time', '')
+    
+    # New fields
+    reminder_type = request.POST.get('reminder_type', Reminder.ONE_TIME)
+    priority = request.POST.get('priority', Reminder.MEDIUM)
+    
+    # Recurring pattern fields
+    weekdays_list = request.POST.getlist('weekdays')  # For weekly
+    month_days_list = request.POST.getlist('month_days')  # For monthly
     custom_repeat_days = request.POST.get('custom_repeat_days')
+    
+    # Linked items
+    linked_task_id = request.POST.get('linked_task')
+    linked_finance_id = request.POST.get('linked_finance')
+    
+    # Legacy support
+    frequency = request.POST.get('frequency', Reminder.DAILY)
     
     # Validate required fields
     if not title or not reminder_date_str:
@@ -70,14 +81,28 @@ def add_reminder(request: HttpRequest) -> HttpResponse:
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
     
     try:
-        # Parse reminder date
+        # Parse dates
         reminder_date = timezone.datetime.strptime(reminder_date_str, "%Y-%m-%d").date()
+        reminder_time = None
+        if reminder_time_str:
+            reminder_time = timezone.datetime.strptime(reminder_time_str, "%H:%M").time()
+        
+        # Process weekdays for weekly reminders
+        weekdays = None
+        if reminder_type == Reminder.WEEKLY and weekdays_list:
+            weekdays = [int(day) for day in weekdays_list]
+        
+        # Process month days for monthly reminders
+        month_days = None
+        if reminder_type == Reminder.MONTHLY_TYPE and month_days_list:
+            month_days = [int(day) for day in month_days_list]
         
         # Check for duplicate reminder
         existing_reminder = Reminder.objects.filter(
             title=title,
             reminder_date=reminder_date,
-            created_by=user
+            created_by=user,
+            is_deleted=False
         ).first()
         
         if existing_reminder:
@@ -92,19 +117,76 @@ def add_reminder(request: HttpRequest) -> HttpResponse:
             title=title,
             description=description,
             reminder_date=reminder_date,
-            frequency=frequency,
-            created_by=user,
-            custom_repeat_days=int(custom_repeat_days) if frequency == 'custom' and custom_repeat_days else None
+            reminder_time=reminder_time,
+            reminder_type=reminder_type,
+            priority=priority,
+            weekdays=weekdays,
+            month_days=month_days,
+            frequency=frequency,  # For backward compatibility
+            custom_repeat_days=int(custom_repeat_days) if custom_repeat_days else None,
+            linked_task_id=linked_task_id if linked_task_id else None,
+            linked_finance_id=linked_finance_id if linked_finance_id else None,
+            created_by=user
         )
         
-        messages.success(request, f"Reminder '{title}' added successfully")
+        priority_icon = reminder.get_priority_icon()
+        messages.success(request, f"{priority_icon} Reminder '{title}' added successfully")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
         
     except ValueError as e:
         messages.error(request, f"Invalid date format: {str(e)}")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
     except Exception as e:
-        messages.error(request, "An unexpected error occurred")
+        messages.error(request, f"An error occurred: {str(e)}")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
+@login_required
+def update_reminder(request: HttpRequest, id: int) -> HttpResponse:
+    """Update an existing reminder."""
+    user = request.user
+    if request.method != "POST":
+        messages.error(request, "Invalid request method")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    try:
+        reminder = Reminder.objects.filter(created_by=user, id=id, is_deleted=False).first()
+        if not reminder:
+            messages.error(request, "Reminder not found")
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        reminder_date_str = request.POST.get('reminder_date')
+        reminder_time_str = request.POST.get('reminder_time', '')
+        reminder_type = request.POST.get('reminder_type', Reminder.ONE_TIME)
+        priority = request.POST.get('priority', Reminder.MEDIUM)
+        weekdays_list = request.POST.getlist('weekdays')
+        month_days_list = request.POST.getlist('month_days')
+        custom_repeat_days = request.POST.get('custom_repeat_days')
+        
+        if not title or not reminder_date_str:
+            messages.error(request, "Title and date are required")
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        
+        reminder.title = title
+        reminder.description = description
+        reminder.reminder_date = timezone.datetime.strptime(reminder_date_str, "%Y-%m-%d").date()
+        reminder.reminder_time = timezone.datetime.strptime(reminder_time_str, "%H:%M").time() if reminder_time_str else None
+        reminder.reminder_type = reminder_type
+        reminder.priority = priority
+        reminder.weekdays = [int(day) for day in weekdays_list] if weekdays_list else None
+        reminder.month_days = [int(day) for day in month_days_list] if month_days_list else None
+        reminder.custom_repeat_days = int(custom_repeat_days) if custom_repeat_days else None
+        reminder.is_snoozed = False
+        reminder.snoozed_until = None
+        reminder.is_dismissed = False
+        reminder.dismissed_at = None
+        reminder.save()
+        
+        messages.success(request, f"{reminder.get_priority_icon()} Reminder '{title}' updated successfully")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    except Exception as e:
+        messages.error(request, f"Error: {str(e)}")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
 
@@ -201,6 +283,85 @@ def cancel_reminder(request: HttpRequest, id: int) -> HttpResponse:
         reminder.save()
         
         messages.success(request, f"Reminder '{reminder.title}' cancelled")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        
+    except Exception as e:
+        messages.error(request, "An unexpected error occurred")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
+@login_required
+def snooze_reminder(request: HttpRequest, id: int, hours: int) -> HttpResponse:
+    """
+    Snooze a reminder for specified hours.
+    
+    Args:
+        request: HTTP request
+        id: Reminder ID
+        hours: Number of hours to snooze
+        
+    Returns:
+        HttpResponse: JSON response or redirect
+    """
+    user = request.user
+    
+    try:
+        reminder = Reminder.objects.filter(
+            created_by=user,
+            id=id,
+            is_deleted=False
+        ).first()
+        
+        if not reminder or not reminder.can_snooze():
+            messages.error(request, "Cannot snooze this reminder")
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        reminder.is_snoozed = True
+        reminder.snoozed_until = timezone.now() + timedelta(hours=hours)
+        reminder.save()
+        
+        messages.success(request, f"Reminder snoozed for {hours} hour(s)")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        
+    except Exception as e:
+        messages.error(request, "An error occurred")
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
+@login_required
+def dismiss_reminder(request: HttpRequest, id: int) -> HttpResponse:
+    """
+    Dismiss a reminder (mark as seen).
+    
+    Args:
+        request: HTTP request
+        id: Reminder ID
+        
+    Returns:
+        HttpResponse: Redirect with success/error message
+    """
+    user = request.user
+    
+    try:
+        reminder = Reminder.objects.filter(
+            created_by=user,
+            id=id,
+            is_deleted=False
+        ).first()
+        
+        if not reminder:
+            messages.error(request, "Reminder not found")
+            return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        
+        from django.utils import timezone
+        reminder.is_dismissed = True
+        reminder.dismissed_at = timezone.now()
+        reminder.save()
+        
+        messages.success(request, f"Reminder '{reminder.title}' dismissed")
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
         
     except Exception as e:
