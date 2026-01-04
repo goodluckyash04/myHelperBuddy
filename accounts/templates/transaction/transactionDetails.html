@@ -6,23 +6,27 @@
 
 <!-- Keyword Display -->
 {% if key %}
-    <p class="mt-3 ms-5 text-secondary">Keyword : <b><span id="key" style="color: var(--primary-dark);">{{ key }}</span></b></p>
+    <div class="px-4 mt-3">
+        <span class="text-secondary small text-uppercase fw-bold">Active Filter:</span>
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">{{ key }}</span>
+    </div>
 {% elif data %}
-    <p class="mt-3 ms-5 text-secondary">Keywords:
+    <div class="px-4 mt-3">
+        <span class="text-secondary small text-uppercase fw-bold">Active Filters:</span>
         {% for j, i in data.items %}
             {% if i != "" %}
                 {% if j == "type" %}
                     {% for item in i %}
-                        <b><span id="key" style="color: var(--primary-dark);">{{ item }},</span></b>
+                        <span class="badge bg-light text-dark border ms-1">{{ item }}</span>
                     {% endfor %}
                 {% else %}
-                    <b><span id="key" style="color: var(--primary-dark);">{{ i }},</span></b>
+                    <span class="badge bg-light text-dark border ms-1">{{ i }}</span>
                 {% endif %}
             {% endif %}
         {% endfor %}
-    </p>
+    </div>
 {% else %}
-    <span id="key" class="text-success visually-hidden">mhb_transactions</span>
+    <span id="key" class="visually-hidden">mhb_transactions</span>
 {% endif %}
 
 <!-- Transaction summary Table -->

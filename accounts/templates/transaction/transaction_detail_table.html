@@ -1,64 +1,92 @@
 <!-- Table with Data -->
-<div class="table-responsive mx-2" style="max-height: 370px; overflow-y: auto; overflow-x: auto;">
-    <form method="POST" action="/delete-transaction/">
-        {% csrf_token %}
-        <table class="table table-striped table-hover" id="myTable">
-            <thead class="table-light sticky-top">
-                <tr>
-                    <th><input type="checkbox" id="select-all-checkbox" onChange="selectMultiple()"></th>
-                    <th></th>
-                    <th class="text-center">Status</th>
-                    <th>Transaction Date</th>
-                    <th>Type&nbsp;<i class="fa-solid fa-circle-info" style="color: var(--primary);" onClick="hiddendiscription()"></i></th>
-                    <th>Category</th>
-                    <th>Amount (₹.)</th>
-                    <th scope="col"  >Beneficiary</th>
-                    <th id="th-desc" hidden="true" >Description</th>
-                    <!-- <th >Manage</th> -->
-                    <th ><button class="btn p-0" type="submit"><i class="fa-solid fa-trash-alt" style="color: #dc3545;"></i></button> Bulk</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% if transaction_data %}
-                    {% for i in transaction_data %}
+<!-- Table with Data -->
+<div class="card border-0 shadow-sm mx-2 mt-3" style="border-radius: 12px; overflow: hidden;">
+    <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
+        <form method="POST" action="/delete-transaction/">
+            {% csrf_token %}
+            <table class="table table-hover align-middle mb-0" id="myTable">
+                <thead class="bg-light sticky-top" style="z-index: 1;">
+                    <tr>
+                        <th class="ps-3" width="40"><input type="checkbox" class="form-check-input" id="select-all-checkbox" onChange="selectMultiple()"></th>
+                        <th class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">#</th>
+                        <th class="text-center text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Status</th>
+                        <th class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Date</th>
+                        <th class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Type <i class="fa-solid fa-circle-info text-primary cursor-pointer" onClick="hiddendiscription()" title="Toggle Description"></i></th>
+                        <th class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Category</th>
+                        <th class="text-end text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Amount</th>
+                        <th class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Beneficiary</th>
+                        <th id="th-desc" hidden="true" class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Description</th>
+                        <th class="text-center text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">
+                            <button class="btn btn-link p-0 text-danger" type="submit" title="Delete Selected">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% if transaction_data %}
+                        {% for i in transaction_data %}
+                            <tr>
+                                <td class="ps-3"><input type="checkbox" class="form-check-input" name="record_ids" value="{{ i.id }}"></td>
+                                <td class="text-muted">{{ forloop.counter }}</td>
+                                <td class="text-center">
+                                    <a href="/update-transaction-status/{{ i.id }}" class="text-decoration-none" title="Toggle Status">
+                                        {% if i.status == 'Completed' %}
+                                            <span class="badge bg-soft-success text-success rounded-pill px-2">
+                                                <i class="fa-solid fa-check me-1"></i> Paid
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-soft-warning text-warning rounded-pill px-2">
+                                                <i class="fa-solid fa-clock me-1"></i> Pending
+                                            </span>
+                                        {% endif %}
+                                    </a>
+                                </td>
+                                <td><span class="text-dark fw-medium">{{ i.date|date:"d M Y" }}</span></td>
+                                <td>
+                                    <a href="#" class="text-decoration-none fw-bold" style="color: var(--primary);" 
+                                       data-bs-toggle="modal" data-bs-target="#editExpenseModal" 
+                                       onclick="openModalAndGetExpense('{{ i.id }}')">
+                                       {{ i.type }}
+                                    </a>
+                                </td>
+                                <td><span class="badge bg-light text-dark border">{{ i.category }}</span></td>
+                                <td class="text-end fw-bold font-monospace">₹{{ i.amount | floatformat:2 }}</td>
+                                <td>{{ i.beneficiary|default:"-" }}</td>
+                                <td class="td-desc small text-muted" hidden>{{ i.description }}</td>
+                               
+                                <td class="text-center">
+                                  <button 
+                                    type="button" 
+                                    class="btn btn-sm btn-icon btn-ghost-danger rounded-circle"
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#confirmModal"
+                                    title="Delete Transaction"
+                                    data-url="/delete-transaction/{{ i.id }}">
+                                    <i class="fa-solid fa-trash-can"></i> 
+                                  </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
                         <tr>
-                            <td><input type="checkbox" name="record_ids" value="{{ i.id }}"></td>
-                            <td>{{ forloop.counter }}</td>
-                            <td class="text-center">
-                                <a href="/update-transaction-status/{{ i.id }}">
-                                    {% if i.status == 'Completed' %}
-                                        <i class="fa-solid fa-circle-check text-success"></i>
-                                    {% else %}
-                                        <i class="fa-solid fa-circle-exclamation text-warning"></i>
-                                    {% endif %}
-                                </a>
-                            </td>
-                            <td>{{ i.date }}</td>
-                            <td><a href="#" class="text-decoration-none" style="color: var(--primary-dark-secondary);" data-bs-toggle="modal" data-bs-target="#editExpenseModal" onclick="openModalAndGetExpense('{{ i.id }}')">{{ i.type }}</a></td>
-                            <td>{{ i.category }}</td>
-                            <td class="">{{ i.amount | floatformat:2 }}</td>
-                            <td>{{ i.beneficiary }}</td>
-                            <td class="td-desc" hidden>{{ i.description }}</td>
-
-                            <!-- <td><a href="#" data-bs-toggle="modal" data-bs-target="#editExpenseModal" onclick="openModalAndGetExpense({{ i.id }})"><i class="fa-solid fa-pencil-alt" style="color: #007bff;"></i></a></td> -->
-                           
-                            <td >
-                              <button 
-                                type="button" 
-                                class="btn custom-btn-danger border-0 btn-sm "
-                                data-bs-toggle="modal" 
-                                data-bs-target="#confirmModal" 
-                                style="background: None;"
-                                data-url="/delete-transaction/{{ i.id }}">
-                                <i class="fa-solid fa-trash-alt" style="color: #dc3545;"></i> 
-                              </button>
+                            <td colspan="10" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-inbox fa-3x mb-3 opacity-50"></i>
+                                <p>No transaction records found</p>
                             </td>
                         </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr><td colspan="10" class="text-center">No Records Found</td></tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </form>
+                    {% endif %}
+                </tbody>
+            </table>
+        </form>
+    </div>
 </div>
+
+<style>
+    .bg-soft-success { background-color: rgba(16, 185, 129, 0.1) !important; }
+    .bg-soft-warning { background-color: rgba(245, 158, 11, 0.1) !important; }
+    .btn-ghost-danger { color: #dc3545; transition: all 0.2s; }
+    .btn-ghost-danger:hover { background-color: rgba(220, 53, 69, 0.1); }
+    .table thead th { border-bottom: 2px solid #edf2f9; }
+    .cursor-pointer { cursor: pointer; }
+</style>
