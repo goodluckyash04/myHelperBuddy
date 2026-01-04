@@ -15,12 +15,14 @@ Features:
 from typing import Optional
 
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, QuerySet
+from django.db.models import F, QuerySet, Count, Q
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from datetime import date
 
-from accounts.models import Task
+from accounts.models import Task, TaskCategory, TaskTag
 
 
 # ============================================================================
@@ -47,6 +49,54 @@ def get_task_data_by_user(user) -> QuerySet:
         F('status').desc(),  # Pending before Completed
         'complete_by_date'
     )
+
+
+def calculate_task_stats(user):
+    """
+    Calculate task statistics for dashboard.
+    
+    Returns dict with counts and breakdowns.
+    """
+    today = date.today()
+    tasks = Task.objects.filter(created_by=user, is_deleted=False)
+    
+    # Basic counts
+    total = tasks.count()
+    pending = tasks.filter(status='Pending').count()
+    in_progress = tasks.filter(Q(status='In Progress') | Q(status='In-Progress')).count()
+    completed = tasks.filter(status='Completed').count()
+    
+    # Overdue count
+    overdue = tasks.filter(
+        status='Pending',
+        complete_by_date__lt=today
+    ).count()
+    
+    # Priority breakdown
+    priority_stats = {
+        'high': tasks.filter(priority='High', status='Pending').count(),
+        'medium': tasks.filter(priority='Medium', status='Pending').count(),
+        'low': tasks.filter(priority='Low', status='Pending').count()
+    }
+    
+    # Category breakdown (top 5)
+    category_stats = tasks.filter(
+        status='Pending',
+        category__isnull=False
+    ).values(
+        'category__name', 'category__color', 'category__icon'
+    ).annotate(count=Count('id')).order_by('-count')[:5]
+    
+    return {
+        'total': total,
+        'pending': pending,
+        'in_progress': in_progress,
+        'completed': completed,
+        'overdue': overdue,
+        'priority_stats': priority_stats,
+        'category_stats': list(category_stats),
+        'completion_rate': round((completed / total * 100) if total > 0 else 0, 1)
+    }
 
 
 def get_task_by_id(task_id: int) -> Task:
@@ -93,15 +143,67 @@ def addTask(request: HttpRequest) -> HttpResponse:
     
     task_data = request.POST
     
-    # Create task
-    Task.objects.create(
+    # Import datetime for date parsing
+    from datetime import datetime
+    
+    # Get and parse dates - convert string to date object
+    complete_by_date = task_data.get("complete_by_date")
+    if complete_by_date:
+        try:
+            complete_by_date = datetime.strptime(complete_by_date, "%Y-%m-%d").date()
+        except ValueError:
+            complete_by_date = None
+    else:
+        complete_by_date = None
+    
+    start_date = task_data.get("start_date")
+    if start_date:
+        try:
+            start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        except ValueError:
+            start_date = None
+    else:
+        start_date = None
+    
+    estimated_hours = task_data.get("estimated_hours") or None
+    category_id = task_data.get("category") or None
+    parent_task_id = task_data.get("parent_task") or None
+    
+    # Get category object if provided
+    category = None
+    if category_id:
+        try:
+            category = TaskCategory.objects.get(id=category_id, created_by=user)
+        except TaskCategory.DoesNotExist:
+            category = None
+    
+    # Get parent task if provided
+    parent_task = None
+    if parent_task_id:
+        try:
+            parent_task = Task.objects.get(id=parent_task_id, created_by=user)
+        except Task.DoesNotExist:
+            parent_task = None
+    
+    # Create task (priority_score will be auto-calculated on save)
+    task = Task.objects.create(
         priority=task_data.get("priority", "Medium"),
         name=task_data.get("name", ""),
-        complete_by_date=task_data.get("complete_by_date"),
+        complete_by_date=complete_by_date,
+        start_date=start_date,
         description=task_data.get("description", ""),
-        status="Pending",
+        estimated_hours=estimated_hours,
+        status=task_data.get("status", "Pending"),
+        category=category,
+        parent_task=parent_task,
         created_by=user
     )
+    
+    # Handle tags (many-to-many relationship)
+    tag_ids = request.POST.getlist("tags")
+    if tag_ids:
+        tags = TaskTag.objects.filter(id__in=tag_ids, created_by=user)
+        task.tags.set(tags)
     
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 
@@ -137,9 +239,21 @@ def currentMonthTaskReport(request: HttpRequest) -> HttpResponse:
         is_deleted=False
     ).select_related('created_by').order_by('complete_by_date')
     
+    # Get user's categories and tags for modal
+    categories = TaskCategory.objects.filter(created_by=user, is_deleted=False).order_by('display_order', 'name')
+    tags = TaskTag.objects.filter(created_by=user).order_by('name')
+    # Get all non-deleted tasks for parent task selector
+    all_tasks = Task.objects.filter(created_by=user, is_deleted=False).exclude(parent_task__isnull=False).order_by('-created_at')[:50]
+    # Get task statistics
+    stats = calculate_task_stats(user)
+    
     context = {
         "user": user,
-        "taskData": tasks
+        "taskData": tasks,
+        "categories": categories,
+        "tags": tags,
+        "all_tasks": all_tasks,
+        "stats": stats
     }
     
     return render(request, "task/tasks.html", context)
@@ -150,28 +264,54 @@ def taskReports(request: HttpRequest) -> HttpResponse:
     """
     Display all tasks with status-based filtering.
     
-    Shows all tasks ordered by:
-        - Status (Pending first, then Completed)
-        - Due date (earliest first)
-    
-    Args:
-        request: HTTP GET request
-        
-    Returns:
-        HttpResponse: Rendered task report page
+    Show complete task report with all tasks.
+    Default filter: Pending tasks only (can be changed by user).
+    Includes pagination for better performance.
     """
     user = request.user
     
-    tasks = Task.objects.filter(
+    # Get status filter from GET parameters (default to 'Pending')
+    status_filter = request.GET.get('status', 'Pending')
+    
+    # Base queryset
+    tasks_queryset = Task.objects.filter(
         created_by=user
-    ).select_related('created_by').order_by(
-        F('status').desc(),
+    ).select_related('created_by', 'category', 'recurring_pattern', 'parent_task').prefetch_related('tags').order_by(
+        '-priority_score',
         'complete_by_date'
     )
     
+    # Apply status filter if specified
+    if status_filter and status_filter != 'All':
+        tasks_queryset = tasks_queryset.filter(status=status_filter)
+    
+    # Pagination: 25 tasks per page
+    paginator = Paginator(tasks_queryset, 15)
+    page_number = request.GET.get('page', 1)
+    
+    try:
+        tasks = paginator.page(page_number)
+    except PageNotAnInteger:
+        tasks = paginator.page(1)
+    except EmptyPage:
+        tasks = paginator.page(paginator.num_pages)
+    
+    # Get user's categories and tags for modal
+    categories = TaskCategory.objects.filter(created_by=user, is_deleted=False).order_by('display_order', 'name')
+    tags = TaskTag.objects.filter(created_by=user).order_by('name')
+    # Get all non-deleted tasks for parent task selector
+    all_tasks = Task.objects.filter(created_by=user, is_deleted=False).exclude(parent_task__isnull=False).order_by('-created_at')[:50]
+    # Get task statistics
+    stats = calculate_task_stats(user)
+    
     context = {
         'user': user,
-        'taskData': tasks
+        'taskData': tasks,  # Paginated task list
+        'categories': categories,
+        'tags': tags,
+        'all_tasks': all_tasks,
+        'stats': stats,
+        'current_status': status_filter,  # Pass current filter to template
     }
     
     return render(request, 'task/taskReport.html', context)
@@ -204,18 +344,79 @@ def editTask(request: HttpRequest, id: int) -> HttpResponse:
             'id': task.id,
             'priority': task.priority,
             'name': task.name,
-            'complete_by_date': task.complete_by_date,
-            'description': task.description
+            'complete_by_date': str(task.complete_by_date) if task.complete_by_date else "",
+            'start_date': str(task.start_date) if task.start_date else "",
+            'description': task.description,
+            'estimated_hours': float(task.estimated_hours) if task.estimated_hours else None,
+            'status': task.status,
+            'category': task.category.id if task.category else None,
+            'tags': list(task.tags.values_list('id', flat=True)),
+            'parent_task': task.parent_task.id if task.parent_task else None
         }
         return JsonResponse(task_dict)
     
     # POST: Update task
-    # Update task fields from POST data
-    for key, value in request.POST.items():
-        if hasattr(task, key) and key != 'id':
-            setattr(task, key, value)
+    user = request.user
+    task_data = request.POST
+    
+    # Update basic fields
+    task.priority = task_data.get("priority", task.priority)
+    task.name = task_data.get("name", task.name)
+    task.description = task_data.get("description", task.description)
+    task.status = task_data.get("status", task.status)
+    
+    # Update dates - convert string to date object
+    from datetime import datetime
+    
+    complete_by_date = task_data.get("complete_by_date")
+    if complete_by_date:
+        try:
+            # Parse the date string to a date object
+            task.complete_by_date = datetime.strptime(complete_by_date, "%Y-%m-%d").date()
+        except ValueError:
+            pass  # Keep existing date if parsing fails
+    
+    start_date = task_data.get("start_date")
+    if start_date:
+        try:
+            task.start_date = datetime.strptime(start_date, "%Y-%m-%d").date()
+        except ValueError:
+            pass
+    
+    # Update estimated hours
+    estimated_hours = task_data.get("estimated_hours")
+    if estimated_hours:
+        task.estimated_hours = estimated_hours
+    
+    # Update category
+    category_id = task_data.get("category")
+    if category_id:
+        try:
+            task.category = TaskCategory.objects.get(id=category_id, created_by=user)
+        except TaskCategory.DoesNotExist:
+            pass
+    else:
+        task.category = None
+    
+    # Update parent task
+    parent_task_id = task_data.get("parent_task")
+    if parent_task_id:
+        try:
+            task.parent_task = Task.objects.get(id=parent_task_id, created_by=user)
+        except Task.DoesNotExist:
+            pass
+    else:
+        task.parent_task = None
     
     task.save()
+    
+    # Handle tags (many-to-many relationship)
+    tag_ids = request.POST.getlist("tags")
+    if tag_ids:
+        tags = TaskTag.objects.filter(id__in=tag_ids, created_by=user)
+        task.tags.set(tags)
+    else:
+        task.tags.clear()
     
     return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
 

@@ -95,6 +95,17 @@ from .views.view_task import (
     taskReports,
 )
 
+from .views.view_task_management import (
+    addCategory,
+    addTag,
+    deleteCategory,
+    deleteTag,
+    editCategory,
+    editTag,
+    manageCategories,
+    manageTags,
+)
+
 # ============================================================================
 # View Imports - Transactions
 # ============================================================================
@@ -176,6 +187,18 @@ urlpatterns = [
     path("taskReports/", taskReports, name="taskReports"),
     path("editTask/<int:id>", editTask, name="editTask"),
     path("task/action/<int:id>/<str:action>/", taskAction, name="taskAction"),
+    
+    # Category Management
+    path("manageCategories/", manageCategories, name="manageCategories"),
+    path("addCategory/", addCategory, name="addCategory"),
+    path("editCategory/<int:id>", editCategory, name="editCategory"),
+    path("deleteCategory/<int:id>", deleteCategory, name="deleteCategory"),
+    
+    # Tag Management
+    path("manageTags/", manageTags, name="manageTags"),
+    path("addTag/", addTag, name="addTag"),
+    path("editTag/<int:id>", editTag, name="editTag"),
+    path("deleteTag/<int:id>", deleteTag, name="deleteTag"),
     
     # ========================================================================
     # Financial Instruments (Loans, SIPs, Splits)

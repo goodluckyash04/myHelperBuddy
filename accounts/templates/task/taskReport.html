@@ -2,83 +2,489 @@
 {% load static %}
 {% block body %}
 
-<div class="container-fluid">
+<div class="container-fluid px-4">
   <div class="d-flex justify-content-between align-items-center my-3">
-    <h2 style="color: var(--primary);font-family: dancing script;">My Tasks</h2>
-    <!-- Button for Current Month's Task -->
-    <a href="/currentMonthTaskReport/" class="btn custom-btn-primary">
-      <i class="fa-solid fa-calendar-check"></i> Current Month's Task
-    </a>
+    <h2 style="color: var(--primary);font-family: dancing script;">My Tasks - Complete Report</h2>
+    <!-- Action Buttons -->
+    <div class="d-flex gap-2">
+      <a href="/manageCategories/" class="btn btn-outline-primary">
+        <i class="fa-solid fa-folder"></i> Categories
+      </a>
+      <a href="/manageTags/" class="btn btn-outline-success">
+        <i class="fa-solid fa-tags"></i> Tags
+      </a>
+      <a href="/currentMonthTaskReport/" class="btn custom-btn-primary">
+        <i class="fa-solid fa-calendar-check"></i> Current Month
+      </a>
+    </div>
   </div>
 
-  <div class="row mx-3">
+  <!-- Task Statistics Dashboard -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="fa-solid fa-chart-pie text-primary"></i> Task Overview
+          </h5>
+          
+          <div class="row g-3">
+            <!-- Quick Stats -->
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center p-3 bg-light rounded">
+                <h3 class="mb-0">{{ stats.total }}</h3>
+                <small class="text-muted">Total Tasks</small>
+              </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center p-3 bg-warning bg-opacity-10 rounded">
+                <h3 class="mb-0 text-warning">{{ stats.pending }}</h3>
+                <small class="text-muted">Pending</small>
+              </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center p-3 bg-danger bg-opacity-10 rounded">
+                <h3 class="mb-0 text-danger">{{ stats.overdue }}</h3>
+                <small class="text-muted">Overdue</small>
+              </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center p-3 bg-success bg-opacity-10 rounded">
+                <h3 class="mb-0 text-success">{{ stats.completion_rate }}%</h3>
+                <small class="text-muted">Completion Rate</small>
+              </div>
+            </div>
+          </div>
+          
+          <hr class="my-3">
+          
+          <div class="row">
+            <!-- Priority Breakdown -->
+            <div class="col-md-6">
+              <h6 class="mb-2"><i class="fa-solid fa-chart-column"></i> Pending by Priority</h6>
+              <div class="d-flex gap-3">
+                <span class="badge bg-danger">🔴 High: {{ stats.priority_stats.high }}</span>
+                <span class="badge bg-warning text-dark">🟡 Med: {{ stats.priority_stats.medium }}</span>
+                <span class="badge bg-success">🟢 Low: {{ stats.priority_stats.low }}</span>
+              </div>
+            </div>
+            
+            <!-- Top Categories -->
+            <div class="col-md-6">
+              <h6 class="mb-2"><i class="fa-solid fa-folder"></i> Top Categories</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                {% for cat in stats.category_stats %}
+                  <span class="badge" style="background-color: {{ cat.category__color }}20; color: {{ cat.category__color }}; border: 1px solid {{ cat.category__color }};">
+                    {{ cat.category__icon|default:"📁" }} {{ cat.category__name }}: {{ cat.count }}
+                  </span>
+                {% empty %}
+                  <small class="text-muted">No categorized pending tasks</small>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advanced Filters Row -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="row g-2">
+            <!-- Category Filter -->
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Category</label>
+              <select class="form-select form-select-sm" id="categoryFilter">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                  <option value="{{ cat.id }}" style="border-left: 4px solid {{ cat.color }}; padding-left: 8px;">
+                    {{ cat.icon|default:"📁" }} {{ cat.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Priority Filter -->
+            <div class="col-md-2">
+              <label class="form-label small fw-bold">Priority</label>
+              <select class="form-select form-select-sm" id="priorityFilter">
+                <option value="">All Priorities</option>
+                <option value="High">🔴 High</option>
+                <option value="Medium">🟡 Medium</option>
+                <option value="Low">🟢 Low</option>
+              </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="col-md-2">
+              <label class="form-label small fw-bold">Status</label>
+              <select class="form-select form-select-sm" id="statusFilter" onchange="applyStatusFilter()">
+                <option value="All" {% if current_status == 'All' %}selected{% endif %}>All Status</option>
+                <option value="Pending" {% if current_status == 'Pending' or not current_status %}selected{% endif %}>⏳ Pending</option>
+                <option value="In Progress" {% if current_status == 'In Progress' %}selected{% endif %}>🔄 In Progress</option>
+                <option value="Completed" {% if current_status == 'Completed' %}selected{% endif %}>✅ Completed</option>
+                <option value="Cancelled" {% if current_status == 'Cancelled' %}selected{% endif %}>❌ Cancelled</option>
+              </select>
+            </div>
+
+            <!-- Tag Filter -->
+            <div class="col-md-3">
+              <label class="form-label small fw-bold">Tags</label>
+              <select class="form-select form-select-sm" id="tagFilter">
+                <option value="">All Tags</option>
+                {% for tag in tags %}
+                  <option value="{{ tag.id }}">🏷️ {{ tag.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Clear Button -->
+            <div class="col-md-2 d-flex align-items-end">
+              <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearFilters()">
+                <i class="fa-solid fa-filter-circle-xmark"></i> Clear Filters
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tasks Table -->
+  <div class="row mx-0">
     <div class="table-responsive" style="max-height: 70vh; overflow-y: auto;">
       <table id="myTable" class="table table-striped table-bordered table-hover">
         <thead class="sticky-top bg-light">
           <tr>
-            <th>#</th>
-            <th scope="col">Priority</th>
-            <th scope="col">Status</th>
-            <th scope="col">Title</th>
-            <th scope="col">Detail</th>
-            <th scope="col">Complete By</th>
-            <th scope="col">Completed On</th>
-            <th scope="col">Updated At</th>
-            <th scope="col" colspan="3">Actions</th>
+            <th style="width: 40px;">#</th>
+            <th style="width: 70px;">Score</th>
+            <th style="width: 90px;">Priority</th>
+            <th style="width: 100px;">Status</th>
+            <th style="width: 150px;">Category</th>
+            <th>Task Title</th>
+            <th style="width: 150px;">Tags</th>
+            <th style="width: 110px;">Due Date</th>
+            <th style="width: 100px;">Time</th>
+            <th style="width: 110px;">Completed</th>
+            <th style="width: 140px;" class="text-center">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="taskTableBody">
           {% if taskData %}
-            {% for i in taskData %}
-              <tr>
-                <td scope="row">{{ forloop.counter }}</td>
-                <td>{{ i.priority }}</td>
+            {% for task in taskData %}
+              <tr data-category="{{ task.category.id|default:'' }}" 
+                  data-priority="{{ task.priority }}"
+                  data-status="{{ task.status }}"
+                  data-tags="{% for tag in task.tags.all %}{{ tag.id }},{% endfor %}">
+                
+                <td>{{ forloop.counter }}</td>
+                
+                <!-- Priority Score -->
+                <td>
+                  <span class="badge {% if task.priority_score >= 50 %}bg-danger{% elif task.priority_score >= 30 %}bg-warning{% else %}bg-success{% endif %} rounded-pill">
+                    {{ task.priority_score }}
+                  </span>
+                </td>
 
-                {% with i.complete_by_date|date:"Y-m-d" as completed_date %}
+                <!-- Priority -->
+                <td>
+                  {% if task.priority == 'High' %}
+                    <span class="badge bg-danger">🔴 High</span>
+                  {% elif task.priority == 'Medium' %}
+                    <span class="badge bg-warning text-dark">🟡 Med</span>
+                  {% else %}
+                    <span class="badge bg-success">🟢 Low</span>
+                  {% endif %}
+                </td>
+
+                <!-- Status -->
+                {% with task.complete_by_date|date:"Y-m-d" as completed_date %}
                 {% with "now"|date:"Y-m-d" as today %}
                 <td>
-                  <!-- Status Button with Color Coding -->
-                  <button class="btn btn-sm {% if i.is_deleted %}
-                        btn-danger {% elif i.status == 'Pending' %} 
-                        {% if completed_date < today %}btn-danger 
-                        {% else %}btn-warning {% endif %}
-                        {% else %}btn-success {% endif %} rounded-pill px-3 py-1">
-                        {{ i.status.0 }}
-                  </button>
+                  {% if task.is_deleted %}
+                    <span class="badge bg-danger rounded-pill">🗑️ Deleted</span>
+                  {% elif task.status == 'Pending' %}
+                    {% if completed_date < today %}
+                      <span class="badge bg-danger rounded-pill">⚠️ Overdue</span>
+                    {% else %}
+                      <span class="badge bg-warning rounded-pill">⏳ Pending</span>
+                    {% endif %}
+                  {% elif task.status == 'In Progress' %}
+                    <span class="badge bg-info rounded-pill">🔄 Progress</span>
+                  {% elif task.status == 'Completed' %}
+                    <span class="badge bg-success rounded-pill">✅ Done</span>
+                  {% else %}
+                    <span class="badge bg-secondary rounded-pill">❌ Cancelled</span>
+                  {% endif %}
                 </td>
                 {% endwith %}
                 {% endwith %}
 
-                <td><a href="" data-bs-toggle="modal" class="text-decoration-none" style="color: var(--primary-dark-four);" data-bs-target="#taskmodal" onclick="openModalAndGetTask({{ i.id }})">{{ i.name }}</a></td>
-                <td>{{ i.description }}</td>
-                <td>{{ i.complete_by_date }}</td>
-                <td>{{ i.completed_on }}</td>
-                <td>{{ i.updated_at|date:"M. d, Y"}}</td>
+                <!-- Category -->
+                <td>
+                  {% if task.category %}
+                    <span class="badge" style="background-color: {{ task.category.color }}20; border-left: 3px solid {{ task.category.color }}; color: #333;">
+                      {{ task.category.icon|default:"📁" }} {{ task.category.name }}
+                    </span>
+                  {% else %}
+                    <span class="text-muted small">—</span>
+                  {% endif %}
+                </td>
+
+                <!-- Task Title with Edit Link -->
+                <td>
+                  <a href="" data-bs-toggle="modal" class="text-decoration-none fw-bold" 
+                     style="color: var(--primary-dark-four);" 
+                     data-bs-target="#taskmodal" 
+                     onclick="openModalAndGetTask({{ task.id }})">
+                    {{ task.name }}
+                  </a>
+                  {% if task.description %}
+                    <br><small class="text-muted">{{ task.description|truncatewords:8 }}</small>
+                  {% endif %}
+                </td>
+
+                <!-- Tags -->
+                <td>
+                  <div class="d-flex flex-wrap gap-1">
+                    {% for tag in task.tags.all %}
+                      <span class="badge rounded-pill" style="background-color: {{ tag.color }}20; color: {{ tag.color }}; border: 1px solid {{ tag.color }};">
+                        {{ tag.name }}
+                      </span>
+                    {% empty %}
+                      <span class="text-muted small">—</span>
+                    {% endfor %}
+                  </div>
+                </td>
+
+                <!-- Due Date -->
+                <td>
+                  {% if task.complete_by_date %}
+                    {{ task.complete_by_date|date:"M d, Y" }}
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
+
+                <!-- Time Tracking -->
+                <td>
+                  {% if task.estimated_hours or task.actual_hours %}
+                    <small>
+                      <i class="fa-solid fa-clock text-info"></i>
+                      {% if task.estimated_hours %}
+                        <span title="Estimated">{{ task.estimated_hours }}h</span>
+                      {% endif %}
+                      {% if task.actual_hours %}
+                        / <span class="text-success" title="Actual">{{ task.actual_hours }}h</span>
+                      {% endif %}
+                    </small>
+                  {% else %}
+                    <span class="text-muted small">—</span>
+                  {% endif %}
+                </td>
+
+                <!-- Completed On -->
+                <td>
+                  {% if task.completed_on %}
+                    <small>{{ task.completed_on|date:"M d, Y" }}</small>
+                  {% else %}
+                    <span class="text-muted">—</span>
+                  {% endif %}
+                </td>
 
                 <!-- Action Buttons -->
-                <td><a href="{% url 'taskAction' i.id 'complete' %}"><i class="fa-solid text-success fa-check-circle"></i></a></td>
-                <td><a href="{% url 'taskAction' i.id 'incomplete' %}"><i class="fa-solid text-secondary fa-xmark-circle"></i></a></td>
-                <!-- <td><a href="" data-bs-toggle="modal" data-bs-target="#taskmodal" onclick="openModalAndGetTask({{ i.id }})"><i class="fa-solid text-warning fa-pen"></i></a></td> -->
-                <td><a href="{% url 'taskAction' i.id 'permdeletetask' %}"><i class="fa-solid text-danger fa-trash-alt"></i></a></td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <a href="{% url 'taskAction' task.id 'complete' %}" 
+                       class="btn btn-outline-success" title="Mark Complete">
+                      <i class="fa-solid fa-check"></i>
+                    </a>
+                    <a href="{% url 'taskAction' task.id 'incomplete' %}" 
+                       class="btn btn-outline-secondary" title="Mark Incomplete">
+                      <i class="fa-solid fa-rotate-left"></i>
+                    </a>
+                    <a href="" data-bs-toggle="modal" data-bs-target="#taskmodal" 
+                       onclick="openModalAndGetTask({{ task.id }})"
+                       class="btn btn-outline-primary" title="Edit">
+                      <i class="fa-solid fa-edit"></i>
+                    </a>
+                    <a href="{% url 'taskAction' task.id 'permdeletetask' %}" 
+                       class="btn btn-outline-danger" title="Permanent Delete"
+                       onclick="return confirm('Permanently delete this task? This cannot be undone!')">
+                      <i class="fa-solid fa-trash"></i>
+                    </a>
+                  </div>
+                </td>
               </tr>
             {% endfor %}
           {% else %}
             <tr>
-              <td colspan="9" class="text-center">No records found</td>
+              <td colspan="11" class="text-center py-5">
+                <i class="fa-solid fa-clipboard-list fa-3x text-muted mb-3"></i>
+                <p class="text-muted">No tasks found. Start by creating your first task!</p>
+              </td>
             </tr>
           {% endif %}
         </tbody>
       </table>
     </div>
+    
+    <!-- Pagination Controls -->
+    {% if taskData.has_other_pages %}
+    <nav aria-label="Task pagination" class="mt-4">
+      <ul class="pagination justify-content-center">
+        {% if taskData.has_previous %}
+          <li class="page-item">
+            <a class="page-link rounded-start" href="?page=1&status={{ current_status }}" aria-label="First" 
+               style="border-color: var(--primary); color: var(--primary);">
+              <span aria-hidden="true">&laquo;&laquo;</span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ taskData.previous_page_number }}&status={{ current_status }}" aria-label="Previous"
+               style="border-color: var(--primary); color: var(--primary);">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link rounded-start" style="border-color: #dee2e6; color: #6c757d;">&laquo;&laquo;</span>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link" style="border-color: #dee2e6; color: #6c757d;">&laquo;</span>
+          </li>
+        {% endif %}
+
+        <!-- Page numbers -->
+        {% for num in taskData.paginator.page_range %}
+          {% if taskData.number == num %}
+            <li class="page-item active">
+              <span class="page-link" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); border-color: var(--primary); color: white; font-weight: 600;">
+                {{ num }}
+              </span>
+            </li>
+          {% elif num > taskData.number|add:'-3' and num < taskData.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}&status={{ current_status }}"
+                 style="border-color: var(--primary); color: var(--primary);">
+                {{ num }}
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if taskData.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ taskData.next_page_number }}&status={{ current_status }}" aria-label="Next"
+               style="border-color: var(--primary); color: var(--primary);">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link rounded-end" href="?page={{ taskData.paginator.num_pages }}&status={{ current_status }}" aria-label="Last"
+               style="border-color: var(--primary); color: var(--primary);">
+              <span aria-hidden="true">&raquo;&raquo;</span>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link" style="border-color: #dee2e6; color: #6c757d;">&raquo;</span>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link rounded-end" style="border-color: #dee2e6; color: #6c757d;">&raquo;&raquo;</span>
+          </li>
+        {% endif %}
+      </ul>
+      
+      <div class="text-center">
+        <span class="badge bg-light text-dark border px-3 py-2" style="font-size: 0.9rem;">
+          <i class="fa-solid fa-file-lines"></i> 
+          Page <strong>{{ taskData.number }}</strong> of <strong>{{ taskData.paginator.num_pages }}</strong>
+          <span class="mx-2">•</span>
+          <strong>{{ taskData.paginator.count }}</strong> total task{{ taskData.paginator.count|pluralize }}
+        </span>
+      </div>
+    </nav>
+    {% endif %}
   </div>
 </div>
 
 {% include 'task/taskModal.html' %}
 {% include 'floating_button_individual.html' with m_type='task' %}
 
-
 {% endblock body %}
 
 {% block script %}
 <script src="{% static 'js/task.js' %}"></script>
+
+<script>
+// Apply status filter via URL (maintains pagination)
+function applyStatusFilter() {
+  const status = document.getElementById('statusFilter').value;
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.set('status', status);
+  currentUrl.searchParams.set('page', '1'); // Reset to first page
+  window.location.href = currentUrl.toString();
+}
+
+// Clear all filters - reload with default (Pending)
+function clearFilters() {
+  window.location.href = '?status=Pending';
+}
+
+// Client-side filters for category, priority, tags (these work with current page only)
+function filterTasks() {
+  const categoryFilter = document.getElementById('categoryFilter').value;
+  const priorityFilter = document.getElementById('priorityFilter').value;
+  const tagFilter = document.getElementById('tagFilter').value;
+  
+  const rows = document.querySelectorAll('#taskTableBody tr');
+  
+  rows.forEach(row => {
+    const rowCategory = row.dataset.category || '';
+    const rowPriority = row.dataset.priority || '';
+    const rowTags = row.dataset.tags || '';
+    
+    let showRow = true;
+    
+    // Category filter
+    if (categoryFilter && rowCategory !== categoryFilter) {
+      showRow = false;
+    }
+    
+    // Priority filter
+    if (priorityFilter && rowPriority !== priorityFilter) {
+      showRow = false;
+    }
+    
+    // Tag filter
+    if (tagFilter && !rowTags.includes(tagFilter)) {
+      showRow = false;
+    }
+    
+    row.style.display = showRow ? '' : 'none';
+  });
+}
+
+// Attach filter event listeners
+document.getElementById('categoryFilter').addEventListener('change', filterTasks);
+document.getElementById('priorityFilter').addEventListener('change', filterTasks);
+document.getElementById('tagFilter').addEventListener('change', filterTasks);
+
+// Reset modal when opening for new task
+const floatingBtn = document.querySelector('[data-bs-target="#taskmodal"]');
+if (floatingBtn) {
+  floatingBtn.addEventListener('click', function(e) {
+    if (e.target.closest('.floating-button')) {
+      resetTaskModal();
+    }
+  });
+}
+</script>
 {% endblock script %}
