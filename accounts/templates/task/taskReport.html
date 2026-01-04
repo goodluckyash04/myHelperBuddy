@@ -19,6 +19,78 @@
     </div>
   </div>
 
+  <!-- Task Statistics Dashboard -->
+  <div class="row mb-3">
+    <div class="col-12">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="fa-solid fa-chart-pie text-primary"></i> Task Overview
+          </h5>
+          
+          <div class="row g-3">
+            <!-- Quick Stats -->
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center p-3 bg-light rounded">
+                <h3 class="mb-0">{{ stats.total }}</h3>
+                <small class="text-muted">Total Tasks</small>
+              </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center p-3 bg-warning bg-opacity-10 rounded">
+                <h3 class="mb-0 text-warning">{{ stats.pending }}</h3>
+                <small class="text-muted">Pending</small>
+              </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center p-3 bg-danger bg-opacity-10 rounded">
+                <h3 class="mb-0 text-danger">{{ stats.overdue }}</h3>
+                <small class="text-muted">Overdue</small>
+              </div>
+            </div>
+            
+            <div class="col-md-3 col-sm-6">
+              <div class="text-center p-3 bg-success bg-opacity-10 rounded">
+                <h3 class="mb-0 text-success">{{ stats.completion_rate }}%</h3>
+                <small class="text-muted">Completion Rate</small>
+              </div>
+            </div>
+          </div>
+          
+          <hr class="my-3">
+          
+          <div class="row">
+            <!-- Priority Breakdown -->
+            <div class="col-md-6">
+              <h6 class="mb-2"><i class="fa-solid fa-chart-column"></i> Pending by Priority</h6>
+              <div class="d-flex gap-3">
+                <span class="badge bg-danger">🔴 High: {{ stats.priority_stats.high }}</span>
+                <span class="badge bg-warning text-dark">🟡 Med: {{ stats.priority_stats.medium }}</span>
+                <span class="badge bg-success">🟢 Low: {{ stats.priority_stats.low }}</span>
+              </div>
+            </div>
+            
+            <!-- Top Categories -->
+            <div class="col-md-6">
+              <h6 class="mb-2"><i class="fa-solid fa-folder"></i> Top Categories</h6>
+              <div class="d-flex gap-2 flex-wrap">
+                {% for cat in stats.category_stats %}
+                  <span class="badge" style="background-color: {{ cat.category__color }}20; color: {{ cat.category__color }}; border: 1px solid {{ cat.category__color }};">
+                    {{ cat.category__icon|default:"📁" }} {{ cat.category__name }}: {{ cat.count }}
+                  </span>
+                {% empty %}
+                  <small class="text-muted">No categorized pending tasks</small>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Advanced Filters Row -->
   <div class="row mb-3">
     <div class="col-12">
@@ -52,12 +124,12 @@
             <!-- Status Filter -->
             <div class="col-md-2">
               <label class="form-label small fw-bold">Status</label>
-              <select class="form-select form-select-sm" id="statusFilter">
-                <option value="">All Status</option>
-                <option value="Pending">⏳ Pending</option>
-                <option value="In Progress">🔄 In Progress</option>
-                <option value="Completed">✅ Completed</option>
-                <option value="Cancelled">❌ Cancelled</option>
+              <select class="form-select form-select-sm" id="statusFilter" onchange="applyStatusFilter()">
+                <option value="All" {% if current_status == 'All' %}selected{% endif %}>All Status</option>
+                <option value="Pending" {% if current_status == 'Pending' or not current_status %}selected{% endif %}>⏳ Pending</option>
+                <option value="In Progress" {% if current_status == 'In Progress' %}selected{% endif %}>🔄 In Progress</option>
+                <option value="Completed" {% if current_status == 'Completed' %}selected{% endif %}>✅ Completed</option>
+                <option value="Cancelled" {% if current_status == 'Cancelled' %}selected{% endif %}>❌ Cancelled</option>
               </select>
             </div>
 
@@ -262,6 +334,84 @@
         </tbody>
       </table>
     </div>
+    
+    <!-- Pagination Controls -->
+    {% if taskData.has_other_pages %}
+    <nav aria-label="Task pagination" class="mt-4">
+      <ul class="pagination justify-content-center">
+        {% if taskData.has_previous %}
+          <li class="page-item">
+            <a class="page-link rounded-start" href="?page=1&status={{ current_status }}" aria-label="First" 
+               style="border-color: var(--primary); color: var(--primary);">
+              <span aria-hidden="true">&laquo;&laquo;</span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ taskData.previous_page_number }}&status={{ current_status }}" aria-label="Previous"
+               style="border-color: var(--primary); color: var(--primary);">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link rounded-start" style="border-color: #dee2e6; color: #6c757d;">&laquo;&laquo;</span>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link" style="border-color: #dee2e6; color: #6c757d;">&laquo;</span>
+          </li>
+        {% endif %}
+
+        <!-- Page numbers -->
+        {% for num in taskData.paginator.page_range %}
+          {% if taskData.number == num %}
+            <li class="page-item active">
+              <span class="page-link" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); border-color: var(--primary); color: white; font-weight: 600;">
+                {{ num }}
+              </span>
+            </li>
+          {% elif num > taskData.number|add:'-3' and num < taskData.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ num }}&status={{ current_status }}"
+                 style="border-color: var(--primary); color: var(--primary);">
+                {{ num }}
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if taskData.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ taskData.next_page_number }}&status={{ current_status }}" aria-label="Next"
+               style="border-color: var(--primary); color: var(--primary);">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+          <li class="page-item">
+            <a class="page-link rounded-end" href="?page={{ taskData.paginator.num_pages }}&status={{ current_status }}" aria-label="Last"
+               style="border-color: var(--primary); color: var(--primary);">
+              <span aria-hidden="true">&raquo;&raquo;</span>
+            </a>
+          </li>
+        {% else %}
+          <li class="page-item disabled">
+            <span class="page-link" style="border-color: #dee2e6; color: #6c757d;">&raquo;</span>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link rounded-end" style="border-color: #dee2e6; color: #6c757d;">&raquo;&raquo;</span>
+          </li>
+        {% endif %}
+      </ul>
+      
+      <div class="text-center">
+        <span class="badge bg-light text-dark border px-3 py-2" style="font-size: 0.9rem;">
+          <i class="fa-solid fa-file-lines"></i> 
+          Page <strong>{{ taskData.number }}</strong> of <strong>{{ taskData.paginator.num_pages }}</strong>
+          <span class="mx-2">•</span>
+          <strong>{{ taskData.paginator.count }}</strong> total task{{ taskData.paginator.count|pluralize }}
+        </span>
+      </div>
+    </nav>
+    {% endif %}
   </div>
 </div>
 
@@ -274,19 +424,24 @@
 <script src="{% static 'js/task.js' %}"></script>
 
 <script>
-// Filter functionality
-function clearFilters() {
-  document.getElementById('categoryFilter').value = '';
-  document.getElementById('priorityFilter').value = '';
-  document.getElementById('statusFilter').value = '';
-  document.getElementById('tagFilter').value = '';
-  filterTasks();
+// Apply status filter via URL (maintains pagination)
+function applyStatusFilter() {
+  const status = document.getElementById('statusFilter').value;
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.set('status', status);
+  currentUrl.searchParams.set('page', '1'); // Reset to first page
+  window.location.href = currentUrl.toString();
 }
 
+// Clear all filters - reload with default (Pending)
+function clearFilters() {
+  window.location.href = '?status=Pending';
+}
+
+// Client-side filters for category, priority, tags (these work with current page only)
 function filterTasks() {
   const categoryFilter = document.getElementById('categoryFilter').value;
   const priorityFilter = document.getElementById('priorityFilter').value;
-  const statusFilter = document.getElementById('statusFilter').value;
   const tagFilter = document.getElementById('tagFilter').value;
   
   const rows = document.querySelectorAll('#taskTableBody tr');
@@ -294,7 +449,6 @@ function filterTasks() {
   rows.forEach(row => {
     const rowCategory = row.dataset.category || '';
     const rowPriority = row.dataset.priority || '';
-    const rowStatus = row.dataset.status || '';
     const rowTags = row.dataset.tags || '';
     
     let showRow = true;
@@ -306,11 +460,6 @@ function filterTasks() {
     
     // Priority filter
     if (priorityFilter && rowPriority !== priorityFilter) {
-      showRow = false;
-    }
-    
-    // Status filter
-    if (statusFilter && rowStatus !== statusFilter) {
       showRow = false;
     }
     
@@ -326,14 +475,16 @@ function filterTasks() {
 // Attach filter event listeners
 document.getElementById('categoryFilter').addEventListener('change', filterTasks);
 document.getElementById('priorityFilter').addEventListener('change', filterTasks);
-document.getElementById('statusFilter').addEventListener('change', filterTasks);
 document.getElementById('tagFilter').addEventListener('change', filterTasks);
 
 // Reset modal when opening for new task
-document.querySelector('[data-bs-target="#taskmodal"]').addEventListener('click', function(e) {
-  if (e.target.closest('.floating-button')) {
-    resetTaskModal();
-  }
-});
+const floatingBtn = document.querySelector('[data-bs-target="#taskmodal"]');
+if (floatingBtn) {
+  floatingBtn.addEventListener('click', function(e) {
+    if (e.target.closest('.floating-button')) {
+      resetTaskModal();
+    }
+  });
+}
 </script>
 {% endblock script %}

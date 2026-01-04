@@ -133,6 +133,45 @@
                     <option value="Cancelled">❌ Cancelled</option>
                   </select>
                 </div>
+
+                <!-- Recurring Pattern -->
+                <div class="mb-3">
+                  <label for="recurring_frequency" class="form-label">
+                    <i class="fa-solid fa-rotate text-info"></i> Recurring
+                  </label>
+                  <div class="row g-2">
+                    <div class="col-8">
+                      <select class="form-select form-select-sm" name="recurring_frequency" id="recurring_frequency">
+                        <option value="">-- Not Recurring --</option>
+                        <option value="daily">📅 Daily</option>
+                        <option value="weekly">📆 Weekly</option>
+                        <option value="monthly">🗓️ Monthly</option>
+                        <option value="yearly">🎂 Yearly</option>
+                      </select>
+                    </div>
+                    <div class="col-4">
+                      <input type="number" class="form-control form-control-sm" name="recurring_interval" id="recurring_interval" 
+                             placeholder="Every" min="1" max="30" value="1">
+                    </div>
+                  </div>
+                  <small class="text-muted">E.g., "Weekly" + "2" = Every 2 weeks</small>
+                </div>
+
+                <!-- Parent Task (for subtasks) -->
+                <div class="mb-3">
+                  <label for="parent_task" class="form-label">
+                    <i class="fa-solid fa-diagram-project text-secondary"></i> Parent Task
+                  </label>
+                  <select class="form-select shadow-sm" name="parent_task" id="parent_task">
+                    <option value="">-- No Parent (Main Task) --</option>
+                    {% for task in all_tasks %}
+                      <option value="{{ task.id }}">
+                        {% if task.category %}{{ task.category.icon|default:"📋" }}{% else %}📋{% endif %} {{ task.name|truncatewords:8 }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <small class="text-muted">Make this a subtask of another task</small>
+                </div>
               </div>
             </div>
 

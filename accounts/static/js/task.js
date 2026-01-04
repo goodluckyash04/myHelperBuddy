@@ -83,6 +83,11 @@ function openModalAndGetTask(Id) {
         document.getElementById("category").value = data.category;
       }
 
+      // Parent Task
+      if (data.parent_task) {
+        document.getElementById("parent_task").value = data.parent_task;
+      }
+
       // Tags (multi-select)
       if (data.tags && data.tags.length > 0) {
         const tagSelect = document.getElementById("tags");
