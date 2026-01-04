@@ -3,44 +3,332 @@
 
 {% block body %}
 <link rel="stylesheet" href="{% static 'css/about.css' %}">
-<div class="about-section container">
-  <div class="text-center mb-5">
-    <h1 class="display-4 mb-3">myHelperBuddy</h1>
-    <p class="lead text-muted mx-auto" style="max-width: 700px;">
-      myHelperBuddy is your all-in-one platform designed to efficiently manage your daily finances, investments, tasks, and more — helping you stay organized and in control.
-    </p>
-  </div>
 
-  <div class="about-slider container">
-    <div class="slider-titles">
-      <div class="slider-title active" data-detail="Seamlessly manage your daily financial transactions to keep your budget on track.">Day-to-Day Transaction Management</div>
-      <div class="slider-title" data-detail="Maintain and track your loans and investments with clear splits and schedules.">Loan & Investment Management</div>
-      <div class="slider-title" data-detail="Organize your daily tasks efficiently and never miss an important activity.">Task Management</div>
-      <div class="slider-title" data-detail="Set and receive timely reminders for your important dates and deadlines.">Reminder Management</div>
-      <div class="slider-title" data-detail="Track price fluctuations on your favorite products and make informed purchase decisions.">Price Tracking</div>
-      <div class="slider-title" data-detail="Download and manage your favorite music easily within the platform.">Music Download</div>
-      <div class="slider-title" data-detail="Maintain detailed ledger records for accurate accounting and financial clarity.">Ledger Management</div>
-    </div>
-
-    <div class="slider-detail">
-      Seamlessly manage your daily financial transactions to keep your budget on track.
+<!-- Header Section -->
+<div class="about-header">
+  <div class="container">
+    <div class="header-content text-center">
+      <div class="header-badge mb-3">
+        <span class="badge-text">Advanced Features</span>
+      </div>
+      <h1 class="header-title mb-3">Unlock More Power</h1>
+      <p class="header-subtitle">
+        You're already managing your day-to-day transactions. Discover advanced features that can transform how you handle finances, investments, and productivity.
+      </p>
     </div>
   </div>
+</div>
 
-  <div class="section-title my-5 text-center">
-    <h3>Key Features</h3>
+<!-- Quick Navigation -->
+<div class="container my-4">
+  <div class="quick-nav">
+    <a href="#financial-tools" class="quick-nav-item">
+      <i class="fas fa-chart-line"></i>
+      <span>Financial Tools</span>
+    </a>
+    <a href="#productivity" class="quick-nav-item">
+      <i class="fas fa-tasks"></i>
+      <span>Productivity</span>
+    </a>
+    <a href="#organization" class="quick-nav-item">
+      <i class="fas fa-folder-open"></i>
+      <span>Organization</span>
+    </a>
+    <a href="#automation" class="quick-nav-item">
+      <i class="fas fa-magic"></i>
+      <span>Automation</span>
+    </a>
   </div>
-<ul class="key-feature">
-    <li><i class="fas fa-exchange-alt"></i> Seamless day-to-day transaction management for your finances.</li>
-    <li><i class="fas fa-hand-holding-usd"></i> Maintain and monitor loan and investment splits effectively.</li>
-    <li><i class="fas fa-tasks"></i> Efficient task management to stay organized and productive.</li>
-    <li><i class="fas fa-bell"></i> Timely reminder management to never miss important dates.</li>
-    <li><i class="fas fa-tags"></i> Real-time tracking of product prices to maximize savings.</li>
-    <li><i class="fas fa-music"></i> Easy music downloads and management within your workspace.</li>
-    <li><i class="fas fa-book-open"></i> Detailed ledger maintenance for comprehensive financial records.</li>
-</ul>
+</div>
+
+<!-- Main Content -->
+<div class="container my-5">
+  
+  <!-- Financial Management Tools -->
+  <div id="financial-tools" class="feature-section mb-5">
+    <div class="section-header mb-4">
+      <h2 class="section-title">
+        <i class="fas fa-chart-line section-icon"></i>
+        Advanced Financial Management
+      </h2>
+      <p class="section-description">Beyond basic transactions — comprehensive tools for loans, investments, and business finances</p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Financial Instruments -->
+      <div class="col-lg-6">
+        <div class="advanced-feature-card">
+          <div class="feature-header">
+            <div class="feature-badge me-2">New</div>
+            <h4 class="feature-title">Loan & Investment Tracker</h4>
+          </div>
+          <p class="feature-intro">
+            Managing a personal loan or SIP? Track EMIs and installments automatically without manual calculations.
+          </p>
+          <div class="feature-highlights">
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Auto EMI Generation:</strong> Create loan entries and we'll automatically generate monthly installment transactions
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>SIP Management:</strong> Track systematic investment plans with automated monthly entries
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Split Payments:</strong> Divide large expenses into manageable installments with friends or family
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Smart Recalculation:</strong> Modify amounts or dates, and installments automatically adjust
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ledger Management -->
+      <div class="col-lg-6">
+        <div class="advanced-feature-card">
+          <div class="feature-header">
+            <div class="feature-badge me-2">Business</div>
+            <h4 class="feature-title">Ledger & Receivables</h4>
+          </div>
+          <p class="feature-intro">
+            Running a small business or freelancing? Track who owes you money and whom you owe.
+          </p>
+          <div class="feature-highlights">
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Receivables Tracking:</strong> Monitor outstanding payments from clients and customers
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Payables Management:</strong> Keep track of vendor payments and due dates
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Counterparty Balances:</strong> See at-a-glance who owes you vs. who you owe
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Payment Installments:</strong> Break down large invoices into payment schedules
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Productivity Tools -->
+  <div id="productivity" class="feature-section mb-5">
+    <div class="section-header mb-4">
+      <h2 class="section-title">
+        <i class="fas fa-tasks section-icon"></i>
+        Productivity Enhancement
+      </h2>
+      <p class="section-description">Stay organized with intelligent task and reminder systems</p>
+    </div>
+
+    <div class="row g-4">
+      <!-- Task Management -->
+      <div class="col-lg-6">
+        <div class="advanced-feature-card">
+          <div class="feature-header">
+            <div class="feature-badge me-2">Essential</div>
+            <h4 class="feature-title">Smart Task Manager</h4>
+          </div>
+          <p class="feature-intro">
+            Never forget important tasks. Organize by priority and get comprehensive reports.
+          </p>
+          <div class="feature-highlights">
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Priority Management:</strong> High, medium, low priorities for better focus
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Due Date Tracking:</strong> Never miss deadlines with clear date visibility
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Monthly Reports:</strong> See what's pending for the current month
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reminder System -->
+      <div class="col-lg-6">
+        <div class="advanced-feature-card">
+          <div class="feature-header">
+            <div class="feature-badge me-2">Automated</div>
+            <h4 class="feature-title">Flexible Reminders</h4>
+          </div>
+          <p class="feature-intro">
+            Set it once, forget it. Get automated email reminders on your schedule.
+          </p>
+          <div class="feature-highlights">
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Daily/Monthly/Yearly:</strong> Perfect for birthdays, anniversaries, bill payments
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Custom Intervals:</strong> Set reminders every N days for medications, maintenance
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Email Notifications:</strong> Receive daily digest of today's reminders
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Organization & Security -->
+  <div id="organization" class="feature-section mb-5">
+    <div class="section-header mb-4">
+      <h2 class="section-title">
+        <i class="fas fa-folder-open section-icon"></i>
+        Organization & Security
+      </h2>
+      <p class="section-description">Securely store and manage important documents</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-lg-12">
+        <div class="advanced-feature-card">
+          <div class="feature-header">
+            <div class="feature-badge me-2">Secure</div>
+            <h4 class="feature-title">Document Manager</h4>
+          </div>
+          <p class="feature-intro">
+            Store important documents like tax files, receipts, or contracts securely in the cloud with optional password protection.
+          </p>
+          <div class="feature-highlights">
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Password Protection:</strong> Add an extra layer of security to sensitive files
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Smart Search:</strong> Find files quickly with keyword and tag-based filtering
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Quota Management:</strong> Track your storage usage with per-user limits
+              </div>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check-circle"></i>
+              <div>
+                <strong>Encrypted Storage:</strong> All files are encrypted for maximum security
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Automation Features -->
+  <div id="automation" class="feature-section mb-5">
+    <div class="section-header mb-4">
+      <h2 class="section-title">
+        <i class="fas fa-magic section-icon"></i>
+        Automation & Admin Tools
+      </h2>
+      <p class="section-description">Powerful features that work in the background</p>
+    </div>
+
+    <div class="automation-grid">
+      <div class="automation-card">
+        <div class="automation-icon">
+          <i class="fas fa-database"></i>
+        </div>
+        <h5>Automated Backups</h5>
+        <p>Daily database backups to Google Drive with encryption</p>
+      </div>
+      
+      <div class="automation-card">
+        <div class="automation-icon">
+          <i class="fas fa-envelope"></i>
+        </div>
+        <h5>Email Reminders</h5>
+        <p>Daily digest emails for pending tasks and reminders</p>
+      </div>
+      
+      <div class="automation-card">
+        <div class="automation-icon">
+          <i class="fas fa-calculator"></i>
+        </div>
+        <h5>Smart Calculation</h5>
+        <p>Automatic EMI and installment amount calculations</p>
+      </div>
+      
+      <div class="automation-card">
+        <div class="automation-icon">
+          <i class="fas fa-sync-alt"></i>
+        </div>
+        <h5>Data Sync</h5>
+        <p>Real-time updates across all your financial records</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Getting Started -->
+  <div class="getting-started-section">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <h3 class="mb-3">Ready to unlock these features?</h3>
+        <p class="mb-4">
+          All these advanced tools are already included in your account. Simply navigate to the respective section from the menu and start exploring. No additional setup required.
+        </p>
+      </div>
+      <div class="col-lg-4 text-lg-end">
+        <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+          <i class="fas fa-rocket me-2"></i> Go to Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
 
 </div>
+
 {% endblock body %}
 
 {% block script %}

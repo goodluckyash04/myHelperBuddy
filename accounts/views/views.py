@@ -1,33 +1,51 @@
+"""
+Core views for the MyHelperBuddy accounts application.
+
+This module contains main views for dashboard, profile, utilities,
+and various analytics/statistics calculations.
+"""
+
 import json
 import re
 from datetime import datetime
+from typing import Dict, Any, Optional
 
 from dateutil.relativedelta import relativedelta
 from django.conf import settings
-from django.db.models import Q, Sum
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q, Sum, DecimalField
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
+from accounts.decorators import auth_user
+from accounts.models import (
+    UtilityModule,
+    LedgerTransaction,
+    RefreshToken,
+    Transaction,
+)
+from accounts.services.module_registry import module_registry
 from accounts.services.security_services import security_service
+from accounts.utilitie_functions import convert_decimal, format_amount
+from accounts.views.view_reminder import calculate_reminder
 
-from ..decorators import auth_user
-from ..models import LedgerTransaction, RefreshToken, Transaction
-from ..utilitie_functions import convert_decimal, format_amount
-from .view_reminder import calculate_reminder
 
-USER_ACCESS = {
-    "TRANSACTION_USER_ACCESS": settings.TRANSACTION_USER_ACCESS,
-    "TASK_USER_ACCESS": settings.TASK_USER_ACCESS,
-    "FINANCE_USER_ACCESS": settings.FINANCE_USER_ACCESS,
-    "LEDGER_USER_ACCESS": settings.LEDGER_USER_ACCESS,
-    "REMINDER_USER_ACCESS": settings.REMINDER_USER_ACCESS,
-    "OTHER_UTILITIES_USER_ACCESS": settings.OTHER_UTILITIES_USER_ACCESS,
-    "MUSIC_USER_ACCESS": settings.MUSIC_USER_ACCESS,
-    "DOCUMENT_MANAGER_USER_ACCESS": settings.DOCUMENT_MANAGER_USER_ACCESS,
-}
+# ============================================================================
+# Helper Functions
+# ============================================================================
 
 
 def get_counter_parties(user):
+    """
+    Retrieve distinct counterparty names for a given user.
+
+    Args:
+        user: The Django user object.
+
+    Returns:
+        QuerySet: Distinct counterparty names.
+    """
     return (
         LedgerTransaction.objects.filter(created_by=user)
         .values_list("counterparty", flat=True)
@@ -35,36 +53,53 @@ def get_counter_parties(user):
     )
 
 
-def calculate_financial_overview(transactions):
-    income = sum(
-        entry.amount
-        for entry in transactions
-        if entry.type.lower() == "income" and not entry.is_deleted
-    )
-    expense = sum(
-        entry.amount
-        for entry in transactions
-        if entry.type.lower() == "expense"
-        and entry.category.lower() != "investment"
-        and entry.status.lower() == "completed"
-    )
-    investment = sum(
-        entry.amount
-        for entry in transactions
-        if entry.category.lower() == "investment"
-        and entry.status.lower() == "completed"
+def calculate_financial_overview(transactions) -> Dict[str, str]:
+    """
+    Calculate financial overview metrics using database aggregations.
+
+    Optimized to use database aggregations instead of Python loops.
+
+    Args:
+        transactions: QuerySet of Transaction objects.
+
+    Returns:
+        Dict containing formatted financial metrics:
+            - Income, Expense, Saving, EMI Due, Investment, Split Due
+    """
+    aggregations = transactions.aggregate(
+        income=Sum(
+            "amount",
+            filter=Q(type__iexact="income", is_deleted=False),
+            output_field=DecimalField(),
+        ),
+        expense=Sum(
+            "amount",
+            filter=Q(type__iexact="expense", status__iexact="completed")
+            & ~Q(category__iexact="investment"),
+            output_field=DecimalField(),
+        ),
+        investment=Sum(
+            "amount",
+            filter=Q(category__iexact="investment", status__iexact="completed"),
+            output_field=DecimalField(),
+        ),
+        overdue=Sum(
+            "amount",
+            filter=Q(category__iexact="emi", status__iexact="pending"),
+            output_field=DecimalField(),
+        ),
     )
 
-    overdue = sum(
-        entry.amount
-        for entry in transactions
-        if entry.category.lower() == "emi" and entry.status.lower() == "pending"
-    )
+    income = aggregations["income"] or 0
+    expense = aggregations["expense"] or 0
+    investment = aggregations["investment"] or 0
+    overdue = aggregations["overdue"] or 0
+
+    # Split due requires regex match, so we still need Python loop for this
     split_due = sum(
         entry.amount
-        for entry in transactions
+        for entry in transactions.filter(status__iexact="pending")
         if re.search(r"Split\s\d{1,2}$", entry.description, re.IGNORECASE)
-        and entry.status.lower() == "pending"
     )
 
     return {
@@ -74,30 +109,52 @@ def calculate_financial_overview(transactions):
         "EMI Due": format_amount(overdue),
         "Investment": format_amount(investment),
         "Split Due": format_amount(split_due),
-        # "Due (Split | EMI)": f"{format_amount(split_due)} |  {format_amount(overdue)}"
     }
 
 
-def calculate_category_wise_expenses(transactions):
-    category_wise_data = {}
-    for txn in transactions.filter(
-        type__iexact="Expense", date__lte=datetime.now().date()
-    ):
-        category_wise_data[txn.category] = (
-            category_wise_data.get(txn.category, 0) + txn.amount
-        )
-    return category_wise_data
+def calculate_category_wise_expenses(transactions) -> Dict[str, Any]:
+    """
+    Calculate expenses grouped by category.
+
+    Optimized using database aggregations grouped by category.
+
+    Args:
+        transactions: QuerySet of Transaction objects.
+
+    Returns:
+        Dict mapping category names to total amounts.
+    """
+    category_data = (
+        transactions.filter(type__iexact="Expense", date__lte=datetime.now().date())
+        .values("category")
+        .annotate(total=Sum("amount"))
+        .order_by("-total")
+    )
+
+    return {item["category"]: item["total"] for item in category_data}
 
 
-def calculate_monthly_savings(transactions, user):
+def calculate_monthly_savings(transactions, user) -> Dict[str, float]:
+    """
+    Calculate monthly savings for the last 12 months.
+
+    Args:
+        transactions: QuerySet of Transaction objects.
+        user: The Django user object.
+
+    Returns:
+        Dict mapping month labels (e.g., "Jan'24") to savings amounts.
+    """
     current_date = timezone.now()
 
-    last_12_months = [(current_date - relativedelta(months=i)).month for i in range(12)]
+    last_12_months = [
+        (current_date - relativedelta(months=i)).month for i in range(12)
+    ]
     last_12_months_years = [
         (current_date - relativedelta(months=i)).year for i in range(12)
     ]
 
-    transactions = (
+    monthly_data = (
         Transaction.objects.filter(
             created_by=user,
             is_deleted=False,
@@ -119,7 +176,7 @@ def calculate_monthly_savings(transactions, user):
         month_data = next(
             (
                 transaction
-                for transaction in transactions
+                for transaction in monthly_data
                 if transaction["date__month"] == month
                 and transaction["date__year"] == year
             ),
@@ -129,20 +186,33 @@ def calculate_monthly_savings(transactions, user):
         total_income = month_data.get("total_income") or 0
 
         savings = total_income - total_expense
-        label = datetime(year, month, 1).strftime("%b'%y")  # Format as Jan'24
+        label = datetime(year, month, 1).strftime("%b'%y")
         savings_data[label] = float(savings)
 
     return savings_data
 
 
-def calculate_year_wise_data(transactions, user):
+def calculate_year_wise_data(transactions, user) -> Dict[str, list]:
+    """
+    Calculate yearly income and expense data.
+
+    Args:
+        transactions: QuerySet of Transaction objects.
+        user: The Django user object.
+
+    Returns:
+        Dict containing lists of income, expense, and year labels.
+    """
     current_date = timezone.now()
 
-    first_day_of_next_month = datetime(current_date.year, current_date.month + 1, 1)
     if current_date.month == 12:
         first_day_of_next_month = datetime(current_date.year + 1, 1, 1)
+    else:
+        first_day_of_next_month = datetime(
+            current_date.year, current_date.month + 1, 1
+        )
 
-    transactions = (
+    yearly_data = (
         Transaction.objects.filter(
             created_by=user,
             is_deleted=False,
@@ -154,14 +224,25 @@ def calculate_year_wise_data(transactions, user):
             total_income=Sum("amount", filter=Q(type="Income")),
         )
     )
-    year_wise_data = {}
-    year_wise_data["income"] = [i["total_income"] for i in transactions]
-    year_wise_data["expense"] = [i["total_expense"] for i in transactions]
-    year_wise_data["label"] = [i["date__year"] for i in transactions]
-    return year_wise_data
+
+    return {
+        "income": [item["total_income"] for item in yearly_data],
+        "expense": [item["total_expense"] for item in yearly_data],
+        "label": [item["date__year"] for item in yearly_data],
+    }
 
 
-def calculate_current_month_category_expenses(transactions, user):
+def calculate_current_month_category_expenses(transactions, user) -> Dict[str, list]:
+    """
+    Calculate current month's category-wise expenses with balance.
+
+    Args:
+        transactions: QuerySet of Transaction objects.
+        user: The Django user object.
+
+    Returns:
+        Dict containing labels and amounts for current month categories.
+    """
     current_date = timezone.now()
     current_year = current_date.year
     current_month = current_date.month
@@ -189,10 +270,10 @@ def calculate_current_month_category_expenses(transactions, user):
         .annotate(amount=Sum("amount"))
     )
 
-    category_wise = {}
-
-    category_wise["labels"] = [i["category"] for i in category_expenses]
-    category_wise["amount"] = [i["amount"] for i in category_expenses]
+    category_wise = {
+        "labels": [item["category"] for item in category_expenses],
+        "amount": [item["amount"] for item in category_expenses],
+    }
 
     income_total = next(
         (item["amount"] for item in total if item["type"] == "Income"), 0
@@ -203,92 +284,124 @@ def calculate_current_month_category_expenses(transactions, user):
 
     category_wise["labels"].append("Balance")
     category_wise["amount"].append(income_total - expense_total)
+
     return category_wise
 
 
-# ...........................................Index..................................................
+def get_service_status(user) -> Dict[str, bool]:
+    """
+    Get user's access status for all modules from database.
+
+    Args:
+        user: The Django user object.
+
+    Returns:
+        Dict mapping module titles to access status (True/False).
+    """
+    all_modules = UtilityModule.objects.all().order_by("display_order")
+    return {module.title: module.has_access(user) for module in all_modules}
+
+
+# ============================================================================
+# Public Views
+# ============================================================================
+
+
 def index(request):
-    if request.session.get("username"):
+    """
+    Landing page view for non-authenticated users.
+
+    Displays active utility modules that are marked to show on landing page.
+    Redirects to dashboard if user is already authenticated.
+
+    Args:
+        request: Django HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered landing page or redirect to dashboard.
+    """
+    if request.user.is_authenticated:
         return redirect("dashboard")
+
+    # Get active modules from database for landing page
+    modules = UtilityModule.objects.filter(
+        is_active=True, show_on_landing=True
+    ).order_by("display_order")
+
     data = [
         {
-            "icon": "fa-credit-card",
-            "title": "Smart Transaction Management",
-            "description": "Track your daily expenses and income with a simple, intuitive system that automatically categorizes each transaction.",
-        },
-        {
-            "icon": "fa-wallet",
-            "title": "Easy Finance Tracking",
-            "description": "Stay on top of your loans and investments, with reminders for payment dates and detailed records.",
-        },
-        {
-            "icon": "fa-check-circle",
-            "title": "Efficient Task Management",
-            "description": "Organize your tasks, set reminders, and keep track of what matters most, all in one place.",
-        },
-        {
-            "icon": "fa-book",
-            "title": "Comprehensive Ledger",
-            "description": "Keep your financial records well-organized. Maintain accurate accounting with ease.",
-        },
-        # {
-        #     "icon": "fa-tags",
-        #     "title": "Price Tracker",
-        #     "description": "Keep tabs on your favorite products and get the best deals with real-time price tracking.",
-        # },
-        {
-            "icon": "fa-bell",
-            "title": "Reminder Management",
-            "description": "Never miss important dates with customizable reminders for bills, tasks, and events.",
-        },
-        {
-            "icon": "fa-file",
-            "title": "Document Management",
-            "description": "Your Digital Library. Always Current. Always Ready.",
-        },
+            "icon": module.icon or "fa-puzzle-piece",
+            "title": module.landing_title or module.title,
+            "description": module.landing_description or module.description,
+        }
+        for module in modules
     ]
+
     return render(request, "landing_page.html", {"data": data})
 
 
-# ...........................................About..................................................
-@auth_user
-def about(request, user):
-    return render(request, "about.html", {"user": user})
+@login_required
+def about(request):
+    """
+    About page view.
+
+    Args:
+        request: Django HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered about page.
+    """
+    return render(request, "about.html", {"user": request.user})
 
 
-# ...........................................Dashboard..................................................
-@auth_user
-def dashboard(request, user):
+@login_required
+def dashboard(request):
+    """
+    Main dashboard view with financial analytics and statistics.
+
+    Displays comprehensive financial overview including:
+    - Financial overview (income, expense, savings, etc.)
+    - Category-wise expenses
+    - Monthly savings for last 12 months
+    - Year-wise income and expense
+    - Current month's category breakdown
+
+    Args:
+        request: Django HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered dashboard with analytics data.
+    """
+    user = request.user
+
+    # Fetch transactions once and reuse
     transactions = Transaction.objects.filter(created_by=user, is_deleted=False)
 
-    user_info = {}
-    user_info["first_txn_date"] = (
-        min(entry.date for entry in transactions if entry.category.lower())
-        if transactions
-        else ""
-    )
-    user_info["account_age"] = (timezone.now() - user.created_at).days
+    # User information
+    user_info = {
+        "first_txn_date": (
+            min(entry.date for entry in transactions if entry.category.lower())
+            if transactions
+            else ""
+        ),
+        "account_age": (timezone.now() - user.date_joined).days,
+    }
 
-    # Financial Overview
+    # Financial overview
     financial_data = calculate_financial_overview(transactions)
 
-    context = {}
-    # Category-wise expense calculations
-    context["category_wise_data"] = calculate_category_wise_expenses(transactions)
-
-    # Monthly savings of the last 12 months
-    context["savings"] = calculate_monthly_savings(transactions, user)
-
-    # Year-wise income and expense
-    context["year_wise_data"] = calculate_year_wise_data(transactions, user)
-
-    # Current month's category-wise expense
-    context["category_wise_month"] = calculate_current_month_category_expenses(
-        transactions, user
-    )
+    # Analytics data
+    analytics = {
+        "category_wise_data": calculate_category_wise_expenses(transactions),
+        "savings": calculate_monthly_savings(transactions, user),
+        "year_wise_data": calculate_year_wise_data(transactions, user),
+        "category_wise_month": calculate_current_month_category_expenses(
+            transactions, user
+        ),
+    }
 
     context = {
-        "data": json.dumps(context, default=convert_decimal),
+        "data": json.dumps(analytics, default=convert_decimal),
         "financial_data": financial_data,
         "user_info": user_info,
         "user": user,
@@ -297,74 +410,26 @@ def dashboard(request, user):
     return render(request, "dashboard.html", context=context)
 
 
-# ...........................................Home Page..................................................
-@auth_user
-def utilities(request, user):
+@login_required
+def utilities(request):
+    """
+    Utilities home page view.
 
-    utility_items = [
-        {
-            "key": "TRANSACTION_USER_ACCESS",
-            "title": "TRANSACTION",
-            "description": "Manage Your Money Moves, One Day at a Time!",
-            "url": "/transaction-detail/",
-        },
-        {
-            "key": "FINANCE_USER_ACCESS",
-            "title": "FINANCE",
-            "description": "Track Your Loans and Sips, No Slips!",
-            "url": "/finance-details/",
-        },
-        {
-            "key": "LEDGER_USER_ACCESS",
-            "title": "LEDGER",
-            "description": "Balance Your Payables and Receivables with Ease!",
-            "url": "/ledger-transaction-details/",
-        },
-        {
-            "key": "TASK_USER_ACCESS",
-            "title": "TASK",
-            "description": "Give Your Brain a Break, We've Got Your To-Dos Covered!",
-            "url": "/currentMonthTaskReport/",
-        },
-        {
-            "key": "REMINDER_USER_ACCESS",
-            "title": "REMINDER",
-            "description": "Never Miss a Moment, Let the Reminders Handle it All!",
-            "url": "/view-today-reminder/",
-        },
-        {
-            "key": "DOCUMENT_MANAGER_USER_ACCESS",
-            "title": "DOCUMENT MANAGER",
-            "description": "The Right File, Right Now. Never Search Again.",
-            "url": "/fetch-documents/",
-        },
-        # {
-        #     "key": "MUSIC_USER_ACCESS",
-        #     "title": "MUSIC",
-        #     "description": "Easily listen music and stay updated in real-time.",
-        #     "url": "/play-my-music/"
-        # },
-        {
-            "key": "OTHER_UTILITIES_USER_ACCESS",
-            "title": "ADVANCE UTILITIES",
-            "description": "Access and manage advanced utility tools integrated with your account.",
-            "url": "/advance-utils/",
-        },
-    ]
+    Displays all available utility modules for the user along with
+    reminder count and counterparties.
 
-    items = [
-        {
-            "title": item["title"],
-            "description": item["description"],
-            "url": item["url"],
-        }
-        for item in utility_items
-        if user.username.lower() in USER_ACCESS[item["key"]].split(",")
-        or USER_ACCESS[item["key"]] == "*"
-    ]
+    Args:
+        request: Django HTTP request object.
 
+    Returns:
+        HttpResponse: Rendered utilities page.
+    """
+    user = request.user
+
+    items = module_registry.get_modules_for_user(user)
     reminder_count = len(calculate_reminder(user))
     counterparties = get_counter_parties(user)
+
     return render(
         request,
         "utiltities.html",
@@ -377,33 +442,189 @@ def utilities(request, user):
     )
 
 
-@auth_user
-def profile(request, user):
-    context = {}
-    context["user"] = user
-    context["service_status"] = get_service_status(user)
-    if user.username == settings.ADMIN:
+@login_required
+def profile(request):
+    """
+    User profile view.
+
+    Displays user profile information, accessible modules,
+    and account statistics.
+
+    Args:
+        request: Django HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered profile page.
+    """
+    user = request.user
+
+    # Get accessible modules with full details
+    accessible_modules = [
+        {
+            "title": module.title,
+            "icon": module.icon or "fa-puzzle-piece",
+            "access_type": module.get_access_type_display(),
+        }
+        for module in UtilityModule.objects.filter(is_active=True)
+        if module.has_access(user)
+    ]
+
+    # Calculate account statistics
+    account_age = (timezone.now() - user.date_joined).days
+    total_transactions = Transaction.objects.filter(
+        created_by=user, is_deleted=False
+    ).count()
+
+    context = {
+        "user": user,
+        "service_status": get_service_status(user),
+        "accessible_modules": accessible_modules,
+        "account_age": account_age,
+        "total_transactions": total_transactions,
+    }
+
+    # Add admin-specific data
+    if user.is_superuser:
         refresh_token_time = (
-            RefreshToken.objects.filter(is_active=True).order_by("-created_at").first()
+            RefreshToken.objects.filter(is_active=True)
+            .order_by("-created_at")
+            .first()
         )
         context["last_genration"] = (
             refresh_token_time.created_at if refresh_token_time else "N/A"
         )
+
     return render(request, "profile.html", context=context)
 
 
-def get_service_status(user):
-    return {
-        key.replace("_USER_ACCESS", "").replace("_", " "): user.username.lower()
-        in value.split(",")
-        or value == "*"
-        for key, value in USER_ACCESS.items()
-    }
+@login_required
+def update_profile(request):
+    """
+    Handle profile picture upload and name update via AJAX.
+
+    Accepts POST requests with profile picture file and/or name update.
+    Deletes old profile picture before saving new one.
+
+    Args:
+        request: Django HTTP request object.
+
+    Returns:
+        JsonResponse: Success/failure status with message and updated data.
+    """
+    if request.method != "POST":
+        return JsonResponse(
+            {"success": False, "message": "Invalid request method"}, status=405
+        )
+
+    user = request.user
+
+    # Handle name update
+    new_name = request.POST.get("name")
+    if new_name and new_name.strip():
+        name_parts = new_name.rsplit(" ", 1)
+        user.first_name = name_parts[0].strip()
+        user.last_name = name_parts[1].strip() if len(name_parts) > 1 else ''
+        user.save()
+
+    # Handle profile picture upload
+    if request.FILES.get("profile_picture"):
+        # Delete old picture if exists
+        if user.profile_picture:
+            user.profile_picture.delete(save=False)
+
+        user.profile_picture = request.FILES["profile_picture"]
+        user.save()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "message": "Profile updated successfully",
+                "profile_picture_url": (
+                    user.profile_picture.url if user.profile_picture else None
+                ),
+            }
+        )
+
+    return JsonResponse({"success": True, "message": "Name updated successfully"})
 
 
-@auth_user
-def redirect_to_streamlit(request, user):
+@login_required
+def redirect_to_streamlit(request):
+    """
+    Redirect to Streamlit app with encrypted authentication token.
+
+    Creates an encrypted token containing user ID and username,
+    then redirects to the Streamlit URL with the token as a query parameter.
+
+    Args:
+        request: Django HTTP request object.
+
+    Returns:
+        HttpResponseRedirect: Redirect to Streamlit with auth token.
+    """
     token = security_service.encrypt_text(
-        {"user_id": user.id, "username": user.username}
+        {"user_id": request.user.id, "username": request.user.username}
     )
     return redirect(f"{settings.STREAMLIT_URL}?_id={token}")
+
+
+@login_required
+def manual_backup(request):
+    """
+    Manually trigger database backup (superuser only).
+    
+    Executes the backup_db management command programmatically.
+    Restricted to superusers only.
+    
+    Args:
+        request: Django HTTP request object
+        
+    Returns:
+        JsonResponse: Backup status and message
+    """
+    from django.contrib import messages
+    from django.core.management import call_command
+    from io import StringIO
+    import sys
+    
+    # Restrict to superusers only
+    if not request.user.is_superuser:
+        messages.error(request, "Access denied. Admin privileges required.")
+        return redirect('profile')
+    
+    try:
+        # Capture management command output
+        output = StringIO()
+        # Skip task reminders when manually triggered from UI
+        call_command('backup_db', stdout=output, skip_reminders=True)
+        
+        # Get the output
+        backup_output = output.getvalue()
+        
+        messages.success(request, "Database backup completed successfully!")
+        
+        # Return JSON if AJAX request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Backup completed successfully',
+                'output': backup_output
+            })
+        
+        # Redirect to profile for normal requests
+        return redirect('profile')
+        
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        
+        messages.error(request, f"Backup failed: {str(e)}")
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e),
+                'details': error_details
+            }, status=500)
+        
+        return redirect('profile')

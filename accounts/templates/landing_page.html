@@ -2,44 +2,93 @@
 {% load static %}
 {% block mainbody %}
 
+<link rel="stylesheet" href="{% static 'css/landing_page.css' %}">
 
-<link rel="stylesheet" href="{% static 'css/landing_page.css' %}"></link>
-
-<section class="hero">
-  <h1>Welcome to myHelperBuddy</h1>
-  <p>The smart, simple solution to manage your daily transactions, loans, tasks, reminders, price tracking, music downloads, and ledgers.</p>
-  <a href="/dashboard/" class="btn-primary">Get Started <i class="fa-solid fa-arrow-right"></i> </a>
+<!-- Modern Hero Section -->
+<section class="modern-hero">
+  <div class="hero-container">
+    <div class="hero-badge">Welcome to the Future of Finance</div>
+    <h1 class="hero-title">
+      Simplify Your Life with
+      <span class="gradient-text">myHelperBuddy</span>
+    </h1>
+    <p class="hero-description">
+      The all-in-one intelligent platform for managing transactions, loans, tasks, and documents with ease and security.
+    </p>
+    <div class="hero-cta">
+      <a href="/signup/" class="btn-modern-primary">
+        Get Started Free
+        <i class="fas fa-arrow-right"></i>
+      </a>
+      <a href="/login" class="btn-modern-ghost">Sign In</a>
+    </div>
+  </div>
+  
+  <!-- Floating Elements -->
+  <div class="float-element float-1"></div>
+  <div class="float-element float-2"></div>
+  <div class="float-element float-3"></div>
 </section>
 
-<section class="features">
-  <h2>Our Features</h2>
-  <div class="features-grid">
-    {% for item in data %}
-    <div class="feature-card">
-      <i class="fas {{ item.icon }} feature-icon"></i>
-      <h3 class="feature-title">{{ item.title }}</h3>
-      <p class="feature-desc">{{ item.description }}</p>
+<!-- Feature Highlights -->
+<section class="features-modern">
+  <div class="container-modern">
+    <div class="section-head">
+      <span class="section-label">Features</span>
+      <h2 class="section-title">Everything You Need, All In One Place</h2>
     </div>
-    {% endfor %}
+    
+    <div class="features-grid-modern">
+      {% for item in data %}
+      <div class="feature-card-modern">
+        <div class="feature-icon-modern">
+          <i class="fas {{ item.icon }}"></i>
+        </div>
+        <h3 class="feature-name">{{ item.title }}</h3>
+        <p class="feature-detail">{{ item.description }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
 </section>
 
+<!-- Benefits Section -->
+<section class="benefits-section">
+  <div class="container-modern">
+    <div class="benefits-grid">
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <i class="fas fa-shield-alt"></i>
+        </div>
+        <h4>Bank-Grade Security</h4>
+        <p>Your data is encrypted and protected with industry-leading security standards.</p>
+      </div>
+      
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <i class="fas fa-sync-alt"></i>
+        </div>
+        <h4>Real-Time Sync</h4>
+        <p>All your information updates instantly across all modules and devices.</p>
+      </div>
+      
+      <div class="benefit-item">
+        <div class="benefit-icon">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <h4>Smart Analytics</h4>
+        <p>Get insights into your spending patterns and financial health.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-<section class="why-choose">
-  <h2>Why Choose myHelperBuddy?</h2>
-  <p class="lead">We provide a secure, intuitive platform that centralizes your financial and task management — making your life easier and more organized.</p>
-  <div class="why-grid">
-    <div class="why-item">
-      <h4>Centralized Platform</h4>
-      <p>All your transactions, loans, tasks, and reminders managed in one intuitive dashboard.</p>
-    </div>
-    <div class="why-item">
-      <h4>Real-time Updates</h4>
-      <p>Stay on top of your finances and deadlines with live sync and timely reminders.</p>
-    </div>
-    <div class="why-item">
-      <h4>Secure & Private</h4>
-      <p>Your data is encrypted and securely stored. Privacy and security are our top priorities.</p>
-    </div>
+<!-- CTA Footer -->
+<section class="cta-modern">
+  <div class="cta-content-modern">
+    <h2>Ready to Take Control?</h2>
+    <p>Join thousands of users who've simplified their financial management</p>
+    <a href="/signup/" class="btn-cta-large">Start Your Free Journey</a>
   </div>
 </section>
 
