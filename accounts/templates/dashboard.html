@@ -3,9 +3,62 @@
     {% load static %}
 
     {% block body %}
+    
+    <style>
+    .dashboard-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 12px;
+    }
+    
+    .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+    
+    .reminder-item {
+        border-left: 4px solid;
+        padding: 10px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 249, 250, 0.9) 100%);
+        transition: all 0.2s ease;
+    }
+    
+    .reminder-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .reminder-item.critical { border-left-color: #EF4444; }
+    .reminder-item.high { border-left-color: #F59E0B; }
+    .reminder-item.medium { border-left-color: #FBBF24; }
+    .reminder-item.low { border-left-color: #3B82F6; }
+    
+    .task-item {
+        padding: 10px;
+        margin-bottom: 8px;
+        border-radius: 8px;
+        background: #F8F9FA;
+        border-left: 4px solid #6B7280;
+        transition: all 0.2s ease;
+    }
+    
+    .task-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-left-color: var(--primary);
+    }
+    
+    .task-item.overdue {
+        border-left-color: #EF4444;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, white 100%);
+    }
+    </style>
+    
     <div class="text-center mt-3">
-        <p class="text-secondary d-inline"> Welcome Back <h2 class="mt-2" style="color:var(--primary);font-family: Dancing Script;">{{ user.first_name }} {{ user.last_name }} </h2> </p>
+        <p class="text-secondary d-inline">Welcome Back <h2 class="mt-2" style="color:var(--primary);font-family: Dancing Script;">{{ user.first_name }} {{ user.last_name }} </h2> </p>
     </div>
+    
     <div class="container mt-4">
         <div class="row g-2">
             {% for label, amount in financial_data.items %}
@@ -45,8 +98,124 @@
             {% endfor %}
         </div>
         
+        <!-- Reminders & Tasks Section -->
+        <div class="row g-3 my-4">
+            <!-- Today's Reminders -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 dashboard-card h-100">
+                    <div class="card-header" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white;">
+                        <h5 class="mb-0" style="font-family: 'Dancing Script';">
+                            <i class="fa-solid fa-bell"></i> Today's Reminders
+                        </h5>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        {% if todays_reminders %}
+                            {% for reminder in todays_reminders %}
+                            <div class="reminder-item {{ reminder.priority }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <span style="font-size: 1.2rem;">{{ reminder.get_priority_icon }}</span>
+                                            <strong>{{ reminder.title|truncatechars:30 }}</strong>
+                                        </div>
+                                        {% if reminder.description %}
+                                        <p class="text-muted mb-1" style="font-size: 0.85rem;">{{ reminder.description|truncatechars:50 }}</p>
+                                        {% endif %}
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <span class="badge" style="background: rgba(var(--primary-rgb, 94, 134, 1), 0.1); color: var(--primary); font-size: 0.75rem;">
+                                                {{ reminder.get_type_icon }} {{ reminder.get_reminder_type_display }}
+                                            </span>
+                                            {% if reminder.reminder_time %}
+                                            <span class="badge bg-secondary" style="font-size: 0.75rem;">
+                                                <i class="fa-solid fa-clock"></i> {{ reminder.reminder_time|time:"H:i" }}
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <a href="/view-reminder/" class="btn btn-sm custom-btn-primary">
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <div class="text-center mt-2">
+                                <a href="/view-today-reminder/" class="btn btn-sm custom-btn-primary">
+                                    View All Reminders
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fa-solid fa-bell-slash fa-3x text-muted mb-2"></i>
+                                <p class="text-muted">No reminders for today</p>
+                                <a href="/view-reminder/" class="btn btn-sm custom-btn-primary">
+                                    Create Reminder
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pending Tasks -->
+            <div class="col-md-6">
+                <div class="card shadow-sm border-0 dashboard-card h-100">
+                    <div class="card-header" style="background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white;">
+                        <h5 class="mb-0" style="font-family: 'Dancing Script';">
+                            <i class="fa-solid fa-tasks"></i> Pending Tasks
+                        </h5>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        {% if pending_tasks %}
+                            {% for task in pending_tasks %}
+                            <div class="task-item {% if task.complete_by_date < today %}overdue{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            {% if task.complete_by_date < today %}
+                                            <i class="fa-solid fa-exclamation-circle text-danger"></i>
+                                            {% else %}
+                                            <i class="fa-solid fa-circle-dot text-warning"></i>
+                                            {% endif %}
+                                            <strong>{{ task.name }}</strong>
+                                        </div>
+                                        <div class="d-flex gap-2 flex-wrap align-items-center">
+                                            <span class="badge bg-secondary" style="font-size: 0.75rem;">
+                                                <i class="fa-solid fa-calendar"></i> {{ task.complete_by_date|date:"d M Y" }}
+                                            </span>
+                                            {% if task.complete_by_date < today %}
+                                            <span class="badge bg-danger" style="font-size: 0.75rem;">
+                                                <i class="fa-solid fa-clock"></i> Overdue
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <a href="/taskReports/" class="btn btn-sm custom-btn-primary">
+                                        <i class="fa-solid fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <div class="text-center mt-2">
+                                <a href="/taskReports/" class="btn btn-sm custom-btn-primary">
+                                    View All Tasks
+                                </a>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fa-solid fa-check-circle fa-3x text-success mb-2"></i>
+                                <p class="text-muted">All caught up! No pending tasks</p>
+                                <a href="/taskReports/" class="btn btn-sm btn">
+                                    Create Task
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
     
-        <div class="row mt-5">
+        <!-- Charts Section -->
+        <div class="row g-3">
             <div class="col-12 col-sm-6 col-md-3" style="min-height: 35vh;">
                 <canvas id="savingsChart"></canvas>
             </div>
@@ -60,13 +229,14 @@
                 <canvas id="subChart2"></canvas>
             </div>
         </div>
+        
         <div class="row mt-5">
             <p class="text-muted col-12 text-end" style="font-size: 1.2vh;">* All the data displayed above calculated from transaction date {{user_info.first_txn_date}}</p>
         </div>
     </div>
         
-        <link rel="stylesheet" href="{% static 'css/floatingButton.css' %}">
-        <button class="floating-button" id="floatingHome"><a href="/utilities/"><i class="fa-solid fa-list" style="color:var(--secondary)"></i></a></button>
+    <link rel="stylesheet" href="{% static 'css/floatingButton.css' %}">
+    <button class="floating-button" id="floatingHome"><a href="/utilities/"><i class="fa-solid fa-list" style="color:var(--secondary)"></i></a></button>
     
     {% endblock body %}
         
@@ -74,11 +244,11 @@
     {% block script %}
     <script type="text/javascript">
         const data = JSON.parse('{{ data|escapejs }}')
+        const today = new Date('{{ today|date:"Y-m-d" }}');
     </script>
     <script src="{% static 'js/dashboardChart.js' %}"></script>
     {% endblock script %}
 
     {% block style %}
-
     <link rel="stylesheet" href="{% static 'css/chart.css' %}">
     {% endblock style %}

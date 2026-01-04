@@ -23,6 +23,7 @@ from accounts.models import (
     UtilityModule,
     LedgerTransaction,
     RefreshToken,
+    Task,
     Transaction,
 )
 from accounts.services.module_registry import module_registry
@@ -357,10 +358,12 @@ def about(request):
 @login_required
 def dashboard(request):
     """
-    Main dashboard view with financial analytics and statistics.
+    Main dashboard view with financial analytics, reminders, and tasks.
 
-    Displays comprehensive financial overview including:
+    Displays comprehensive overview including:
     - Financial overview (income, expense, savings, etc.)
+    - Today's active reminders
+    - Pending tasks till today
     - Category-wise expenses
     - Monthly savings for last 12 months
     - Year-wise income and expense
@@ -400,11 +403,28 @@ def dashboard(request):
         ),
     }
 
+    # Get today's reminders
+    from accounts.views.view_reminder import calculate_reminder
+    todays_reminders = calculate_reminder(user)
+
+    # Get pending tasks till today
+    from datetime import date
+    today = date.today()
+    pending_tasks = Task.objects.filter(
+        created_by=user,
+        is_deleted=False,
+        status='Pending',
+        complete_by_date__lte=today
+    ).order_by('complete_by_date')[:10]  # Latest 10 pending tasks
+
     context = {
         "data": json.dumps(analytics, default=convert_decimal),
         "financial_data": financial_data,
         "user_info": user_info,
         "user": user,
+        "todays_reminders": todays_reminders[:5],  # Show top 5 reminders
+        "pending_tasks": pending_tasks,
+        "today": today,
     }
 
     return render(request, "dashboard.html", context=context)
