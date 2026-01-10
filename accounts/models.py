@@ -469,7 +469,7 @@ class RefreshToken(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.created_at
+        return self.created_at.strftime('%Y-%m-%d %H:%M:%S')
 
 
 class UtilityModule(models.Model):

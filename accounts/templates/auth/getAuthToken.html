@@ -116,18 +116,6 @@
   </body>
 
 <script>
-  function getCSRFToken() {
-    const name = 'csrftoken=';
-    const cookies = document.cookie.split(';');
-    for (let cookie of cookies) {
-      cookie = cookie.trim();
-      if (cookie.startsWith(name)) {
-        return cookie.substring(name.length);
-      }
-    }
-    return '';
-  }
-
   function sendData() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
@@ -142,7 +130,7 @@
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-CSRFToken": getCSRFToken(),
+        "X-CSRFToken": "{{ csrf_token }}",
       },
       body: JSON.stringify({ code }),
     })
