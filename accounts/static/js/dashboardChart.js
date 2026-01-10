@@ -9,6 +9,47 @@ const top_expenses = data.top_expenses;
 const savings_rate = data.savings_rate;
 const income_sources = data.income_sources;
 
+// ============================================================================
+// Loading States - Show shimmer on all chart containers initially
+// ============================================================================
+document.addEventListener('DOMContentLoaded', function () {
+  // Add loading class to all chart containers
+  document.querySelectorAll('.card-body canvas').forEach(canvas => {
+    canvas.parentElement.classList.add('loading');
+  });
+
+  // Remove loading after charts are rendered (triggered at end of file)
+  window.chartsLoaded = false;
+});
+
+// Function to remove all loading states
+function removeLoadingStates() {
+  setTimeout(() => {
+    document.querySelectorAll('.card-body.loading').forEach(body => {
+      body.classList.remove('loading');
+    });
+    window.chartsLoaded = true;
+  }, 300);  // Small delay for smooth transition
+}
+
+// ============================================================================
+// Empty State Handler - Show helpful messages when no data
+// ============================================================================
+function showEmptyState(canvasId, message, icon = 'fa-inbox') {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  const parent = canvas.parentElement;
+  parent.classList.remove('loading');
+  parent.innerHTML = `
+    <div class="text-center py-5 text-muted">
+      <i class="fa-solid ${icon} fa-3x mb-3" style="opacity: 0.3;"></i>
+      <p class="mb-0">${message}</p>
+    </div>
+  `;
+}
+
+
 // Color palette
 const colors = {
   income: '#10b981',
@@ -243,10 +284,8 @@ if (income_sources.labels && income_sources.labels.length > 0) {
     }
   });
 } else {
-  // Show "No data" message
-  const canvas = document.getElementById('incomeSourcesChart');
-  const parent = canvas.parentElement;
-  parent.innerHTML = '<div class="text-center text-muted py- 5"><i class="fa-solid fa-inbox fa-2x mb-2"></i><p>No income data</p></div>';
+  // Show empty state
+  showEmptyState('incomeSourcesChart', 'No income data for this month', 'fa-wallet');
 }
 
 // 6. Weekly Spending Trend
@@ -358,3 +397,8 @@ new Chart(document.getElementById('yearWiseChart'), {
     }
   }
 });
+
+// ============================================================================
+// Remove loading states after all charts are rendered
+// ============================================================================
+removeLoadingStates();
