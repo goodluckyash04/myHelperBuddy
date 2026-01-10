@@ -215,18 +215,81 @@
         </div>
     
         <!-- Charts Section -->
-        <div class="row g-3">
-            <div class="col-12 col-sm-6 col-md-3" style="min-height: 35vh;">
-                <canvas id="savingsChart"></canvas>
+        <div class="row g-3 mb-3">
+            <!-- Large Cash Flow Trend Chart -->
+            <div class="col-12">
+                <div class="card shadow-sm border-0 dashboard-card">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0" style="color: var(--primary); font-family: 'Dancing Script';">
+                            <i class="fa-solid fa-chart-line"></i> Cash Flow Trend (Last 12 Months)
+                        </h5>
+                    </div>
+                    <div class="card-body" style="min-height: 300px;">
+                        <canvas id="cashFlowChart"></canvas>
+                    </div>
+                </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3" style="min-height: 35vh;">
-                <canvas id="expenseCategoryChart"></canvas>
+        </div>
+        
+        <!-- Secondary Charts Grid -->
+        <div class="row g-3">            
+            <!-- Category-wise Distribution -->
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm border-0 dashboard-card h-100">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0" style="color: var(--primary);">
+                            <i class="fa-solid fa-chart-pie"></i> Category Distribution
+                        </h6>
+                    </div>
+                    <div class="card-body" style="min-height: 300px;">
+                        <canvas id="expenseCategoryChart"></canvas>
+                    </div>
+                </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3" style="min-height: 35vh;">
-                <canvas id="subChart1"></canvas>
+            
+            <!-- Income Sources -->
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm border-0 dashboard-card h-100">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0" style="color: var(--primary);">
+                            <i class="fa-solid fa-wallet"></i> Income Sources
+                        </h6>
+                    </div>
+                    <div class="card-body" style="min-height: 300px;">
+                        <canvas id="incomeSourcesChart"></canvas>
+                    </div>
+                </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3" style="min-height: 35vh;">
-                <canvas id="subChart2"></canvas>
+        </div>
+        
+        <!-- Additional Charts Row -->
+        <div class="row g-3 mt-3">
+            <!-- Weekly Spending Trend -->
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm border-0 dashboard-card">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0" style="color: var(--primary);">
+                            <i class="fa-solid fa-calendar-week"></i> Last 30 Days Spending
+                        </h6>
+                    </div>
+                    <div class="card-body" style="min-height: 250px;">
+                        <canvas id="weeklySpendingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Year-wise Comparison -->
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm border-0 dashboard-card">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0" style="color: var(--primary);">
+                            <i class="fa-solid fa-chart-column"></i> Year-wise Comparison
+                        </h6>
+                    </div>
+                    <div class="card-body" style="min-height: 250px;">
+                        <canvas id="yearWiseChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
         

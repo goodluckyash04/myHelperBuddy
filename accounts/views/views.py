@@ -289,6 +289,238 @@ def calculate_current_month_category_expenses(transactions, user) -> Dict[str, l
     return category_wise
 
 
+def calculate_monthly_income_expense(transactions, user) -> Dict[str, list]:
+    """
+    Calculate monthly income and expense for the last 12 months.
+    
+    This provides data for the Cash Flow Trend chart showing income,
+    expense, and net savings over time.
+
+    Args:
+        transactions: QuerySet of Transaction objects.
+        user: The Django user object.
+
+    Returns:
+        Dict containing lists of labels, income, expense, and savings.
+    """
+    current_date = timezone.now()
+    
+    last_12_months = [
+        (current_date - relativedelta(months=i)).month for i in range(12)
+    ]
+    last_12_months_years = [
+        (current_date - relativedelta(months=i)).year for i in range(12)
+    ]
+
+    monthly_data = (
+        Transaction.objects.filter(
+            created_by=user,
+            is_deleted=False,
+            date__year__in=last_12_months_years,
+            date__month__in=last_12_months,
+        )
+        .values("date__year", "date__month")
+        .annotate(
+            total_expense=Sum("amount", filter=Q(type="Expense")),
+            total_income=Sum("amount", filter=Q(type="Income")),
+        )
+    )
+
+    labels = []
+    income_data = []
+    expense_data = []
+    savings_data = []
+
+    for i in range(12):
+        month = last_12_months[i]
+        year = last_12_months_years[i]
+
+        month_data = next(
+            (
+                transaction
+                for transaction in monthly_data
+                if transaction["date__month"] == month
+                and transaction["date__year"] == year
+            ),
+            {},
+        )
+        
+        total_expense = float(month_data.get("total_expense") or 0)
+        total_income = float(month_data.get("total_income") or 0)
+        savings = total_income - total_expense
+        
+        label = datetime(year, month, 1).strftime("%b'%y")
+        
+        labels.append(label)
+        income_data.append(total_income)
+        expense_data.append(total_expense)
+        savings_data.append(savings)
+
+    return {
+        "labels": labels,
+        "income": income_data,
+        "expense": expense_data,
+        "savings": savings_data,
+    }
+
+
+def calculate_weekly_spending(transactions, user) -> Dict[str, list]:
+    """
+    Calculate daily spending for the last 30 days.
+    
+    Used for Weekly Spending Trend chart to identify spending patterns.
+
+    Args:
+        transactions: QuerySet of Transaction objects.
+        user: The Django user object.
+
+    Returns:
+        Dict containing date labels and daily expense amounts.
+    """
+    from datetime import timedelta
+    
+    current_date = timezone.now().date()
+    start_date = current_date - timedelta(days=29)  # Last 30 days including today
+    
+    daily_data = (
+        Transaction.objects.filter(
+            created_by=user,
+            is_deleted=False,
+            type="Expense",
+            date__gte=start_date,
+            date__lte=current_date,
+        )
+        .values("date")
+        .annotate(total=Sum("amount"))
+        .order_by("date")
+    )
+    
+    # Create a complete date range with 0 for days with no expenses
+    date_dict = {item["date"]: float(item["total"]) for item in daily_data}
+    
+    labels = []
+    amounts = []
+    
+    for i in range(30):
+        date = start_date + timedelta(days=i)
+        labels.append(date.strftime("%d %b"))
+        amounts.append(date_dict.get(date, 0))
+    
+    return {
+        "labels": labels,
+        "amounts": amounts,
+    }
+
+
+def calculate_top_expenses(transactions, user, limit=5) -> Dict[str, list]:
+    """
+    Calculate top expense categories for the current month.
+    
+    Used for Top 5 Expenses chart.
+
+    Args:
+        transactions: QuerySet of Transaction objects.
+        user: The Django user object.
+        limit: Number of top categories to return (default: 5).
+
+    Returns:
+        Dict containing category labels and amounts.
+    """
+    current_date = timezone.now()
+    
+    top_categories = (
+        Transaction.objects.filter(
+            created_by=user,
+            is_deleted=False,
+            type="Expense",
+            date__month=current_date.month,
+            date__year=current_date.year,
+        )
+        .values("category")
+        .annotate(total=Sum("amount"))
+        .order_by("-total")[:limit]
+    )
+    
+    return {
+        "labels": [item["category"] for item in top_categories],
+        "amounts": [float(item["total"]) for item in top_categories],
+    }
+
+
+def calculate_savings_rate(transactions, user) -> float:
+    """
+    Calculate savings rate as percentage of income for the current month.
+    
+    Used for Savings Rate Gauge chart.
+
+    Args:
+        transactions: QuerySet of Transaction objects.
+        user: The Django user object.
+
+    Returns:
+        Float representing savings rate percentage (0-100).
+    """
+    current_date = timezone.now()
+    
+    totals = (
+        Transaction.objects.filter(
+            created_by=user,
+            is_deleted=False,
+            date__month=current_date.month,
+            date__year=current_date.year,
+        )
+        .values("type")
+        .annotate(total=Sum("amount"))
+    )
+    
+    income = next(
+        (float(item["total"]) for item in totals if item["type"] == "Income"), 0
+    )
+    expense = next(
+        (float(item["total"]) for item in totals if item["type"] == "Expense"), 0
+    )
+    
+    if income == 0:
+        return 0.0
+    
+    savings_rate = ((income - expense) / income) * 100
+    return round(max(0, min(100, savings_rate)), 1)  # Clamp between 0-100
+
+
+def calculate_income_sources(transactions, user) -> Dict[str, list]:
+    """
+    Calculate income breakdown by category for current month.
+    
+    Used for Income Sources chart.
+
+    Args:
+        transactions: QuerySet of Transaction objects.
+        user: The Django user object.
+
+    Returns:
+        Dict containing income source labels and amounts.
+    """
+    current_date = timezone.now()
+    
+    income_data = (
+        Transaction.objects.filter(
+            created_by=user,
+            is_deleted=False,
+            type="Income",
+            date__month=current_date.month,
+            date__year=current_date.year,
+        )
+        .values("category")
+        .annotate(total=Sum("amount"))
+        .order_by("-total")
+    )
+    
+    return {
+        "labels": [item["category"] for item in income_data],
+        "amounts": [float(item["total"]) for item in income_data],
+    }
+
+
 def get_service_status(user) -> Dict[str, bool]:
     """
     Get user's access status for all modules from database.
@@ -401,6 +633,12 @@ def dashboard(request):
         "category_wise_month": calculate_current_month_category_expenses(
             transactions, user
         ),
+        # New analytics for enhanced charts
+        "monthly_cash_flow": calculate_monthly_income_expense(transactions, user),
+        "weekly_spending": calculate_weekly_spending(transactions, user),
+        "top_expenses": calculate_top_expenses(transactions, user),
+        "savings_rate": calculate_savings_rate(transactions, user),
+        "income_sources": calculate_income_sources(transactions, user),
     }
 
     # Get today's reminders
