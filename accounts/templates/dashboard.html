@@ -5,6 +5,69 @@
     {% block body %}
     
     <style>
+    /* Metric Cards */
+    .metric-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.95) 100%);
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12) !important;
+    }
+    
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        font-family: 'Dancing Script', cursive;
+    }
+    
+    .metric-icon {
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    /* Loading States */
+    .card-body.loading {
+        position: relative;
+        min-height: 200px;
+        overflow: hidden;
+    }
+    
+    .card-body.loading::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            #f0f0f0 25%,
+            #e0e0e0 50%,
+            #f0f0f0 75%
+        );
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        z-index: 1;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
+    .card-body.loading canvas {
+        opacity: 0;
+    }
+    
+    /* Dashboard Cards */
     .dashboard-card {
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         border-radius: 12px;
@@ -56,16 +119,219 @@
     </style>
     
     <div class="text-center mt-3">
-        <p class="text-secondary d-inline">Welcome Back <h2 class="mt-2" style="color:var(--primary);font-family: Dancing Script;">{{ user.first_name }} {{ user.last_name }} </h2> </p>
+        <p class="text-muted d-inline">Welcome Back  <h2 class="mt-2 d-inline" style="color:var(--primary);font-family: Dancing Script;">{{ user.first_name }} {{ user.last_name }} </h2> </p>
     </div>
     
     <div class="container mt-4">
-        <div class="row g-2">
+        <!-- Date Range Selector -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0" style="color: var(--primary);">
+                        <i class="fa-solid fa-chart-line"></i> Financial Overview
+                    </h5>
+                    <select id="periodSelector" class="form-select w-auto" style="min-width: 180px;">
+                        <option value="this_month" {% if current_period == 'this_month' %}selected{% endif %}>This Month</option>
+                        <option value="last_3_months" {% if current_period == 'last_3_months' %}selected{% endif %}>Last 3 Months</option>
+                        <option value="last_6_months" {% if current_period == 'last_6_months' %}selected{% endif %}>Last 6 Months</option>
+                        <option value="this_year" {% if current_period == 'this_year' %}selected{% endif %}>This Year</option>
+                        <option value="all" {% if current_period == 'all' %}selected{% endif %}>All Time</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison Mode Toggle -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%);">
+                    <div class="card-body py-2">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" id="comparisonToggle" 
+                                       {% if compare_mode %}checked{% endif %}
+                                       style="cursor: pointer; width: 3em; height: 1.5em;">
+                                <label class="form-check-label ms-2" for="comparisonToggle" style="cursor: pointer;">
+                                    <i class="fa-solid fa-code-compare"></i> <strong>Compare Periods</strong>
+                                </label>
+                            </div>
+                            
+                            <!-- Comparison Selectors (shown when toggle is ON) -->
+                            <div id="comparisonSelectors" class="d-flex align-items-center gap-2 flex-wrap" 
+                                 style="display: {% if compare_mode %}flex{% else %}none{% endif %} !important;">
+                                <select id="period1Selector" class="form-select form-select-sm" style="width: auto; min-width: 140px;">
+                                    <option value="this_month">This Month</option>
+                                    <option value="last_month">Last Month</option>
+                                    <option value="last_3_months">Last 3 Months</option>
+                                    <option value="this_year">This Year</option>
+                                </select>
+                                <span class="text-muted fw-bold">vs</span>
+                                <select id="period2Selector" class="form-select form-select-sm" style="width: auto; min-width: 140px;">
+                                    <option value="last_month" selected>Last Month</option>
+                                    <option value="this_month">This Month</option>
+                                    <option value="last_3_months">Last 3 Months</option>
+                                    <option value="this_year">This Year</option>
+                                </select>
+                                <button id="applyComparison" class="btn btn-sm custom-btn-primary">
+                                    <i class="fa-solid fa-refresh"></i> Apply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comparison Results (shown when in comparison mode) -->
+        {% if compare_mode and comparison_data %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);">
+                    <div class="card-body">
+                        <h6 class="mb-3">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <script>
+                                const compData = JSON.parse('{{ comparison_data|escapejs }}');
+                                document.write(`Comparing <strong>${compData.period1.label}</strong> vs <strong>${compData.period2.label}</strong>`);
+                            </script>
+                        </h6>
+                        <div class="row g-3">
+                            <div class="col-4">
+                                <div class="text-center p-2 rounded" style="background: rgba(255,255,255,0.7);">
+                                    <small class="text-muted d-block">Income</small>
+                                    <script>
+                                        const incomeChange = compData.changes.income;
+                                        const incomeColor = incomeChange > 0 ? '#10b981' : incomeChange < 0 ? '#ef4444' : '#6b7280';
+                                        document.write(`<h6 class="mb-0" style="color: ${incomeColor}">${incomeChange > 0 ? '+' : ''}${incomeChange}%</h6>`);
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-center p-2 rounded" style="background: rgba(255,255,255,0.7);">
+                                    <small class="text-muted d-block">Expense</small>
+                                    <script>
+                                        const expenseChange = compData.changes.expense;
+                                        const expenseColor = expenseChange > 0 ? '#ef4444' : expenseChange < 0 ? '#10b981' : '#6b7280';
+                                        document.write(`<h6 class="mb-0" style="color: ${expenseColor}">${expenseChange > 0 ? '+' : ''}${expenseChange}%</h6>`);
+                                    </script>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="text-center p-2 rounded" style="background: rgba(255,255,255,0.7);">
+                                    <small class="text-muted d-block">Savings</small>
+                                    <script>
+                                        const savingsChange = compData.changes.savings;
+                                        const savingsColor = savingsChange > 0 ? '#10b981' : savingsChange < 0 ? '#ef4444' : '#6b7280';
+                                        document.write(`<h6 class="mb-0" style="color: ${savingsColor}">${savingsChange > 0 ? '+' : ''}${savingsChange}%</h6>`);
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Key Metrics Cards -->
+        <div class="row g-3 mb-4">
+            <!-- Average Daily Spending -->
+            <div class="col-6 col-md-3">
+                <div class="card metric-card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="metric-icon mb-2">
+                            <i class="fa-solid fa-calendar-day" style="font-size: 1.5rem; color: var(--primary);"></i>
+                        </div>
+                        <p class="text-muted small mb-1">Avg Daily</p>
+                        <h3 class="metric-value mb-0">₹{{ key_metrics.avg_daily_spending|floatformat:0 }}</h3>
+                        <small class="text-muted">per day</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Month Over Month --><div class="col-6 col-md-3">
+                <div class="card metric-card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="metric-icon mb-2">
+                            {% if key_metrics.mom_direction == 'up' %}
+                                <i class="fa-solid fa-arrow-trend-up" style="font-size: 1.5rem; color: #ef4444;"></i>
+                            {% elif key_metrics.mom_direction == 'down' %}
+                                <i class="fa-solid fa-arrow-trend-down" style="font-size: 1.5rem; color: #10b981;"></i>
+                            {% else %}
+                                <i class="fa-solid fa-minus" style="font-size: 1.5rem; color: #6b7280;"></i>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted small mb-1">vs Last Month</p>
+                        <h3 class="metric-value mb-0 {% if key_metrics.mom_direction == 'up' %}text-danger{% elif key_metrics.mom_direction == 'down' %}text-success{% endif %}">
+                            {% if key_metrics.mom_direction != 'neutral' %}
+                                {{ key_metrics.mom_change }}%
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </h3>
+                        <small class="text-muted">
+                            {% if key_metrics.mom_direction == 'up' %}higher{% elif key_metrics.mom_direction == 'down' %}lower{% else %}no data{% endif %}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Spending Trend -->
+            <div class="col-6 col-md-3">
+                <div class="card metric-card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="metric-icon mb-2">
+                            {% if key_metrics.spending_trend == 'higher' %}
+                                <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.5rem; color: #f59e0b;"></i>
+                            {% elif key_metrics.spending_trend == 'lower' %}
+                                <i class="fa-solid fa-check-circle" style="font-size: 1.5rem; color: #10b981;"></i>
+                            {% else %}
+                                <i class="fa-solid fa-circle-check" style="font-size: 1.5rem; color: #3b82f6;"></i>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted small mb-1">Spending Trend</p>
+                        <h3 class="metric-value mb-0 
+                            {% if key_metrics.spending_trend == 'higher' %}text-warning
+                            {% elif key_metrics.spending_trend == 'lower' %}text-success
+                            {% else %}text-primary{% endif %}">
+                            {% if key_metrics.spending_trend == 'higher' %}
+                                Higher
+                            {% elif key_metrics.spending_trend == 'lower' %}
+                                Lower
+                            {% else %}
+                                Normal
+                            {% endif %}
+                        </h3>
+                        <small class="text-muted">vs 3-mo avg</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Largest Expense -->
+            <div class="col-6 col-md-3">
+                <div class="card metric-card border-0 shadow-sm h-100">
+                    <div class="card-body text-center">
+                        <div class="metric-icon mb-2">
+                            <i class="fa-solid fa-crown" style="font-size: 1.5rem; color: #f59e0b;"></i>
+                        </div>
+                        <p class="text-muted small mb-1">Largest Expense</p>
+                        <h3 class="metric-value mb-0">₹{{ key_metrics.largest_expense.amount|floatformat:0 }}</h3>
+                        <small class="text-muted">{{ key_metrics.largest_expense.category }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-2"
             {% for label, amount in financial_data.items %}
                 {% if label == "Income" or label == "Expense" or label == "Saving" %}
                     <!-- Cards for Income and Expense -->
                     <div class="col-md-4 col-4">
-                        <div class="card text-center shadow-sm">
+                        <div class="card text-center shadow-sm" 
+                             data-bs-toggle="tooltip" 
+                             data-bs-placement="top"
+                             data-bs-html="true"
+                             title="{% if label == 'Income' %}<strong>Total Income</strong><br>Money received this period{% elif label == 'Expense' %}<strong>Total Expenses</strong><br>Money spent this period{% else %}<strong>Net Savings</strong><br>Income - Expenses{% endif %}">
                             <div class="card-body px-0">
                                 <p class="card-title fs-6 text-secondary">{{ label }}</p>
                                 <p class="card-text fs-3" style="color:var(--primary)">{{ amount }}</p>
@@ -215,18 +481,81 @@
         </div>
     
         <!-- Charts Section -->
-        <div class="row g-3">
-            <div class="col-12 col-sm-6 col-md-3" style="min-height: 35vh;">
-                <canvas id="savingsChart"></canvas>
+        <div class="row g-3 mb-3">
+            <!-- Large Cash Flow Trend Chart -->
+            <div class="col-12">
+                <div class="card shadow-sm border-0 dashboard-card">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0" style="color: var(--primary); font-family: 'Dancing Script';">
+                            <i class="fa-solid fa-chart-line"></i> Cash Flow Trend (Last 12 Months)
+                        </h5>
+                    </div>
+                    <div class="card-body" style="min-height: 300px;">
+                        <canvas id="cashFlowChart"></canvas>
+                    </div>
+                </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3" style="min-height: 35vh;">
-                <canvas id="expenseCategoryChart"></canvas>
+        </div>
+        
+        <!-- Secondary Charts Grid -->
+        <div class="row g-3">            
+            <!-- Category-wise Distribution -->
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm border-0 dashboard-card h-100">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0" style="color: var(--primary);">
+                            <i class="fa-solid fa-chart-pie"></i> Category Distribution
+                        </h6>
+                    </div>
+                    <div class="card-body" style="min-height: 300px;">
+                        <canvas id="expenseCategoryChart"></canvas>
+                    </div>
+                </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3" style="min-height: 35vh;">
-                <canvas id="subChart1"></canvas>
+            
+            <!-- Income Sources -->
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm border-0 dashboard-card h-100">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0" style="color: var(--primary);">
+                            <i class="fa-solid fa-wallet"></i> Income Sources
+                        </h6>
+                    </div>
+                    <div class="card-body" style="min-height: 300px;">
+                        <canvas id="incomeSourcesChart"></canvas>
+                    </div>
+                </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3" style="min-height: 35vh;">
-                <canvas id="subChart2"></canvas>
+        </div>
+        
+        <!-- Additional Charts Row -->
+        <div class="row g-3 mt-3">
+            <!-- Weekly Spending Trend -->
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm border-0 dashboard-card">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0" style="color: var(--primary);">
+                            <i class="fa-solid fa-calendar-week"></i> Last 30 Days Spending
+                        </h6>
+                    </div>
+                    <div class="card-body" style="min-height: 250px;">
+                        <canvas id="weeklySpendingChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Year-wise Comparison -->
+            <div class="col-12 col-md-6">
+                <div class="card shadow-sm border-0 dashboard-card">
+                    <div class="card-header bg-white border-bottom">
+                        <h6 class="mb-0" style="color: var(--primary);">
+                            <i class="fa-solid fa-chart-column"></i> Year-wise Comparison
+                        </h6>
+                    </div>
+                    <div class="card-body" style="min-height: 250px;">
+                        <canvas id="yearWiseChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -245,6 +574,57 @@
     <script type="text/javascript">
         const data = JSON.parse('{{ data|escapejs }}')
         const today = new Date('{{ today|date:"Y-m-d" }}');
+        
+        // Initialize Bootstrap tooltips
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(
+                document.querySelectorAll('[data-bs-toggle="tooltip"]')
+            );
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl, {
+                    trigger: 'hover'
+                });
+            });
+            
+            // Period selector handler
+            const periodSelector = document.getElementById('periodSelector');
+            if (periodSelector) {
+                periodSelector.addEventListener('change', function() {
+                    const period = this.value;
+                    // Reload page with new period parameter
+                    window.location.href = `/dashboard/?period=${period}`;
+                });
+            }
+            
+            // Comparison mode toggle handler
+            const comparisonToggle = document.getElementById('comparisonToggle');
+            const comparisonSelectors = document.getElementById('comparisonSelectors');
+            
+            if (comparisonToggle) {
+                comparisonToggle.addEventListener('change', function() {
+                    if (this.checked) {
+                        // Show comparison selectors
+                        comparisonSelectors.style.display = 'flex';
+                    } else {
+                        // Hide selectors and turn off comparison mode
+                        comparisonSelectors.style.display = 'none';
+                        window.location.href = '/dashboard/';
+                    }
+                });
+            }
+            
+            // Apply comparison button handler
+            const applyComparisonBtn = document.getElementById('applyComparison');
+            if (applyComparisonBtn) {
+                applyComparisonBtn.addEventListener('click', function() {
+                    const period1 = document.getElementById('period1Selector').value;
+                    const period2 = document.getElementById('period2Selector').value;
+                    
+                    // Reload with comparison parameters
+                    window.location.href = `/dashboard/?compare=true&period1=${period1}&period2=${period2}`;
+                });
+            }
+        });
     </script>
     <script src="{% static 'js/dashboardChart.js' %}"></script>
     {% endblock script %}
