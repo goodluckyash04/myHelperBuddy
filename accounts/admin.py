@@ -10,6 +10,7 @@ from .models import (
     TimeLog,
     TaskAttachment,
     LedgerTransaction,
+    PaymentRecord,
     Reminder,
     RefreshToken,
     UploadedFile,
@@ -292,6 +293,7 @@ class TaskAttachmentAdmin(admin.ModelAdmin):
 admin.site.register(FinancialProduct)
 admin.site.register(Transaction)
 admin.site.register(LedgerTransaction)
+admin.site.register(PaymentRecord)
 admin.site.register(Reminder)
 admin.site.register(RefreshToken)
 admin.site.register(UploadedFile)

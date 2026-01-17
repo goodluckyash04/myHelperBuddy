@@ -1,170 +1,204 @@
-<!-- Add Ledger Transaction Modal -->
- {% load static %}
-<div
-  class="modal fade"
-  id="ledgerModal"
-  tabindex="-1"
-  aria-labelledby="exampleModalLabel"
-  aria-hidden="true"
->
-  <div class="modal-dialog modal-dialog-centered">
+<!-- Enhanced Ledger Transaction Modal with All New Features -->
+{% load static %}
+<div class="modal fade" id="ledgerModal" tabindex="-1" aria-labelledby="ledgerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fs-5" id="tname">Ledger Transaction</h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
+        <h5 class="modal-title" id="ledgerModalLabel">
+          <i class="fas fa-receipt me-2"></i> Add Ledger Transaction
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div class="modal-body">
-        <form action="/create-ledger-transaction/" id="myLedgerForm" method="post">
+        <form action="/create-ledger-transaction/" id="myLedgerForm" method="post" enctype="multipart/form-data">
           {% csrf_token %}
+          <input type="hidden" id="transaction_id" name="transaction_id">
 
-          <!-- Type -->
-          <div class="mb-4" id="ledgerTransactionType">
-            <div class="row">
-              <div class="col-6 col-sm-3">
-                <div class="form-check form-check-inline">
-                  <input
-                    class="form-check-input shadow-sm"
-                    type="radio"
-                    name="transaction_type"
-                    id="receivable"
-                    value="Receivable"
-                    required
-                  />
-                  <label class="form-check-label" for="receivable">Receivable</label>
-                </div>
+          <!-- Transaction Type -->
+          <div class="mb-4">
+            <label class="form-label fw-bold">Transaction Type</label>
+            <div class="row g-2">
+              <div class="col-6 col-md-3">
+                <input class="btn-check" type="radio" name="transaction_type" id="receivable" value="RECEIVABLE" required>
+                <label class="btn btn-outline-success w-100" for="receivable">
+                  <i class="fas fa-arrow-down"></i> To Receive
+                </label>
               </div>
-              <div class="col-6 col-sm-3">
-                <div class="form-check form-check-inline">
-                  <input
-                    class="form-check-input shadow-sm"
-                    type="radio"
-                    name="transaction_type"
-                    id="payable"
-                    value="Payable"
-                  />
-                  <label class="form-check-label" for="payable">Payable</label>
-                </div>
+              <div class="col-6 col-md-3">
+                <input class="btn-check" type="radio" name="transaction_type" id="payable" value="PAYABLE">
+                <label class="btn btn-outline-warning w-100" for="payable">
+                  <i class="fas fa-arrow-up"></i> To Pay
+                </label>
               </div>
-              <div class="col-6 col-sm-3">
-                <div class="form-check form-check-inline">
-                  <input
-                    class="form-check-input shadow-sm"
-                    type="radio"
-                    name="transaction_type"
-                    id="received"
-                    value="Received"
-                    required
-                  />
-                  <label class="form-check-label" for="received">Received</label>
-                </div>
+              <div class="col-6 col-md-3">
+                <input class="btn-check" type="radio" name="transaction_type" id="received" value="RECEIVED">
+                <label class="btn btn-outline-primary w-100" for="received">
+                  <i class="fas fa-check-circle"></i> Received
+                </label>
               </div>
-              <div class="col-6 col-sm-3">
-                <div class="form-check form-check-inline">
-                  <input
-                    class="form-check-input shadow-sm"
-                    type="radio"
-                    name="transaction_type"
-                    id="paid"
-                    value="Paid"
-                  />
-                  <label class="form-check-label" for="paid">Paid</label>
+              <div class="col-6 col-md-3">
+                <input class="btn-check" type="radio" name="transaction_type" id="paid" value="PAID">
+                <label class="btn btn-outline-danger w-100" for="paid">
+                  <i class="fas fa-check-circle"></i> Paid
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Counterparty Information -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="card-title mb-3"><i class="fas fa-user-tie me-2"></i> Counterparty Details</h6>
+              
+              <div class="mb-3">
+                <label for="counterparty" class="form-label">Counterparty <span class="text-danger">*</span></label>
+                <select class="form-select" name="counterparty" id="counterparty" onchange="counterpartyChange()" required>
+                  <option value="">- Select Counterparty -</option>
+                  {% for counterparty in counterparties %}
+                  <option value="{{ counterparty }}">{{ counterparty }}</option>
+                  {% endfor %}
+                  <option value="other">+ Add New</option>
+                </select>
+              </div>
+
+              <div class="mb-3" id="counterparty_txt_div" style="display:none;">
+                <input type="text" class="form-control" name="counterparty" id="counterparty_txt" placeholder="Enter New Counterparty Name">
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="counterparty_contact" class="form-label">Contact Number</label>
+                  <input type="tel" class="form-control" name="counterparty_contact" id="counterparty_contact" placeholder="+91 98765 43210">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="counterparty_email" class="form-label">Email</label>
+                  <input type="email" class="form-control" name="counterparty_email" id="counterparty_email" placeholder="email@example.com">
                 </div>
               </div>
             </div>
           </div>
-          
 
-          <!-- Counterparty -->
-          <div class="mb-3">
-            <select
-              class="form-select shadow-sm"
-              name="counterparty"
-              id="counterparty"
-              aria-label="Counterparty"
-              onchange="counterpartyChange()"
-              required
-            >
-              <option value="">- Select Counterparty -</option>
-              {% for counterparty in counterparties %}
-              <option value="{{ counterparty }}">{{ counterparty }}</option>
-              {% endfor %}
-              <option value="other">Other</option>
-            </select>
+          <!-- Transaction Details -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="card-title mb-3"><i class="fas fa-file-invoice me-2"></i> Transaction Information</h6>
+              
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="transaction_date" class="form-label">Transaction Date <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" name="transaction_date" id="transaction_date" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="due_date" class="form-label">Due Date</label>
+                  <input type="date" class="form-control" name="due_date" id="due_date">
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="amount" class="form-label">Amount (₹) <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control" name="amount" id="amount" placeholder="0.00" step="0.01" required>
+                </div>
+                <div class="col-md-6 mb-3" id="payment_method_div" style="display:none;">
+                  <label for="payment_method" class="form-label">Payment Method</label>
+                  <select class="form-select" name="payment_method" id="payment_method">
+                    <option value="">- Select Method -</option>
+                    <option value="CASH">Cash</option>
+                    <option value="BANK_TRANSFER">Bank Transfer</option>
+                    <option value="UPI">UPI</option>
+                    <option value="CHEQUE">Cheque</option>
+                    <option value="CARD">Card</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="reference_number" class="form-label">Reference Number</label>
+                  <input type="text" class="form-control" name="reference_number" id="reference_number" placeholder="REF-001">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="invoice_number" class="form-label">Invoice Number</label>
+                  <input type="text" class="form-control" name="invoice_number" id="invoice_number" placeholder="INV-001">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea class="form-control" name="description" id="description" rows="2" placeholder="Transaction details..."></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label for="notes" class="form-label">Additional Notes</label>
+                <textarea class="form-control" name="notes" id="notes" rows="2" placeholder="Any additional information..."></textarea>
+              </div>
+            </div>
           </div>
 
-          <!-- Counterparty Text -->
-          <div class="mb-3">
-            <input
-              type="text"
-              class="form-control shadow-sm"
-              id="counterparty_txt"
-              style="display:none;"
-              placeholder="Enter Counterparty"
-              aria-describedby="transaction_date"
-            />
+          <!-- Installments Section -->
+          <div class="card mb-3 border-0 shadow-sm" id="installment_card">
+            <div class="card-body">
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="enable_installments" name="enable_installments" onchange="toggleInstallments()">
+                <label class="form-check-label fw-bold" for="enable_installments">
+                  <i class="fas fa-calendar-alt me-2"></i> Split into Installments
+                </label>
+              </div>
+
+              <div id="installment_settings" style="display:none;">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="no_of_installments" class="form-label">Number of Installments</label>
+                    <input type="number" class="form-control" name="no_of_installments" id="no_of_installments" value="1" min="1" max="100" onchange="previewInstallments()">
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="installment_frequency" class="form-label">Frequency</label>
+                    <select class="form-select" name="installment_frequency" id="installment_frequency" onchange="toggleCustomDays()">
+                      <option value="MONTHLY">Monthly</option>
+                      <option value="WEEKLY">Weekly</option>
+                      <option value="CUSTOM">Custom</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="mb-3" id="custom_days_div" style="display:none;">
+                  <label for="custom_days" class="form-label">Custom Interval (Days)</label>
+                  <input type="number" class="form-control" name="custom_days" id="custom_days" placeholder="e.g., 15 for bi-weekly" min="1">
+                </div>
+
+                <div id="installment_preview" class="alert alert-info" style="display:none;">
+                  <strong>Preview:</strong>
+                  <div id="preview_content"></div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <!-- Transaction Date -->
-          <div class="mb-3">
-            <input
-              type="date"
-              class="form-control shadow-sm"
-              name="transaction_date"
-              id="transaction_date"
-              aria-describedby="transaction_date"
-              required
-            />
-          </div>
+          <!-- Tags and Attachment -->
+          <div class="card mb-3 border-0 shadow-sm">
+            <div class="card-body">
+              <h6 class="card-title mb-3"><i class="fas fa-tags me-2"></i> Organization</h6>
+              
+              <div class="mb-3">
+                <label for="tags" class="form-label">Tags</label>
+                <input type="text" class="form-control" name="tags" id="tags" placeholder="supplies, materials, urgent (comma-separated)">
+                <small class="text-muted">Separate tags with commas</small>
+              </div>
 
-          <!-- Instrument Amount -->
-          <div class="mb-3">
-            <input
-              type="number"
-              class="form-control shadow-sm"
-              name="amount"
-              placeholder="Amount"
-              id="amount"
-              required
-            />
-          </div>
-
-          <!-- Number of Installments -->
-          <div class="mb-3">
-            <input
-              type="number"
-              class="form-control shadow-sm"
-              name="no_of_installments"
-              placeholder="No of Installments"
-              id="no_of_installments"
-              value="1"
-            />
-          </div>
-
-          <!-- Description -->
-          <div class="mb-3">
-            <textarea
-              class="form-control shadow-sm"
-              name="description"
-              placeholder="Description"
-              id="description"
-              rows="3"
-            ></textarea>
+              <div class="mb-3">
+                <label for="attachment" class="form-label">Attachment</label>
+                <input type="file" class="form-control" name="attachment" id="attachment" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                <small class="text-muted">Invoice, receipt, or supporting document</small>
+              </div>
+            </div>
           </div>
 
           <!-- Submit Button -->
-          <div class="d-flex justify-content-center">
-            <button
-            id="submitButton"
-              type="submit"
-              class="btn custom-btn-primary w-100 shadow-sm"
-            ><i class="fa-solid fa-plus-circle"></i>
-              Add Transaction
+          <div class="d-grid">
+            <button type="submit" class="btn custom-btn-primary btn-lg" id="submitButton">
+              <i class="fas fa-save me-2"></i> Save Transaction
             </button>
           </div>
         </form>
@@ -173,7 +207,37 @@
   </div>
 </div>
 
-<script src="{% static 'js/ledger.js' %}"></script>
-<script>
-  document.getElementById('transaction_date').value = new Date().toISOString().split('T')[0]
-</script>
+
+<style>
+.btn-check:checked + .btn-outline-success {
+  background-color: #28a745;
+  color: white;
+}
+.btn-check:checked + .btn-outline-warning {
+  background-color: #ffc107;
+  color: #000;
+}
+.btn-check:checked + .btn-outline-primary {
+  background-color: #007bff;
+  color: white;
+}
+.btn-check:checked + .btn-outline-danger {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .btn {
+    font-size: 0.875rem;
+  }
+}
+</style>

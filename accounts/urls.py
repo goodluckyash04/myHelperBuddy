@@ -64,12 +64,18 @@ from .views.view_ledger_transaction import (
     add_ledger_transaction,
     delete_ledger_transaction,
     fetch_deleted_ledger_transaction,
-    ledger_transaction,
+    get_ledger_transactions_by_party,
     ledger_transaction_details,
     undo_ledger_transaction,
     update_counterparty_name,
     update_ledger_transaction,
     update_ledger_transaction_status,
+    # New enhanced endpoints
+    record_payment,
+    get_transaction_payments,
+    get_counterparty_summary,
+    get_aging_report,
+    get_cash_flow_projection,
 )
 
 # ============================================================================
@@ -218,7 +224,7 @@ urlpatterns = [
     # ========================================================================
     path("create-ledger-transaction/", add_ledger_transaction, name="create-ledger-transaction"),
     path("ledger-transaction-details/", ledger_transaction_details, name="ledger-transaction-details"),
-    path("ledger-transaction/<str:id>", ledger_transaction, name="ledger-transaction"),
+    path("ledger-transaction/<str:id>", get_ledger_transactions_by_party, name="ledger-transaction"),
     path("update-ledger-transaction-status/<int:id>", update_ledger_transaction_status, name="update-ledger-transaction-status"),
     path("update-ledger-transaction-status/", update_ledger_transaction_status, name="update-ledger-transaction-status"),
     path("delete-ledger-transaction/<int:id>", delete_ledger_transaction, name="delete-ledger-transaction"),
@@ -227,6 +233,13 @@ urlpatterns = [
     path("deleted-ledger-transaction/", fetch_deleted_ledger_transaction, name="deleted-ledger-transaction"),
     path("undo-ledger-transaction/", undo_ledger_transaction, name="undo-ledger-transaction"),
     path("undo-ledger-transaction/<int:id>", undo_ledger_transaction, name="undo-ledger-transaction"),
+    
+    # Enhanced Ledger Endpoints
+    path("record-payment/<int:id>", record_payment, name="record-payment"),
+    path("transaction-payments/<int:id>", get_transaction_payments, name="transaction-payments"),
+    path("counterparty-summary/", get_counterparty_summary, name="counterparty-summary"),
+    path("aging-report/", get_aging_report, name="aging-report"),
+    path("cash-flow-projection/", get_cash_flow_projection, name="cash-flow-projection"),
     
     # ========================================================================
     # Reminder Management

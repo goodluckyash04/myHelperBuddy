@@ -142,37 +142,291 @@ from accounts.task_models import (
 
 
 class LedgerTransaction(models.Model):
-    STATUS_CHOICES = [
-        ("Completed", _("Completed")),
-        ("Pending", _("Pending")),
+    """
+    Enhanced ledger transaction tracking with installment and partial payment support.
+    
+    Tracks financial transactions between user and entities (vendors, customers, partners).
+    Supports installments, partial payments, and comprehensive audit trail.
+    """
+    
+    # Transaction Type Choices
+    TRANSACTION_TYPES = [
+        ('RECEIVABLE', _('Money to Receive')),      # Pending incoming
+        ('RECEIVED', _('Money Received')),          # Completed incoming
+        ('PAYABLE', _('Money to Pay')),             # Pending outgoing
+        ('PAID', _('Money Paid')),                  # Completed outgoing
     ]
-    transaction_type = models.CharField(max_length=50)
+    
+    # Status Choices
+    STATUS_CHOICES = [
+        ('PENDING', _('Pending')),
+        ('PARTIAL', _('Partially Paid')),
+        ('COMPLETED', _('Completed')),
+        ('CANCELLED', _('Cancelled')),
+    ]
+    
+    # Payment Method Choices
+    PAYMENT_METHODS = [
+        ('CASH', _('Cash')),
+        ('BANK_TRANSFER', _('Bank Transfer')),
+        ('UPI', _('UPI')),
+        ('CHEQUE', _('Cheque')),
+        ('CARD', _('Card')),
+        ('OTHER', _('Other')),
+    ]
+    
+    # Core Fields
+    transaction_type = models.CharField(
+        max_length=20, 
+        choices=TRANSACTION_TYPES,
+        default='RECEIVABLE'
+    )
     transaction_date = models.DateField()
     amount = models.DecimalField(max_digits=15, decimal_places=2, default=0.0)
-    counterparty = models.CharField(max_length=100)
-    description = models.CharField(max_length=255)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="Pending")
-    completion_date = models.DateField(blank=True, null=True)
+    
+    # Entity Information
+    counterparty = models.CharField(max_length=100, db_index=True)
+    counterparty_contact = models.CharField(
+        max_length=15, 
+        blank=True, 
+        null=True,
+        help_text=_("Contact number of counterparty")
+    )
+    counterparty_email = models.EmailField(
+        blank=True, 
+        null=True,
+        help_text=_("Email address of counterparty")
+    )
+    
+    # Transaction Details
+    description = models.TextField()
+    reference_number = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True,
+        help_text=_("Transaction reference number")
+    )
+    invoice_number = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True,
+        help_text=_("Invoice or receipt number")
+    )
+    
+    # Status & Payment
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='PENDING'
+    )
+    payment_method = models.CharField(
+        max_length=20, 
+        choices=PAYMENT_METHODS, 
+        blank=True, 
+        null=True
+    )
+    
+    # Installment Support
+    parent_transaction = models.ForeignKey(
+        'self', 
+        on_delete=models.CASCADE, 
+        related_name='installments',
+        null=True, 
+        blank=True,
+        help_text=_("Parent transaction if this is an installment")
+    )
+    installment_number = models.PositiveIntegerField(
+        null=True, 
+        blank=True,
+        help_text=_("Installment number (e.g., 1 of 5)")
+    )
+    total_installments = models.PositiveIntegerField(
+        null=True, 
+        blank=True,
+        help_text=_("Total number of installments")
+    )
+    
+    # Payment Tracking
+    paid_amount = models.DecimalField(
+        max_digits=15, 
+        decimal_places=2, 
+        default=0.0,
+        help_text=_("Amount paid so far")
+    )
+    remaining_amount = models.DecimalField(
+        max_digits=15, 
+        decimal_places=2, 
+        default=0.0,
+        help_text=_("Amount remaining to be paid")
+    )
+    
+    # Due Date Management
+    due_date = models.DateField(
+        blank=True, 
+        null=True,
+        help_text=_("Due date for payment")
+    )
+    completion_date = models.DateField(
+        blank=True, 
+        null=True,
+        help_text=_("Date when transaction was completed")
+    )
+    
+    # Attachments & Notes
+    attachment = models.FileField(
+        upload_to='ledger_attachments/', 
+        blank=True, 
+        null=True,
+        help_text=_("Invoice, receipt, or supporting document")
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text=_("Additional notes or comments")
+    )
+    
+    # Tags for categorization
+    tags = models.JSONField(
+        default=list, 
+        blank=True,
+        help_text=_("Tags for categorization (e.g., ['supplies', 'materials'])")
+    )
+    
+    # Audit Fields
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateField(blank=True, null=True)
     created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.counterparty
-
+    
     class Meta:
-        verbose_name = _("LedgerTransaction")
-        verbose_name_plural = _("LedgerTransactions")
+        verbose_name = _("Ledger Transaction")
+        verbose_name_plural = _("Ledger Transactions")
+        ordering = ['-transaction_date', '-created_at']
         indexes = [
-            models.Index(fields=['created_by']),
-            models.Index(fields=['status']),
-            models.Index(fields=['transaction_date']),
-            models.Index(fields=['is_deleted']),
-            # Composite indexes
+            models.Index(fields=['counterparty', 'is_deleted']),
+            models.Index(fields=['created_by', 'transaction_date']),
+            models.Index(fields=['status', 'due_date']),
+            models.Index(fields=['parent_transaction']),
             models.Index(fields=['created_by', 'is_deleted']),
+            models.Index(fields=['transaction_type']),
         ]
+    
+    def __str__(self):
+        return f"{self.counterparty} - {self.get_transaction_type_display()} - ₹{self.amount}"
+    
+    def save(self, *args, **kwargs):
+        """Auto-calculate remaining amount and update status"""
+        # Calculate remaining amount
+        self.remaining_amount = self.amount - self.paid_amount
+        
+        # Auto-update status based on payment (only for RECEIVABLE/PAYABLE)
+        if self.transaction_type in ['RECEIVABLE', 'PAYABLE']:
+            if self.paid_amount == 0:
+                if self.status != 'CANCELLED':
+                    self.status = 'PENDING'
+            elif self.paid_amount < self.amount:
+                self.status = 'PARTIAL'
+            elif self.paid_amount >= self.amount:
+                self.status = 'COMPLETED'
+                if not self.completion_date:
+                    from django.utils import timezone
+                    self.completion_date = timezone.now().date()
+        
+        super().save(*args, **kwargs)
+    
+    def get_payment_percentage(self):
+        """Get payment completion percentage"""
+        if self.amount == 0:
+            return 0
+        return int((self.paid_amount / self.amount) * 100)
+    
+    def is_overdue(self):
+        """Check if transaction is overdue"""
+        from django.utils import timezone
+        if not self.due_date or self.status == 'COMPLETED':
+            return False
+        return timezone.now().date() > self.due_date
+    
+    def days_overdue(self):
+        """Get number of days overdue"""
+        from django.utils import timezone
+        if not self.is_overdue():
+            return 0
+        return (timezone.now().date() - self.due_date).days
+
+
+class PaymentRecord(models.Model):
+    """
+    Track individual payments against ledger transactions.
+    
+    Enables partial payment tracking with complete audit trail.
+    Each payment records the amount, method, and optional receipt.
+    """
+    
+    ledger_transaction = models.ForeignKey(
+        LedgerTransaction,
+        on_delete=models.CASCADE,
+        related_name='payments',
+        help_text=_("Ledger transaction this payment is for")
+    )
+    
+    payment_date = models.DateField(help_text=_("Date payment was made/received"))
+    amount_paid = models.DecimalField(
+        max_digits=15, 
+        decimal_places=2,
+        help_text=_("Amount paid in this transaction")
+    )
+    payment_method = models.CharField(
+        max_length=20, 
+        choices=LedgerTransaction.PAYMENT_METHODS,
+        help_text=_("Method of payment")
+    )
+    
+    reference_number = models.CharField(
+        max_length=50, 
+        blank=True,
+        help_text=_("Transaction reference number")
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text=_("Additional notes about this payment")
+    )
+    
+    # Receipt management
+    receipt_file = models.FileField(
+        upload_to='payment_receipts/', 
+        blank=True, 
+        null=True,
+        help_text=_("Receipt or proof of payment")
+    )
+    
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = _("Payment Record")
+        verbose_name_plural = _("Payment Records")
+        ordering = ['-payment_date', '-created_at']
+        indexes = [
+            models.Index(fields=['ledger_transaction', 'payment_date']),
+            models.Index(fields=['created_by']),
+        ]
+    
+    def __str__(self):
+        return f"Payment ₹{self.amount_paid} on {self.payment_date}"
+    
+    def save(self, *args, **kwargs):
+        """Update parent ledger transaction when payment is recorded"""
+        super().save(*args, **kwargs)
+        
+        # Update parent transaction's paid amount
+        transaction = self.ledger_transaction
+        total_paid = sum(
+            payment.amount_paid 
+            for payment in transaction.payments.all()
+        )
+        transaction.paid_amount = total_paid
+        transaction.save()  # This will trigger auto-status update
 
 
 class Reminder(models.Model):
