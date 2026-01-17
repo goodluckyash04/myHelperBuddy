@@ -224,8 +224,8 @@ def ledger_transaction_details(request: HttpRequest) -> HttpResponse:
         - Net balance (receivables - payables)
     
     Formula:
-        - Receivables = Receivable (Pending) + Receivable (Completed as Received)
-        - Payables = Payable (Pending) + Payable (Completed as Paid)
+        - Receivables = RECEIVABLE (Pending) + RECEIVABLE (Completed as RECEIVED)
+        - Payables = PAYABLE (Pending) + PAYABLE (Completed as PAID)
     
     Args:
         request: HTTP GET request
@@ -240,19 +240,19 @@ def ledger_transaction_details(request: HttpRequest) -> HttpResponse:
         Calculate sum of completed transactions.
         
         Args:
-            transaction_type: Either "Paid" or "Received"
+            transaction_type: Either "PAID" or "RECEIVED"
             
         Returns:
             Aggregation expression for sum
         """
-        if transaction_type == "Paid":
-            txn_types = ["Payable", "Paid"]
+        if transaction_type == "PAID":
+            txn_types = ["PAYABLE", "PAID"]
         else:
-            txn_types = ["Receivable", "Received"]
+            txn_types = ["RECEIVABLE", "RECEIVED"]
         
         return Coalesce(
             Sum('amount', filter=Q(
-                (Q(transaction_type=txn_types[0], status='Completed') |
+                (Q(transaction_type=txn_types[0], status='COMPLETED') |
                  Q(transaction_type=txn_types[1])) &
                 Q(created_by=user, is_deleted=False)
             )),
@@ -275,8 +275,8 @@ def ledger_transaction_details(request: HttpRequest) -> HttpResponse:
         receivables_payables = LedgerTransaction.objects.filter(
             created_by=user
         ).values('counterparty').annotate(
-            total_receivable=get_sum("Receivable") - get_paid_and_received_sums("Received"),
-            total_payable=get_sum("Payable") - get_paid_and_received_sums("Paid")
+            total_receivable=get_sum("RECEIVABLE") - get_paid_and_received_sums("RECEIVED"),
+            total_payable=get_sum("PAYABLE") - get_paid_and_received_sums("PAID")
         ).annotate(
             total=ExpressionWrapper(
                 F('total_receivable') - F('total_payable'),
@@ -301,62 +301,177 @@ def ledger_transaction_details(request: HttpRequest) -> HttpResponse:
 
 
 @login_required
-def ledger_transaction(request: HttpRequest, id: str) -> HttpResponse:
+def get_ledger_transactions_by_party(
+    request: HttpRequest,
+    id: str
+) -> HttpResponse:
     """
-    List ledger transactions with filtering.
+    Display ledger transactions filtered by counterparty or other criteria.
+    Supports comprehensive filtering and pagination.
     
-    Filter Options:
-        - "all": All transactions
-        - "completed": Completed transactions only
-        - "pending": Pending transactions only
-        - {counterparty_name}: Transactions for specific counterparty
-    
-    Args:
-        request: HTTP GET request
-        id: Filter identifier (all/completed/pending/counterparty_name)
-        
-    Returns:
-        HttpResponse: Rendered transaction list page
+    URL Parameters:
+        - status: Filter by status (ALL, PENDING, PARTIAL, COMPLETED, CANCELLED)
+        - type: Filter by transaction type (ALL, RECEIVABLE, PAYABLE, RECEIVED, PAID)
+        - search: Search in counterparty or description
+        - start_date: Filter from this date (YYYY-MM-DD)
+        - end_date: Filter to this date (YYYY-MM-DD)
+        - min_amount: Minimum transaction amount
+        - max_amount: Maximum transaction amount
+        - overdue: Show only overdue transactions (true/false)
+        - tags: Filter by tags (comma-separated)
+        - per_page: Results per page (10, 25, 50, 100)
+        - page: Page number
     """
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    from django.db.models import Q
+    from datetime import datetime, date
+    from decimal import Decimal, InvalidOperation
+    
     user = request.user
     filter_type = id
+    counterparty = id if id not in ['all', 'completed', 'pending'] else None
     
-    # Build query based on filter
-    if filter_type == "all":
-        transactions = LedgerTransaction.objects.filter(
-            created_by=user,
-            is_deleted=False
-        ).select_related('created_by').order_by('-transaction_date')
+    # Get filter parameters from URL
+    status_filter = request.GET.get('status', 'ALL')
+    type_filter = request.GET.get('type', 'ALL')
+    search_query = request.GET.get('search', '').strip()
+    start_date_str = request.GET.get('start_date', '').strip()
+    end_date_str = request.GET.get('end_date', '').strip()
+    min_amount_str = request.GET.get('min_amount', '').strip()
+    max_amount_str = request.GET.get('max_amount', '').strip()
+    overdue_only = request.GET.get('overdue', '').lower() == 'true'
+    tags_filter = request.GET.get('tags', '').strip()
+    per_page = int(request.GET.get('per_page', 25))
+    page_number = request.GET.get('page', 1)
     
-    elif filter_type == "completed":
-        transactions = LedgerTransaction.objects.filter(
-            created_by=user,
-            is_deleted=False,
-            status="Completed"
-        ).select_related('created_by').order_by('-transaction_date')
+    # Ensure per_page is within allowed values
+    if per_page not in [10, 25, 50, 100]:
+        per_page = 25
     
-    elif filter_type == "pending":
-        transactions = LedgerTransaction.objects.filter(
-            created_by=user,
-            is_deleted=False,
-            status="Pending"
-        ).select_related('created_by').order_by('-transaction_date')
+    # Start with base query
+    transactions = LedgerTransaction.objects.filter(
+        created_by=user,
+        is_deleted=False
+    ).select_related('created_by')
     
-    else:
-        # Filter by counterparty name (case-insensitive)
-        counterparty = filter_type
-        transactions = LedgerTransaction.objects.filter(
-            created_by=user,
-            is_deleted=False,
-            counterparty__iexact=counterparty
-        ).select_related('created_by').order_by('-transaction_date')
+    # Apply counterparty filter if applicable
+    if filter_type not in ["all", "completed", "pending"]:
+        transactions = transactions.filter(counterparty__iexact=counterparty)
+    
+    # Apply status filter
+    if status_filter != 'ALL':
+        if filter_type == "completed" or status_filter == 'COMPLETED':
+            transactions = transactions.filter(status='COMPLETED')
+        elif filter_type == "pending" or status_filter == 'PENDING':
+            transactions = transactions.filter(status='PENDING')
+        elif status_filter in ['PARTIAL', 'CANCELLED']:
+            transactions = transactions.filter(status=status_filter)
+    
+    # Apply transaction type filter
+    if type_filter != 'ALL':
+        transactions = transactions.filter(transaction_type=type_filter)
+    
+    # Apply search filter (counterparty or description)
+    if search_query:
+        transactions = transactions.filter(
+            Q(counterparty__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(reference_number__icontains=search_query) |
+            Q(invoice_number__icontains=search_query)
+        )
+    
+    # Apply date range filters
+    if start_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            transactions = transactions.filter(transaction_date__gte=start_date)
+        except ValueError:
+            pass
+    
+    if end_date_str:
+        try:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            transactions = transactions.filter(transaction_date__lte=end_date)
+        except ValueError:
+            pass
+    
+    # Apply amount range filters
+    if min_amount_str:
+        try:
+            min_amount = Decimal(min_amount_str)
+            transactions = transactions.filter(amount__gte=min_amount)
+        except (ValueError, InvalidOperation):
+            pass
+    
+    if max_amount_str:
+        try:
+            max_amount = Decimal(max_amount_str)
+            transactions = transactions.filter(amount__lte=max_amount)
+        except (ValueError, InvalidOperation):
+            pass
+    
+    # Apply overdue filter
+    if overdue_only:
+        today = date.today()
+        transactions = transactions.filter(
+            due_date__lt=today,
+            status__in=['PENDING', 'PARTIAL']
+        )
+    
+    # Apply tags filter
+    if tags_filter:
+        tag_list = [tag.strip() for tag in tags_filter.split(',') if tag.strip()]
+        if tag_list:
+            # Filter transactions that have any of the specified tags
+            q_objects = Q()
+            for tag in tag_list:
+                q_objects |= Q(tags__contains=[tag])
+            transactions = transactions.filter(q_objects)
+    
+    # Order by transaction date (most recent first)
+    transactions = transactions.order_by('-transaction_date', '-id')
+    
+    # Get total count before pagination
+    total_count = transactions.count()
+    
+    # Paginate results
+    paginator = Paginator(transactions, per_page)
+    
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.get_page(1)
+    except EmptyPage:
+        page_obj = paginator.get_page(paginator.num_pages)
+    
+    # Calculate range for display
+    start_index = (page_obj.number - 1) * per_page + 1 if total_count > 0 else 0
+    end_index = min(start_index + per_page - 1, total_count) if total_count > 0 else 0
     
     context = {
         "user": user,
-        'transaction_data': transactions,
+        'transaction_data': page_obj,  # Paginated results
+        'page_obj': page_obj,
         'current_filter': filter_type,
         'counter_party': counterparty,
-        'counterparties': get_counter_parties(user)
+        'counterparties': get_counter_parties(user),
+        # Filter values to preserve state
+        'filters': {
+            'status': status_filter,
+            'type': type_filter,
+            'search': search_query,
+            'start_date': start_date_str,
+            'end_date': end_date_str,
+            'min_amount': min_amount_str,
+            'max_amount': max_amount_str,
+            'overdue': overdue_only,
+            'tags': tags_filter,
+            'per_page': per_page,
+        },
+        # Pagination info
+        'total_count': total_count,
+        'start_index': start_index,
+        'end_index': end_index,
     }
     
     return render(request, 'ledger_transaction/ledgerTransaction.html', context)
@@ -366,7 +481,6 @@ def ledger_transaction(request: HttpRequest, id: str) -> HttpResponse:
 # Status Management
 # ============================================================================
 
-@login_required
 def update_ledger_transaction_status(
     request: HttpRequest,
     id: Optional[int] = None

@@ -64,7 +64,7 @@ from .views.view_ledger_transaction import (
     add_ledger_transaction,
     delete_ledger_transaction,
     fetch_deleted_ledger_transaction,
-    ledger_transaction,
+    get_ledger_transactions_by_party,
     ledger_transaction_details,
     undo_ledger_transaction,
     update_counterparty_name,
@@ -224,7 +224,7 @@ urlpatterns = [
     # ========================================================================
     path("create-ledger-transaction/", add_ledger_transaction, name="create-ledger-transaction"),
     path("ledger-transaction-details/", ledger_transaction_details, name="ledger-transaction-details"),
-    path("ledger-transaction/<str:id>", ledger_transaction, name="ledger-transaction"),
+    path("ledger-transaction/<str:id>", get_ledger_transactions_by_party, name="ledger-transaction"),
     path("update-ledger-transaction-status/<int:id>", update_ledger_transaction_status, name="update-ledger-transaction-status"),
     path("update-ledger-transaction-status/", update_ledger_transaction_status, name="update-ledger-transaction-status"),
     path("delete-ledger-transaction/<int:id>", delete_ledger_transaction, name="delete-ledger-transaction"),
