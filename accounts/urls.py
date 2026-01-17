@@ -70,6 +70,12 @@ from .views.view_ledger_transaction import (
     update_counterparty_name,
     update_ledger_transaction,
     update_ledger_transaction_status,
+    # New enhanced endpoints
+    record_payment,
+    get_transaction_payments,
+    get_counterparty_summary,
+    get_aging_report,
+    get_cash_flow_projection,
 )
 
 # ============================================================================
@@ -227,6 +233,13 @@ urlpatterns = [
     path("deleted-ledger-transaction/", fetch_deleted_ledger_transaction, name="deleted-ledger-transaction"),
     path("undo-ledger-transaction/", undo_ledger_transaction, name="undo-ledger-transaction"),
     path("undo-ledger-transaction/<int:id>", undo_ledger_transaction, name="undo-ledger-transaction"),
+    
+    # Enhanced Ledger Endpoints
+    path("record-payment/<int:id>", record_payment, name="record-payment"),
+    path("transaction-payments/<int:id>", get_transaction_payments, name="transaction-payments"),
+    path("counterparty-summary/", get_counterparty_summary, name="counterparty-summary"),
+    path("aging-report/", get_aging_report, name="aging-report"),
+    path("cash-flow-projection/", get_cash_flow_projection, name="cash-flow-projection"),
     
     # ========================================================================
     # Reminder Management

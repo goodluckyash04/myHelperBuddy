@@ -49,6 +49,7 @@ def get_counter_parties(user):
     """
     return (
         LedgerTransaction.objects.filter(created_by=user)
+        .order_by("counterparty")
         .values_list("counterparty", flat=True)
         .distinct()
     )

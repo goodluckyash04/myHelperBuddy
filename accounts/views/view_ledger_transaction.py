@@ -54,16 +54,19 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
     """
     Create new ledger transaction(s) with optional installments.
     
-    Transaction Types:
-        - Receivable: Money to be received from counterparty
-        - Payable: Money to be paid to counterparty
-        - Received: Money already received (auto-completed)
-        - Paid: Money already paid (auto-completed)
+    Supports:
+        - RECEIVABLE: Money to be received from counterparty
+        - PAYABLE: Money to be paid to counterparty
+        - RECEIVED: Money already received (auto-completed)
+        - PAID: Money already paid (auto-completed)
     
     Features:
-        - Automatically creates multiple installments if specified
-        - Auto-completes 'Received' and 'Paid' transactions
-        - Validates for duplicate transactions
+        - Installment creation with multiple frequency options
+        - File attachments for invoices/receipts
+        - Tags for categorization
+        - Payment method tracking
+        - Due date management
+        - Reference and invoice numbers
     
     Args:
         request: HTTP POST request with transaction details
@@ -71,55 +74,125 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
     Returns:
         HttpResponse: Redirect with success/error message
     """
+    from accounts.services.ledger_utils import create_installment_transactions
+    
     user = request.user
     
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    
     try:
-        # Extract form data
-        transaction_type = request.POST.get('transaction_type', 'Receivable')
-        transaction_date = request.POST.get('transaction_date')
+        # Extract core form data
+        transaction_type = request.POST.get('transaction_type', 'RECEIVABLE').upper()
+        transaction_date_str = request.POST.get('transaction_date')
         amount = decimal.Decimal(request.POST.get('amount', 0.0))
         counterparty = request.POST.get('counterparty', '').upper()
         description = request.POST.get('description', '')
-        no_of_installments = int(request.POST.get('no_of_installments') or 1)
         
-        # Check for duplicate transaction
-        try:
-            existing = LedgerTransaction.objects.get(
-                transaction_type=transaction_type,
-                transaction_date=transaction_date,
-                amount=amount,
-                counterparty=counterparty,
-                description=description,
-                created_by=user
-            )
-            if existing:
-                raise ValueError(f"Duplicate {transaction_type} transaction already exists")
-        except ObjectDoesNotExist:
-            pass  # No duplicate, proceed with creation
+        # Parse transaction date
+        from datetime import datetime
+        if transaction_date_str:
+            transaction_date = datetime.strptime(transaction_date_str, '%Y-%m-%d').date()
+        else:
+            transaction_date = datetime.today().date()
+        
+        # Extract additional fields
+        counterparty_contact = request.POST.get('counterparty_contact', '')
+        counterparty_email = request.POST.get('counterparty_email', '')
+        reference_number = request.POST.get('reference_number', '')
+        invoice_number = request.POST.get('invoice_number', '')
+        payment_method = request.POST.get('payment_method', '')
+        due_date_str = request.POST.get('due_date', '')
+        notes = request.POST.get('notes', '')
+        
+        # Parse due date
+        due_date = None
+        if due_date_str:
+            try:
+                due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        
+        # Handle tags (comma-separated)
+        tags_str = request.POST.get('tags', '')
+        tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()]
+        
+        # Handle file attachment
+        attachment = request.FILES.get('attachment')
+        
+        # Installment configuration
+        enable_installments = request.POST.get('enable_installments') == 'on'
+        num_installments = int(request.POST.get('no_of_installments') or 1)
+        installment_frequency = request.POST.get('installment_frequency', 'MONTHLY')
+        custom_days = request.POST.get('custom_days')
+        
+        # Validate transaction type
+        valid_types = ['RECEIVABLE', 'RECEIVED', 'PAYABLE', 'PAID']
+        if transaction_type not in valid_types:
+            raise ValueError(f"Invalid transaction type: {transaction_type}")
         
         # Determine status based on transaction type
-        is_completed = transaction_type in ('Received', 'Paid')
-        status = 'Completed' if is_completed else 'Pending'
-        completion_date = datetime.datetime.today() if is_completed else None
+        if transaction_type in ['RECEIVED', 'PAID']:
+            status = 'COMPLETED'
+            completion_date = datetime.today().date()
+            paid_amount = amount  # Fully paid
+        else:
+            status = 'PENDING'
+            completion_date = None
+            paid_amount = decimal.Decimal('0')
+        
+        # Common fields for all transactions
+        common_fields = {
+            'counterparty': counterparty,
+            'counterparty_contact': counterparty_contact,
+            'counterparty_email': counterparty_email,
+            'description': description,
+            'reference_number': reference_number,
+            'invoice_number': invoice_number,
+            'payment_method': payment_method if payment_method else None,
+            'notes': notes,
+            'tags': tags,
+            'status': status,
+            'completion_date': completion_date,
+            'paid_amount': paid_amount,
+            'attachment': attachment,
+            'transaction_type': transaction_type,
+        }
         
         # Create transaction(s)
-        for index in range(no_of_installments):
+        if enable_installments and num_installments > 1:
+            # Create installments using utility function
+            parent, installments = create_installment_transactions(
+                user=user,
+                base_amount=amount,
+                num_installments=num_installments,
+                frequency=installment_frequency,
+                start_date=transaction_date,
+                custom_days=int(custom_days) if custom_days else None,
+                due_date=due_date,
+                **common_fields
+            )
+            
+            messages.success(
+                request,
+                f'{transaction_type} transaction created with {num_installments} installments'
+            )
+        else:
+            # Create single transaction
             LedgerTransaction.objects.create(
-                transaction_type=transaction_type,
-                transaction_date=desired_date(transaction_date, index),
+                created_by=user,
+                transaction_date=transaction_date,
                 amount=amount,
-                status=status,
-                completion_date=completion_date,
-                counterparty=counterparty,
-                description=description,
-                created_by=user
+                due_date=due_date,
+                **common_fields
+            )
+            
+            messages.success(
+                request,
+                f'{transaction_type} transaction added successfully'
             )
         
-        installment_text = f" with {no_of_installments} installments" if no_of_installments > 1 else ""
-        messages.success(
-            request,
-            f'{transaction_type} transaction added successfully{installment_text}'
-        )
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
         
     except ValidationError as e:
@@ -130,9 +203,10 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
         messages.error(request, str(e))
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
     except Exception as e:
-        messages.error(request, "An unexpected error occurred")
+        messages.error(request, f"An unexpected error occurred: {str(e)}")
         traceback.print_exc()
         return HttpResponseServerError()
+
 
 
 # ============================================================================
@@ -583,3 +657,238 @@ def undo_ledger_transaction(
         messages.error(request, "An error occurred while restoring transactions")
         traceback.print_exc()
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+
+
+# ============================================================================
+# Payment Recording
+# ============================================================================
+
+@login_required
+def record_payment(request: HttpRequest, id: int) -> HttpResponse:
+    """
+    Record a payment against a ledger transaction.
+    
+    Supports partial payments - creates PaymentRecord and updates transaction status.
+    
+    Args:
+        request: HTTP POST request with payment details
+        id: Ledger transaction ID
+        
+    Returns:
+        HttpResponse: Redirect or JSON response with success/error
+    """
+    from accounts.services.ledger_utils import record_payment as record_payment_util
+    
+    user = request.user
+    
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method')
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    
+    try:
+        # Extract payment details
+        payment_date_str = request.POST.get('payment_date')
+        amount_paid = decimal.Decimal(request.POST.get('amount_paid', 0))
+        payment_method = request.POST.get('payment_method')
+        reference_number = request.POST.get('reference_number', '')
+        notes = request.POST.get('notes', '')
+        receipt_file = request.FILES.get('receipt_file')
+        
+        # Parse payment date
+        from datetime import datetime
+        if payment_date_str:
+            payment_date = datetime.strptime(payment_date_str, '%Y-%m-%d').date()
+        else:
+            payment_date = datetime.today().date()
+        
+        # Record payment using utility function
+        payment = record_payment_util(
+            transaction_id=id,
+            user=user,
+            payment_date=payment_date,
+            amount_paid=amount_paid,
+            payment_method=payment_method,
+            reference_number=reference_number,
+            notes=notes,
+            receipt_file=receipt_file
+        )
+        
+        messages.success(
+            request,
+            f'Payment of ₹{amount_paid} recorded successfully'
+        )
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        
+    except ValueError as e:
+        messages.error(request, str(e))
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    except Exception as e:
+        messages.error(request, f"An error occurred: {str(e)}")
+        traceback.print_exc()
+        return HttpResponseServerError()
+
+
+@login_required
+def get_transaction_payments(request: HttpRequest, id: int) -> JsonResponse:
+    """
+    Get all payments for a transaction (AJAX endpoint).
+    
+    Args:
+        request: HTTP GET request
+        id: Transaction ID
+        
+    Returns:
+        JSON response with payment history
+    """
+    user = request.user
+    
+    try:
+        transaction = LedgerTransaction.objects.get(
+            id=id,
+            created_by=user
+        )
+        
+        payments = transaction.payments.all().order_by('-payment_date')
+        
+        payment_list = [{
+            'id': payment.id,
+            'payment_date': payment.payment_date.strftime('%Y-%m-%d'),
+            'amount_paid': str(payment.amount_paid),
+            'payment_method': payment.get_payment_method_display(),
+            'reference_number': payment.reference_number,
+            'notes': payment.notes,
+            'created_at': payment.created_at.strftime('%Y-%m-%d %H:%M')
+        } for payment in payments]
+        
+        return JsonResponse({
+            'success': True,
+            'payments': payment_list,
+            'total_paid': str(transaction.paid_amount),
+            'remaining': str(transaction.remaining_amount),
+            'payment_percentage': transaction.get_payment_percentage()
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+# ============================================================================
+# Enhanced Summary & Reports
+# ============================================================================
+
+@login_required
+def get_counterparty_summary(request: HttpRequest) -> JsonResponse:
+    """
+    Get summary of all counterparties with balances (AJAX endpoint).
+    
+    Returns:
+        JSON response with counterparty summaries
+    """
+    from accounts.services.ledger_utils import get_all_counterparties_summary
+    
+    user = request.user
+    
+    try:
+        summaries = get_all_counterparties_summary(user)
+        
+        # Convert Decimal to string for JSON serialization
+        for summary in summaries:
+            summary['total_receivable'] = str(summary['total_receivable'])
+            summary['total_payable'] = str(summary['total_payable'])
+            summary['net_balance'] = str(summary['net_balance'])
+            summary['overdue_receivable'] = str(summary['overdue_receivable'])
+            summary['overdue_payable'] = str(summary['overdue_payable'])
+        
+        return JsonResponse({
+            'success': True,
+            'summaries': summaries
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+def get_aging_report(request: HttpRequest) -> JsonResponse:
+    """
+    Get aging analysis report (AJAX endpoint).
+    
+    Args:
+        request: HTTP GET request with optional counterparty parameter
+        
+    Returns:
+        JSON response with aging buckets
+    """
+    from accounts.services.ledger_utils import get_aging_report as get_aging_util
+    
+    user = request.user
+    counterparty = request.GET.get('counterparty')
+    
+    try:
+        report = get_aging_util(user, counterparty)
+        
+        # Convert Decimals to strings
+        for category in ['receivables', 'payables']:
+            for bucket in report[category]:
+                report[category][bucket] = str(report[category][bucket])
+        
+        return JsonResponse({
+            'success': True,
+            'report': report,
+            'counterparty': counterparty
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+
+@login_required
+def get_cash_flow_projection(request: HttpRequest) -> JsonResponse:
+    """
+    Get cash flow projection (AJAX endpoint).
+    
+    Args:
+        request: HTTP GET request with optional days_ahead parameter
+        
+    Returns:
+        JSON response with daily projections
+    """
+    from accounts.services.ledger_utils import get_cash_flow_projection as get_projection_util
+    
+    user = request.user
+    days_ahead = int(request.GET.get('days_ahead', 30))
+    
+    try:
+        projections = get_projection_util(user, days_ahead)
+        
+        # Convert data for JSON
+        for proj in projections:
+            proj['date'] = proj['date'].strftime('%Y-%m-%d')
+            proj['receivable'] = str(proj['receivable'])
+            proj['payable'] = str(proj['payable'])
+            proj['net'] = str(proj['net'])
+        
+        return JsonResponse({
+            'success': True,
+            'projections': projections
+        })
+        
+    except Exception as e:
+        traceback.print_exc()
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
