@@ -51,6 +51,10 @@ function selectMultiple() {
   }
 }
 
-document.getElementById("select-all-checkbox").addEventListener("change", selectMultiple);
+// Only add select-all functionality if checkbox exists
+const selectAllCheckbox = document.getElementById("select-all-checkbox");
+if (selectAllCheckbox) {
+  selectAllCheckbox.addEventListener("change", selectMultiple);
+}
 
 

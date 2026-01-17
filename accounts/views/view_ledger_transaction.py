@@ -442,8 +442,8 @@ def update_ledger_transaction(request: HttpRequest, id: int) -> HttpResponse:
     """
     Update ledger transaction details.
     
-    GET: Returns transaction details as JSON
-    POST: Updates transaction fields
+    GET: Returns transaction details as JSON for editing
+    POST: Updates transaction with new data
     
     Args:
         request: HTTP request (GET or POST)
@@ -457,30 +457,82 @@ def update_ledger_transaction(request: HttpRequest, id: int) -> HttpResponse:
     try:
         entry = get_object_or_404(LedgerTransaction, id=id, created_by=user)
         
-        # GET: Return transaction details
+        # GET: Return transaction details for editing
         if request.method == "GET":
             return JsonResponse({
                 'id': entry.id,
                 'transaction_type': entry.transaction_type,
-                'transaction_date': entry.transaction_date,
-                'amount': entry.amount,
-                'description': entry.description
+                'transaction_date': entry.transaction_date.strftime('%Y-%m-%d'),
+                'amount': str(entry.amount),
+                'counterparty': entry.counterparty,
+                'counterparty_contact': entry.counterparty_contact or '',
+                'counterparty_email': entry.counterparty_email or '',
+                'description': entry.description,
+                'reference_number': entry.reference_number or '',
+                'invoice_number': entry.invoice_number or '',
+                'due_date': entry.due_date.strftime('%Y-%m-%d') if entry.due_date else '',
+                'payment_method': entry.payment_method or '',
+                'notes': entry.notes or '',
+                'tags': ','.join(entry.tags) if entry.tags else '',
+                'status': entry.status,
             })
         
         # POST: Update transaction
-        entry.transaction_type = request.POST['transaction_type']
-        entry.transaction_date = request.POST['transaction_date']
-        entry.amount = decimal.Decimal(request.POST['amount'])
-        entry.description = request.POST['description']
+        from datetime import datetime
+        
+        # Update basic fields
+        entry.transaction_type = request.POST.get('transaction_type', entry.transaction_type).upper()
+        
+        transaction_date_str = request.POST.get('transaction_date')
+        if transaction_date_str:
+            entry.transaction_date = datetime.strptime(transaction_date_str, '%Y-%m-%d').date()
+        
+        entry.amount = decimal.Decimal(request.POST.get('amount', entry.amount))
+        entry.description = request.POST.get('description', entry.description)
+        
+        # Update counterparty details
+        counterparty = request.POST.get('counterparty', entry.counterparty)
+        if counterparty == 'other':
+            counterparty = request.POST.get('counterparty_txt', '').upper()
+        entry.counterparty = counterparty.upper()
+        
+        entry.counterparty_contact = request.POST.get('counterparty_contact', '')
+        entry.counterparty_email = request.POST.get('counterparty_email', '')
+        
+        # Update transaction details
+        entry.reference_number = request.POST.get('reference_number', '')
+        entry.invoice_number = request.POST.get('invoice_number', '')
+        entry.notes = request.POST.get('notes', '')
+        
+        # Update dates
+        due_date_str = request.POST.get('due_date', '')
+        if due_date_str:
+            entry.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+        else:
+            entry.due_date = None
+        
+        # Update payment method
+        payment_method = request.POST.get('payment_method', '')
+        entry.payment_method = payment_method if payment_method else None
+        
+        # Update tags
+        tags_str = request.POST.get('tags', '')
+        entry.tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()]
+        
+        # Handle file attachment (only if new file uploaded)
+        if 'attachment' in request.FILES:
+            entry.attachment = request.FILES['attachment']
+        
         entry.save()
         
         messages.success(request, 'Transaction updated successfully')
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
         
     except Exception as e:
-        messages.error(request, "An unexpected error occurred")
+        messages.error(request, f"An error occurred: {str(e)}")
         traceback.print_exc()
         return HttpResponseServerError()
+
 
 
 @login_required
