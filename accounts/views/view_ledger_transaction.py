@@ -354,7 +354,9 @@ def ledger_transaction(request: HttpRequest, id: str) -> HttpResponse:
     context = {
         "user": user,
         'transaction_data': transactions,
-        'current_filter': filter_type
+        'current_filter': filter_type,
+        'counter_party': counterparty,
+        'counterparties': get_counter_parties(user)
     }
     
     return render(request, 'ledger_transaction/ledgerTransaction.html', context)

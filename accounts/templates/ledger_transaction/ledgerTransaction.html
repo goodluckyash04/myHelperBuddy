@@ -41,6 +41,7 @@
                     <th>Status</th>
                     <th>Date</th>
                     <th>Due Date</th>
+                    <th>Completion Date</th>
                     <th>Description</th>
                     <th class="text-center">Actions</th>
                   </tr>
@@ -104,6 +105,13 @@
                       <td>
                         {% if txn.due_date %}
                           {{ txn.due_date|date:"d M Y" }}
+                        {% else %}
+                          <span class="text-muted">-</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if txn.completion_date %}
+                          {{ txn.completion_date|date:"d M Y" }}
                         {% else %}
                           <span class="text-muted">-</span>
                         {% endif %}
