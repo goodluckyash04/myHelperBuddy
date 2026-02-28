@@ -41,7 +41,7 @@
               required
               style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
             />
-            <small class="text-muted">At least 3 characters</small>
+            <small class="field-hint"><i class="fa-solid fa-circle-info"></i> At least 3 characters</small>
           </div>
 
           <!-- Email Field with auto-send OTP -->
@@ -69,7 +69,7 @@
                 <i class="fa-regular fa-paper-plane" style="color: var(--primary);"></i>
               </button>
             </div>
-            <small class="text-muted">We'll send you a verification code</small>
+            <small class="field-hint"><i class="fa-solid fa-circle-info"></i> We'll send you a verification code</small>
           </div>
 
           <!-- OTP Field (hidden initially) -->
@@ -114,7 +114,7 @@
               </div>
               <small id="password-strength-text" class="password-strength-text"></small>
             </div>
-            <small class="text-muted">Min 8 characters, include uppercase, number & special character</small>
+            <small class="field-hint"><i class="fa-solid fa-circle-info"></i> Min 8 chars, include uppercase, number &amp; special character</small>
           </div>
 
           <!-- Confirm Password Field -->
@@ -191,6 +191,26 @@
 <style>
   .fade-in {
     animation: fadeIn 0.3s ease-in;
+  }
+
+  .field-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.72rem;
+    font-style: italic;
+    color: #adb5bd;
+    opacity: 0.85;
+    letter-spacing: 0.01em;
+  }
+  .field-hint i {
+    font-size: 0.65rem;
+    opacity: 0.7;
+    margin-right: 2px;
+  }
+
+  #signup-form input::placeholder {
+    color: #c4c9d0;
+    font-weight: 400;
   }
   
   @keyframes fadeIn {

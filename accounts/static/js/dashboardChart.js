@@ -147,6 +147,7 @@ new Chart(document.getElementById('cashFlowChart'), {
   },
   options: {
     ...commonOptions,
+    aspectRatio: window.innerWidth < 768 ? 1.6 : 2,
     plugins: {
       legend: {
         display: true,
@@ -228,65 +229,6 @@ new Chart(document.getElementById('expenseCategoryChart'), {
     }
   }
 });
-
-// 5. Income Sources Chart
-if (income_sources.labels && income_sources.labels.length > 0) {
-  new Chart(document.getElementById('incomeSourcesChart'), {
-    type: 'doughnut',
-    data: {
-      labels: income_sources.labels,
-      datasets: [{
-        data: income_sources.amounts,
-        backgroundColor: [
-          '#3b82f6',
-          '#8b5cf6',
-          '#ec4899',
-          '#f43f5e',
-          '#f97316'
-        ],
-        borderWidth: 2,
-        borderColor: '#fff'
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      aspectRatio: 1.5,
-      plugins: {
-        legend: {
-          position: window.innerWidth < 768 ? 'bottom' : 'right',
-          labels: {
-            boxWidth: 12,
-            padding: 8,
-            font: {
-              size: window.innerWidth < 768 ? 9 : 11
-            },
-            generateLabels: function (chart) {
-              const data = chart.data;
-              if (data.labels.length && data.datasets.length) {
-                return data.labels.map((label, i) => {
-                  const value = data.datasets[0].data[i];
-                  const formattedValue = '₹' + (value / 1000).toFixed(1) + 'k';
-                  return {
-                    text: window.innerWidth < 768 ? label.substring(0, 10) : `${label}: ${formattedValue}`,
-                    fillStyle: data.datasets[0].backgroundColor[i],
-                    hidden: false,
-                    index: i
-                  };
-                });
-              }
-              return [];
-            }
-          }
-        },
-        tooltip: currencyFormatter
-      }
-    }
-  });
-} else {
-  // Show empty state
-  showEmptyState('incomeSourcesChart', 'No income data for this month', 'fa-wallet');
-}
 
 // 6. Weekly Spending Trend
 new Chart(document.getElementById('weeklySpendingChart'), {
