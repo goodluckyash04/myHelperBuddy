@@ -727,6 +727,8 @@ def dashboard(request):
     context = {
         "data": json.dumps(analytics, default=convert_decimal),
         "financial_data": financial_data,
+        "split_due_display": financial_data.get("Split Due", "₹0"),
+        "emi_due_display": financial_data.get("EMI Due", "₹0"),
         "user_info": user_info,
         "user": user,
         "todays_reminders": todays_reminders[:5],  # Show top 5 reminders

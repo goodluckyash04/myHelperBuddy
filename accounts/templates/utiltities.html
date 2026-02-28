@@ -3,56 +3,169 @@
 
 {% block body %}
 <style>
-  .utility-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .utility-card:hover {
-    transform: translateY(-5px) scale(1.01);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-  }
 
-  .utility-badge {
-    font-size: 0.75rem;
-    padding: 0.35em 0.7em;
-    background-color: var(--primary);
-    color: white;
-    border-radius: 999px;
-  }
+/* ══════════════════════════════════════
+   PAGE BACKGROUND
+══════════════════════════════════════ */
+.util-page {
+    background: linear-gradient(160deg, #faf9f5 0%, #f4f2ea 60%, #faf9f5 100%);
+    min-height: 100vh;
+}
 
-  .card-title {
-    font-family: Cardo;
+/* ══════════════════════════════════════
+   SECTION LABEL
+══════════════════════════════════════ */
+.util-section-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--primary);
+    font-weight: 700;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-  }
+    gap: 8px;
+}
+.util-section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(176,163,111,0.3), transparent);
+}
+
+/* ══════════════════════════════════════
+   MODULE CARDS
+══════════════════════════════════════ */
+.util-card-link { text-decoration: none; display: block; height: 100%; }
+
+.util-card {
+    background: #fff;
+    border-radius: 18px;
+    border: 1px solid rgba(176,163,111,0.12);
+    box-shadow: 0 2px 12px rgba(176,163,111,0.08);
+    padding: 22px 20px;
+    height: 100%;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.util-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), #9a8855);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s ease;
+    border-radius: 0 0 18px 18px;
+}
+.util-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(176,163,111,0.18);
+    border-color: rgba(176,163,111,0.3);
+}
+.util-card:hover::after { transform: scaleX(1); }
+
+/* Icon circle */
+.util-icon-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(176,163,111,0.15) 0%, rgba(176,163,111,0.06) 100%);
+    border: 1px solid rgba(176,163,111,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    color: var(--primary);
+    transition: background 0.25s ease, transform 0.25s ease;
+    flex-shrink: 0;
+}
+.util-card:hover .util-icon-circle {
+    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 100%);
+    color: #fff;
+    transform: rotate(-6deg) scale(1.08);
+}
+
+.util-card-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.util-badge {
+    font-size: 0.65rem;
+    padding: 2px 9px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0;
+}
+.util-card-desc {
+    font-size: 0.8rem;
+    color: #6b7280;
+    line-height: 1.5;
+    margin: 0;
+    flex: 1;
+}
+.util-card-arrow {
+    font-size: 0.75rem;
+    color: var(--primary);
+    opacity: 0;
+    transform: translateX(-4px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    align-self: flex-end;
+}
+.util-card:hover .util-card-arrow {
+    opacity: 1;
+    transform: translateX(0);
+}
+
 </style>
 
-<div class="container my-5">
-  <!-- Section Title -->
-  <h2 class="text-center fw-bold mb-4" style="color: var(--primary-dark-secondary); font-family: 'Dancing Script';">
-    My Utilities
-  </h2>
+<div class="util-page">
 
-  <!-- Card Grid -->
-  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4 mx-2">
-    {% for item in items %}
-    <div class="col">
-      <a href="{{ item.url }}" target="{% if item.title == 'ADVANCE UTILITIES' %}_blank{% endif %}" class="text-decoration-none">
-        <div class="card utility-card h-100 border-0 shadow-sm rounded-3 p-3">
-          <div class="card-body p-0">
-            <div class="card-title fw-semibold" style="color: var(--primary);">
-              {{ item.title }}
-              {% if item.title == 'REMINDER' and badge > 0 %}
-              <span class="utility-badge">{{ badge }}</span>
-              {% endif %}
+    <div class="container">
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+            {% for item in items %}
+            <div class="col">
+                <a href="{{ item.url }}"
+                   target="{% if item.title == 'ADVANCE UTILITIES' %}_blank{% endif %}"
+                   class="util-card-link">
+                    <div class="util-card">
+                        <div class="util-icon-circle">
+                            <i class="fa-solid {{ item.icon }}"></i>
+                        </div>
+                        <div>
+                            <div class="util-card-title">
+                                {{ item.title }}
+                                {% if item.title == 'REMINDER' and badge > 0 %}
+                                <span class="util-badge">{{ badge }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="util-card-desc">{{ item.description }}</p>
+                        </div>
+                        <div class="util-card-arrow">
+                            <i class="fa-solid fa-arrow-right"></i> Open
+                        </div>
+                    </div>
+                </a>
             </div>
-            <p class="card-text text-muted mt-2">{{ item.description }}</p>
-          </div>
+            {% endfor %}
         </div>
-      </a>
+
     </div>
-    {% endfor %}
-  </div>
 </div>
 
 {% include 'floating_button.html' with m_type='*' %}
