@@ -1,14 +1,21 @@
 <!-- Edit Expense Modal -->
 
-<div class="modal fade" id="editExpenseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="editExpenseModal" tabindex="-1" aria-labelledby="editExpenseModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5 text-center" style="color: var(--primary-dark);" id="title_u">Edit Transaction</h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 14px; overflow: hidden;">
+
+      <!-- Branded Modal Header -->
+      <div class="modal-header" style="background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%); border-bottom: none; padding: 16px 20px;">
+        <div class="d-flex align-items-center gap-2">
+            <div style="width:34px; height:34px; background:rgba(176,163,111,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                <i class="fa-solid fa-pen-to-square" style="color:#fff; font-size: 0.9rem;"></i>
+            </div>
+            <h5 class="modal-title mb-0" id="title_u" style="color:#fff; font-weight:700; font-size:1rem;">Edit Transaction</h5>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
-      <div class="modal-body">
+      <div class="modal-body p-4">
         <form action="" id="updateExpenseForm" method="post">
           {% csrf_token %}
 
@@ -16,59 +23,118 @@
 
             <!-- Transaction Category -->
             <div class="mb-3">
-              <select class="form-select shadow-sm" id="category_u" name="category" aria-label="Select Category">
-                <option value="" disabled selected>-- Select Category --</option>
-                <!-- Categories will be populated dynamically -->
+              <label class="txn-modal-label" for="category_u">
+                <i class="fa-solid fa-tag me-1" style="color: var(--primary);"></i> Category
+              </label>
+              <select class="form-select txn-modal-input" id="category_u" name="category">
+                <option value="" disabled selected>— Select Category —</option>
               </select>
             </div>
 
-            <!-- Beneficiary (Self/Home/Other) -->
+            <!-- Beneficiary -->
             <div class="mb-3">
-              <input type="text" class="form-control shadow-sm" name="beneficiary" id="beneficiary_data" placeholder="Beneficiary (Self/Home/Other)" />
+              <label class="txn-modal-label" for="beneficiary_data">
+                <i class="fa-solid fa-user me-1" style="color: var(--primary);"></i> Beneficiary
+              </label>
+              <input type="text" class="form-control txn-modal-input" name="beneficiary" id="beneficiary_data" placeholder="Self / Home / Other" />
             </div>
 
-            <!-- Transaction Date -->
-            <div class="mb-3">
-              <input type="date" class="form-control shadow-sm" name="date" id="date_u" required />
+            <!-- Date / Amount row -->
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="txn-modal-label" for="date_u">
+                  <i class="fa-solid fa-calendar me-1" style="color: var(--primary);"></i> Date
+                </label>
+                <input type="date" class="form-control txn-modal-input" name="date" id="date_u" required />
+              </div>
+              <div class="col-6">
+                <label class="txn-modal-label" for="amount_u">
+                  <i class="fa-solid fa-indian-rupee-sign me-1" style="color: var(--primary);"></i> Amount
+                </label>
+                <input type="number" class="form-control txn-modal-input" step="0.01" name="amount" id="amount_u" placeholder="0.00" required />
+              </div>
             </div>
 
-            <!-- Transaction Amount -->
+            <!-- Description -->
             <div class="mb-3">
-              <input type="number" class="form-control shadow-sm" step="0.01" name="amount" id="amount_u" placeholder="Amount" required />
+              <label class="txn-modal-label" for="description_u">
+                <i class="fa-solid fa-align-left me-1" style="color: var(--primary);"></i> Description
+              </label>
+              <input type="text" class="form-control txn-modal-input" name="description" id="description_u" placeholder="Brief note…" required />
             </div>
 
-            <!-- Transaction Description -->
-            <div class="mb-3">
-              <input type="text" class="form-control shadow-sm" name="description" id="description_u" placeholder="Description" required />
-            </div>
-
-            <!-- Transaction Mode -->
-            <div class="mb-3">
-              <select class="form-select shadow-sm" name="mode" id="mode_u">
-                <option value="" disabled selected>-- Select Mode --</option>
-                <!-- Mode options will be populated dynamically -->
-              </select>
-            </div>
-
-            <!-- Mode Details -->
-            <div class="mb-3">
-              <input type="text" class="form-control shadow-sm" name="mode_detail" id="mode_detail_u" placeholder="Mode Description (e.g., bankDR, bankUPI, cash)" />
+            <!-- Mode / Mode Detail row -->
+            <div class="row g-3 mb-4">
+              <div class="col-6">
+                <label class="txn-modal-label" for="mode_u">
+                  <i class="fa-solid fa-credit-card me-1" style="color: var(--primary);"></i> Mode
+                </label>
+                <select class="form-select txn-modal-input" name="mode" id="mode_u">
+                  <option value="" disabled selected>— Select Mode —</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="txn-modal-label" for="mode_detail_u">
+                  <i class="fa-solid fa-info-circle me-1" style="color: var(--primary);"></i> Detail
+                </label>
+                <input type="text" class="form-control txn-modal-input" name="mode_detail" id="mode_detail_u" placeholder="e.g. bankDR, UPI" />
+              </div>
             </div>
 
             <!-- Submit Button -->
-            <div class="d-flex justify-content-center">
-              <button
-                id="submitButton"
-                type="submit"
-                class="btn custom-btn-primary w-100 shadow-sm"
-              >
-                <i class="fa-solid fa-plus-circle"></i> Update Transaction 
-              </button>
-            </div>
-          </div>
+            <button id="submitButton" type="submit" class="txn-modal-submit w-100">
+                <i class="fa-solid fa-floppy-disk me-2"></i>
+                <span id="submitBtnText">Save Changes</span>
+            </button>
 
+          </div>
         </form>
       </div>
+
     </div>
   </div>
 </div>
+
+<style>
+.txn-modal-label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    font-weight: 700;
+    color: #6b7280;
+    margin-bottom: 5px;
+}
+.txn-modal-input {
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    padding: 9px 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.txn-modal-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(176, 163, 111, 0.18);
+    outline: none;
+}
+.txn-modal-submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
+    color: #e9d891;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+.txn-modal-submit:hover {
+    opacity: 0.92;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(32, 27, 5, 0.28);
+}
+</style>

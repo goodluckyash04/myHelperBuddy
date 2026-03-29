@@ -82,9 +82,9 @@ function openModalAndGetExpense(Id) {
     .then((data) => {
       // title
       document.getElementById("title_u").textContent = `${data.type}`;
-      document.getElementById(
-        "submitButton"
-      ).textContent = `Update ${data.type}`;
+      // Update button text without removing the icon
+      var btnTextEl = document.getElementById("submitBtnText");
+      if (btnTextEl) btnTextEl.textContent = `Update ${data.type}`;
 
       // category
       var categorySelect = document.getElementById("category_u");

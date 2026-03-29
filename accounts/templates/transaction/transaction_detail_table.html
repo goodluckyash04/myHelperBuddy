@@ -1,78 +1,144 @@
-<!-- Table with Data -->
-<!-- Table with Data -->
-<div class="card border-0 shadow-sm mx-2 mt-3" style="border-radius: 12px; overflow: hidden;">
-    <div class="table-responsive" style="max-height: 450px; overflow-y: auto;">
-        <form method="POST" action="/delete-transaction/">
+<!-- Transaction Detail Table -->
+<div class="txn-table-card mx-2 mt-3">
+
+    <!-- Table Toolbar (bulk actions, visible always) -->
+    <div class="txn-table-toolbar">
+        <span class="txn-table-section-title">
+            <i class="fa-solid fa-table-list me-2 text-muted"></i>All Transactions
+        </span>
+        <div class="txn-bulk-actions" id="bulkActionsBar" style="display:none;">
+            <form method="POST" action="/delete-transaction/" id="bulkDeleteForm">
+                {% csrf_token %}
+                <div id="bulkCheckboxContainer"></div>
+                <button class="txn-tb-btn txn-tb-btn--danger-sm" type="submit" title="Delete Selected">
+                    <i class="fa-solid fa-trash-can me-1"></i> Delete Selected
+                </button>
+            </form>
+        </div>
+        <span class="text-muted" style="font-size:0.75rem;">
+            <i class="fa-solid fa-circle-info me-1 text-muted opacity-50"></i>
+            Click type to edit &nbsp;|&nbsp; Click status to toggle
+        </span>
+    </div>
+
+    <div class="table-responsive" style="max-height: 480px; overflow-y: auto;">
+        <form method="POST" action="/delete-transaction/" id="mainDeleteForm">
             {% csrf_token %}
-            <table class="table table-hover align-middle mb-0" id="myTable">
-                <thead class="bg-light sticky-top" style="z-index: 1;">
+            <table class="table txn-table align-middle mb-0" id="myTable">
+                <thead class="txn-thead sticky-top">
                     <tr>
-                        <th class="ps-3" width="40"><input type="checkbox" class="form-check-input" id="select-all-checkbox" onChange="selectMultiple()"></th>
-                        <th class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">#</th>
-                        <th class="text-center text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Status</th>
-                        <th class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Date</th>
-                        <th class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Type <i class="fa-solid fa-circle-info text-primary cursor-pointer" onClick="hiddendiscription()" title="Toggle Description"></i></th>
-                        <th class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Category</th>
-                        <th class="text-end text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Amount</th>
-                        <th class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Beneficiary</th>
-                        <th id="th-desc" hidden="true" class="text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">Description</th>
-                        <th class="text-center text-secondary text-uppercase fw-bold" style="font-size: 0.75rem;">
-                            <button class="btn btn-link p-0 text-danger" type="submit" title="Delete Selected">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
+                        <th class="ps-3" width="40">
+                            <input type="checkbox" class="txn-check" id="select-all-checkbox" onChange="selectMultiple()">
                         </th>
+                        <th class="txn-th">#</th>
+                        <th class="txn-th text-center">Status</th>
+                        <th class="txn-th">Date</th>
+                        <th class="txn-th">
+                            Type
+                            <i class="fa-solid fa-circle-info ms-1 txn-info-icon"
+                               onClick="hiddendiscription()"
+                               style="color: rgb(212, 208, 208);"
+                               title="Toggle for description"></i>
+                        </th>
+                        <th class="txn-th">Category</th>
+                        <th class="txn-th text-end">Amount</th>
+                        <th class="txn-th">Beneficiary</th>
+                        <th id="th-desc" hidden class="txn-th">Description</th>
+                        <th class="txn-th text-center">Action</th>
                     </tr>
                 </thead>
-                <tbody class="border-top-0">
+                <tbody>
                     {% if transaction_data %}
                         {% for i in transaction_data %}
-                            <tr>
-                                <td class="ps-3"><input type="checkbox" class="form-check-input" name="record_ids" value="{{ i.id }}"></td>
-                                <td class="text-muted">{{ forloop.counter }}</td>
+                            <tr class="txn-row
+                                {% if i.type == 'Income' %}txn-row--income
+                                {% elif i.type == 'Expense' %}txn-row--expense
+                                {% elif i.type == 'Investment' %}txn-row--invest
+                                {% elif i.type == 'EMI' %}txn-row--emi
+                                {% endif %}">
+
+                                <td class="ps-3">
+                                    <input type="checkbox"
+                                           class="txn-check row-checkbox"
+                                           name="record_ids"
+                                           value="{{ i.id }}"
+                                           onChange="updateBulkBar()">
+                                </td>
+
+                                <td class="txn-serial">{{ forloop.counter }}</td>
+
                                 <td class="text-center">
-                                    <a href="/update-transaction-status/{{ i.id }}" class="text-decoration-none" title="Toggle Status">
+                                    <a href="/update-transaction-status/{{ i.id }}"
+                                       class="text-decoration-none"
+                                       title="Toggle Status">
                                         {% if i.status == 'Completed' %}
-                                            <span class="badge bg-soft-success text-success rounded-pill px-2">
-                                                <i class="fa-solid fa-check me-1"></i> Paid
+                                            <span class="txn-badge txn-badge--success">
+                                                <i class="fa-solid fa-check me-1"></i>Paid
                                             </span>
                                         {% else %}
-                                            <span class="badge bg-soft-warning text-warning rounded-pill px-2">
-                                                <i class="fa-solid fa-clock me-1"></i> Pending
+                                            <span class="txn-badge txn-badge--warning">
+                                                <i class="fa-solid fa-clock me-1"></i>Pending
                                             </span>
                                         {% endif %}
                                     </a>
                                 </td>
-                                <td><span class="text-dark fw-medium">{{ i.date|date:"d M Y" }}</span></td>
+
                                 <td>
-                                    <a href="#" class="text-decoration-none fw-bold" style="color: var(--primary);" 
-                                       data-bs-toggle="modal" data-bs-target="#editExpenseModal" 
+                                    <span class="txn-date">{{ i.date|date:"d M Y" }}</span>
+                                </td>
+
+                                <td>
+                                    <a href="#"
+                                       class="txn-type-link text-decoration-none"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#editExpenseModal"
                                        onclick="openModalAndGetExpense('{{ i.id }}')">
-                                       {{ i.type }}
+                                        {{ i.type }}
                                     </a>
                                 </td>
-                                <td><span class="badge bg-light text-dark border">{{ i.category }}</span></td>
-                                <td class="text-end fw-bold font-monospace">₹{{ i.amount | floatformat:2 }}</td>
-                                <td>{{ i.beneficiary|default:"-" }}</td>
-                                <td class="td-desc small text-muted" hidden>{{ i.description }}</td>
-                               
+
+                                <td>
+                                    <span class="txn-cat-badge">{{ i.category }}</span>
+                                </td>
+
+                                <td class="text-end">
+                                    <span class="txn-amount
+                                        {% if i.category == 'EMI' %}txn-amount--emi
+                                        {% elif i.category == 'Investment' %}txn-amount--invest
+                                        {% elif i.type == 'Income' %}txn-amount--income
+                                        {% elif i.type == 'Expense' %}txn-amount--expense
+                                        {% endif %}">
+                                        ₹{{ i.amount|floatformat:2 }}
+                                    </span>
+                                </td>
+
+                                <td class="txn-beneficiary">{{ i.beneficiary|default:"—" }}</td>
+
+                                <td class="td-desc txn-desc small text-muted" hidden>{{ i.description }}</td>
+
                                 <td class="text-center">
-                                  <button 
-                                    type="button" 
-                                    class="btn btn-sm btn-icon btn-ghost-danger rounded-circle"
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#confirmModal"
-                                    title="Delete Transaction"
-                                    data-url="/delete-transaction/{{ i.id }}">
-                                    <i class="fa-solid fa-trash-can"></i> 
-                                  </button>
+                                    <button
+                                        type="button"
+                                        class="txn-del-btn"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#confirmModal"
+                                        title="Delete Transaction"
+                                        data-url="/delete-transaction/{{ i.id }}">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
                                 </td>
                             </tr>
                         {% endfor %}
                     {% else %}
                         <tr>
-                            <td colspan="10" class="text-center py-5 text-muted">
-                                <i class="fa-solid fa-inbox fa-3x mb-3 opacity-50"></i>
-                                <p>No transaction records found</p>
+                            <td colspan="10" class="txn-empty-state">
+                                <div class="txn-empty-inner">
+                                    <div class="txn-empty-icon">
+                                        <i class="fa-solid fa-inbox"></i>
+                                    </div>
+                                    <p class="txn-empty-title">No transactions found</p>
+                                    <p class="txn-empty-sub">Try adjusting your filters or adding a new transaction</p>
+                                </div>
                             </td>
                         </tr>
                     {% endif %}
@@ -83,10 +149,238 @@
 </div>
 
 <style>
-    .bg-soft-success { background-color: rgba(16, 185, 129, 0.1) !important; }
-    .bg-soft-warning { background-color: rgba(245, 158, 11, 0.1) !important; }
-    .btn-ghost-danger { color: #dc3545; transition: all 0.2s; }
-    .btn-ghost-danger:hover { background-color: rgba(220, 53, 69, 0.1); }
-    .table thead th { border-bottom: 2px solid #edf2f9; }
-    .cursor-pointer { cursor: pointer; }
+/* ── Table Card ──────────────────────────────────────────── */
+.txn-table-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 16px rgba(32, 27, 5, 0.08);
+    border: 1px solid rgba(176, 163, 111, 0.12);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+/* ── Table Toolbar ───────────────────────────────────────── */
+.txn-table-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    border-bottom: 1px solid #f3f4f6;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.txn-table-section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    letter-spacing: 0.02em;
+}
+.txn-tb-btn--danger-sm {
+    display: inline-flex;
+    align-items: center;
+    background: #fff;
+    border: 1.5px solid #dc2626;
+    color: #dc2626;
+    border-radius: 7px;
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.txn-tb-btn--danger-sm:hover {
+    background: #dc2626;
+    color: #fff;
+}
+
+/* ── Table Head ──────────────────────────────────────────── */
+.txn-thead {
+    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%) !important;
+    background-color: var(--primary) !important;
+    z-index: 1;
+}
+/* Override global th{} rule from style.css */
+.txn-thead th,
+.txn-thead tr th {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    border-bottom: none !important;
+}
+.txn-th {
+    color: rgba(255,255,255,0.8) !important;
+    font-size: 0.68rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700 !important;
+    padding: 12px 10px !important;
+    border-bottom: none !important;
+    white-space: nowrap;
+}
+.txn-info-icon {
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+.txn-info-icon:hover { opacity: 1; }
+/* No hover highlight on thead */
+.txn-thead tr:hover,
+.txn-thead tr:hover th {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* ── Rows ────────────────────────────────────────────────── */
+.txn-table { border-collapse: separate; border-spacing: 0; border-radius: 16px 16px 0 0; overflow: hidden; }
+.txn-row {
+    border-left: 4px solid transparent;
+    transition: background 0.15s, border-color 0.15s;
+}
+.txn-row:hover { background: #fafaf8 !important; }
+.txn-row td { border-bottom: 1px solid #f3f4f6 !important; padding: 10px 10px !important; }
+.txn-row:last-child td { border-bottom: none !important; }
+
+/* Row left-border by type */
+.txn-row--income   { border-left-color: #10b981; }
+.txn-row--expense  { border-left-color: #ef4444; }
+.txn-row--invest   { border-left-color: #8b5cf6; }
+.txn-row--emi      { border-left-color: #3b82f6; }
+
+/* ── Cells ───────────────────────────────────────────────── */
+.txn-serial { color: #9ca3af; font-size: 0.8rem; }
+.txn-date   { font-size: 0.82rem; font-weight: 600; color: #374151; white-space: nowrap; }
+.txn-beneficiary { font-size: 0.82rem; color: #6b7280; }
+
+.txn-type-link {
+    font-weight: 700;
+    font-size: 0.82rem;
+    color: var(--primary) !important;
+    transition: color 0.18s;
+}
+.txn-type-link:hover { color: var(--primary-dark) !important; }
+
+/* ── Category Badge ──────────────────────────────────────── */
+.txn-cat-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, rgba(176,163,111,0.15), rgba(176,163,111,0.08));
+    border: 1px solid rgba(176, 163, 111, 0.35);
+    color: var(--primary-dark);
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 50px;
+    padding: 2px 10px;
+    white-space: nowrap;
+}
+
+/* ── Amount ──────────────────────────────────────────────── */
+.txn-amount {
+    font-weight: 700;
+    font-size: 0.88rem;
+    font-family: monospace;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.txn-amount--income  { color: #10b981; }
+.txn-amount--expense { color: #ef4444; }
+.txn-amount--invest  { color: #8b5cf6; }
+.txn-amount--emi     { color: #3b82f6; }
+
+/* ── Status Badges ───────────────────────────────────────── */
+.txn-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 50px;
+    padding: 3px 10px;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+}
+.txn-badge:hover { opacity: 0.8; }
+.txn-badge--success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.txn-badge--warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* ── Delete Button ───────────────────────────────────────── */
+.txn-del-btn {
+    background: none;
+    border: none;
+    color: #d1d5db;
+    font-size: 0.85rem;
+    padding: 5px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.18s;
+}
+.txn-row:hover .txn-del-btn { color: #ef4444; }
+.txn-del-btn:hover {
+    background: rgba(239, 68, 68, 0.1) !important;
+    color: #ef4444 !important;
+}
+
+/* ── Checkbox ────────────────────────────────────────────── */
+.txn-check {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    border-color: var(--primary);
+    cursor: pointer;
+    accent-color: var(--primary-dark);
+}
+
+/* ── Empty State ─────────────────────────────────────────── */
+.txn-empty-state { padding: 56px 24px !important; }
+.txn-empty-inner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.txn-empty-icon {
+    width: 72px;
+    height: 72px;
+    background: rgba(176, 163, 111, 0.1);
+    border: 2px dashed rgba(176, 163, 111, 0.4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+.txn-empty-title { font-weight: 700; color: var(--primary-dark); margin: 0; font-size: 0.95rem; }
+.txn-empty-sub   { color: #9ca3af; font-size: 0.8rem; margin: 0; }
 </style>
+
+<script>
+// Bulk action bar helper
+function updateBulkBar() {
+    const checked = document.querySelectorAll('.row-checkbox:checked');
+    const bar = document.getElementById('bulkActionsBar');
+    const container = document.getElementById('bulkCheckboxContainer');
+    if (checked.length > 0) {
+        bar.style.display = 'block';
+        container.innerHTML = '';
+        checked.forEach(cb => {
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.name = 'record_ids';
+            hidden.value = cb.value;
+            container.appendChild(hidden);
+        });
+    } else {
+        bar.style.display = 'none';
+    }
+}
+// Extend selectMultiple to also call updateBulkBar
+const _origSelectMultiple = typeof selectMultiple === 'function' ? selectMultiple : null;
+function selectMultiple() {
+    const allCb = document.getElementById('select-all-checkbox');
+    document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = allCb.checked);
+    updateBulkBar();
+}
+</script>
