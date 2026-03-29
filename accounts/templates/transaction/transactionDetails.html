@@ -2,25 +2,43 @@
 {% load static %} 
 {% block body %}
 
+<!-- Page Banner -->
+<div class="txn-page-banner">
+    <div class="txn-banner-content">
+        <div class="txn-banner-text">
+            <h1 class="txn-banner-title">
+                <i class="fa-solid fa-wallet me-2"></i>Transactions
+            </h1>
+            <p class="txn-banner-subtitle">Manage, filter and track all your financial records</p>
+        </div>
+        <div class="txn-banner-badge">
+            <span class="txn-count-chip">
+                <i class="fa-solid fa-list-check me-1"></i>
+                {{ transaction_data|length }} record{{ transaction_data|length|pluralize }}
+            </span>
+        </div>
+    </div>
+</div>
+
 {% include 'transaction/filter_grid.html' %} 
 
-<!-- Keyword Display -->
+<!-- Active Filter Badges -->
 {% if key %}
-    <div class="px-4 mt-3">
-        <span class="text-secondary small text-uppercase fw-bold">Active Filter:</span>
-        <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">{{ key }}</span>
+    <div class="px-4 mt-2 mb-1">
+        <span class="txn-filter-label">Active Filter:</span>
+        <span class="txn-filter-badge"><i class="fa-solid fa-tag me-1"></i>{{ key }}</span>
     </div>
 {% elif data %}
-    <div class="px-4 mt-3">
-        <span class="text-secondary small text-uppercase fw-bold">Active Filters:</span>
+    <div class="px-4 mt-2 mb-1">
+        <span class="txn-filter-label">Active Filters:</span>
         {% for j, i in data.items %}
             {% if i != "" %}
                 {% if j == "type" %}
                     {% for item in i %}
-                        <span class="badge bg-light text-dark border ms-1">{{ item }}</span>
+                        <span class="txn-filter-badge"><i class="fa-solid fa-tag me-1"></i>{{ item }}</span>
                     {% endfor %}
                 {% else %}
-                    <span class="badge bg-light text-dark border ms-1">{{ i }}</span>
+                    <span class="txn-filter-badge"><i class="fa-solid fa-tag me-1"></i>{{ i }}</span>
                 {% endif %}
             {% endif %}
         {% endfor %}
@@ -46,6 +64,87 @@
 
 {% include 'floating_button_individual.html' with m_type='transaction' %}
 
+
+<style>
+/* ── Page Banner ─────────────────────────────────────────── */
+.txn-page-banner {
+    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
+    padding: 24px 28px 20px;
+    margin-bottom: 0;
+    position: relative;
+    overflow: hidden;
+    border-radius: 0 0 15px 15px;
+}
+.txn-page-banner::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(176, 163, 111, 0.12);
+}
+.txn-page-banner::after {
+    content: '';
+    position: absolute;
+    bottom: -30px; left: 30%;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: rgba(176, 163, 111, 0.08);
+}
+.txn-banner-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+}
+.txn-banner-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 4px;
+    letter-spacing: 0.03em;
+}
+.txn-banner-subtitle {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.65);
+    margin: 0;
+    letter-spacing: 0.02em;
+}
+.txn-count-chip {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 50px;
+    padding: 6px 16px;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ── Active Filter Badges ────────────────────────────────── */
+.txn-filter-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: #6b7280;
+    letter-spacing: 0.06em;
+    margin-right: 4px;
+}
+.txn-filter-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 50px;
+    padding: 3px 10px;
+    margin: 2px 3px;
+    border: 1px solid rgba(176,163,111,0.4);
+    letter-spacing: 0.02em;
+}
+</style>
 
 {% endblock body %}
 

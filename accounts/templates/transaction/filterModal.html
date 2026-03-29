@@ -1,64 +1,138 @@
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content border-0 shadow">
-      <div class="modal-header text-white" style="background-color: var(--primary);">
-        <h5 class="modal-title mx-auto" id="exampleModalLabel">Filter Transactions</h5>
-        <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+
+      <!-- Header -->
+      <div class="modal-header" style="background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%); border-bottom: none; padding: 16px 20px;">
+        <div class="d-flex align-items-center gap-2">
+          <div style="width:34px;height:34px;background:rgba(176,163,111,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+            <i class="fa-solid fa-sliders" style="color:#fff;font-size:0.95rem;"></i>
+          </div>
+          <h5 class="modal-title mb-0" id="filterModalLabel" style="color:#fff;font-weight:700;font-size:1rem;">Filter Transactions</h5>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
+
+      <div class="modal-body p-4">
         <form action="/transaction-detail/" method="get" class="needs-validation" novalidate>
-          <!-- Type -->
-          <div class="d-flex justify-content-start mb-3">
-            <div class="form-check me-4">
-              <input class="form-check-input" name="type" {% if "Expense" in data.type %} checked {% endif %} type="checkbox" id="inlineCheckbox1" value="Expense">
-              <label class="form-check-label" for="inlineCheckbox1">Expense</label>
-            </div>
-            <div class="form-check">
-              <input class="form-check-input" name="type" {% if "Income" in data.type %} checked {% endif %} type="checkbox" id="inlineCheckbox2" value="Income">
-              <label class="form-check-label" for="inlineCheckbox2">Income</label>
+
+          <!-- Type Toggle Pills -->
+          <div class="mb-4">
+            <label class="txn-modal-label mb-2">
+              <i class="fa-solid fa-arrow-right-arrow-left me-1" style="color:var(--primary);"></i> Transaction Type
+            </label>
+            <div class="d-flex gap-2 flex-wrap">
+              <label class="fm-pill-label">
+                <input type="checkbox" name="type" value="Expense"
+                       {% if "Expense" in data.type %} checked {% endif %}
+                       class="fm-pill-input" id="typeExpense">
+                <span class="fm-pill fm-pill--expense">
+                  <i class="fa-solid fa-arrow-up-long me-1"></i>Expense
+                </span>
+              </label>
+              <label class="fm-pill-label">
+                <input type="checkbox" name="type" value="Income"
+                       {% if "Income" in data.type %} checked {% endif %}
+                       class="fm-pill-input" id="typeIncome">
+                <span class="fm-pill fm-pill--income">
+                  <i class="fa-solid fa-arrow-down-long me-1"></i>Income
+                </span>
+              </label>
             </div>
           </div>
-          <!-- Category and Mode -->
+
+          <!-- Row: Category / Mode / Status -->
           <div class="row g-3 mb-3">
             <div class="col-md-4">
-              <select class="form-select" name="category" aria-label="Default select example">
-                <option {% if data.category == "" %} selected {% endif %} value="">-- Category --</option>
+              <label class="txn-modal-label" for="fm-category">
+                <i class="fa-solid fa-tag me-1" style="color:var(--primary);"></i> Category
+              </label>
+              <select class="form-select txn-modal-input" name="category" id="fm-category">
+                <option {% if data.category == "" %} selected {% endif %} value="">— All —</option>
                 {% for category in categories %}
                   <option {% if data.category == category %} selected {% endif %} value="{{ category }}">{{ category }}</option>
                 {% endfor %}
               </select>
             </div>
             <div class="col-md-4">
-              <select class="form-select" name="mode" aria-label="Default select example">
-                <option {% if data.mode == "" %} selected {% endif %} value="">-- Mode --</option>
-                <option {% if data.mode == "CreditCard" %} selected {% endif %} value="CreditCard">CreditCard</option>
+              <label class="txn-modal-label" for="fm-mode">
+                <i class="fa-solid fa-credit-card me-1" style="color:var(--primary);"></i> Mode
+              </label>
+              <select class="form-select txn-modal-input" name="mode" id="fm-mode">
+                <option {% if data.mode == "" %} selected {% endif %} value="">— All —</option>
+                <option {% if data.mode == "CreditCard" %} selected {% endif %} value="CreditCard">Credit Card</option>
                 <option {% if data.mode == "Online" %} selected {% endif %} value="Online">Online</option>
                 <option {% if data.mode == "Cash" %} selected {% endif %} value="Cash">Cash</option>
               </select>
             </div>
             <div class="col-md-4">
-              <select class="form-select" name="status" aria-label="Default select example">
-                <option {% if data.status == "" %} selected {% endif %} value="">-- Status --</option>
+              <label class="txn-modal-label" for="fm-status">
+                <i class="fa-solid fa-circle-half-stroke me-1" style="color:var(--primary);"></i> Status
+              </label>
+              <select class="form-select txn-modal-input" name="status" id="fm-status">
+                <option {% if data.status == "" %} selected {% endif %} value="">— All —</option>
                 <option {% if data.status == "Completed" %} selected {% endif %} value="Completed">Completed</option>
                 <option {% if data.status == "Pending" %} selected {% endif %} value="Pending">Pending</option>
               </select>
             </div>
           </div>
-          <!-- Beneficiary and Date -->
-          <div class="row g-3 mb-3">
+
+          <!-- Row: Beneficiary / Date Range -->
+          <div class="row g-3 mb-4">
             <div class="col-md-6">
-              <input type="text" class="form-control" id="beneficiary" name="beneficiary" placeholder="Beneficiary" value="{{ data.beneficiary }}">
+              <label class="txn-modal-label" for="fm-beneficiary">
+                <i class="fa-solid fa-user me-1" style="color:var(--primary);"></i> Beneficiary
+              </label>
+              <input type="text" class="form-control txn-modal-input" id="fm-beneficiary" name="beneficiary"
+                     placeholder="e.g. Self, Home" value="{{ data.beneficiary }}">
             </div>
             <div class="col-md-6">
-              <input type="text" class="form-control" id="daterange" name="daterange" value="{{ data.daterange }}">
+              <label class="txn-modal-label" for="daterange">
+                <i class="fa-solid fa-calendar-range me-1" style="color:var(--primary);"></i> Date Range
+              </label>
+              <input type="text" class="form-control txn-modal-input" id="daterange" name="daterange"
+                     value="{{ data.daterange }}">
             </div>
           </div>
-          <button type="submit" class="btn custom-btn-primary w-100">Filter <i class="fa-solid fa-filter ms-1"></i></button>
+
+          <button type="submit" class="txn-modal-submit w-100">
+            <i class="fa-solid fa-magnifying-glass me-2"></i>Apply Filters
+          </button>
         </form>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+/* ── Filter Modal Pill Toggles ───────────────────────────── */
+.fm-pill-label { cursor: pointer; margin: 0; }
+.fm-pill-input { display: none; }
+.fm-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1.5px solid;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    user-select: none;
+}
+/* Expense */
+.fm-pill--expense { border-color: #ef4444; color: #ef4444; background: #fff; }
+.fm-pill-input:checked + .fm-pill--expense { background: #ef4444; color: #fff; }
+/* Income */
+.fm-pill--income { border-color: #10b981; color: #10b981; background: #fff; }
+.fm-pill-input:checked + .fm-pill--income { background: #10b981; color: #fff; }
+/* Investment */
+.fm-pill--invest { border-color: #8b5cf6; color: #8b5cf6; background: #fff; }
+.fm-pill-input:checked + .fm-pill--invest { background: #8b5cf6; color: #fff; }
+/* EMI */
+.fm-pill--emi { border-color: #3b82f6; color: #3b82f6; background: #fff; }
+.fm-pill-input:checked + .fm-pill--emi { background: #3b82f6; color: #fff; }
+</style>
 
 <script>
   if ($("#daterange").val()) {
@@ -79,9 +153,7 @@
     {
       startDate: start,
       endDate: end,
-      locale: {
-        format: "DD/MM/YYYY",
-      },
+      locale: { format: "DD/MM/YYYY" },
       autoApply: true,
       showDropdowns: true,
       linkedCalendars: false,
@@ -106,5 +178,4 @@
   if ($("#daterange").val() == "") {
     cb(start, end);
   }
-
 </script>

@@ -1,40 +1,192 @@
 
-<!-- Filter Grid -->
-<div class="row mx-3 mt-4 mb-4 justify-content-between align-items-center">
-    <!-- Filter Button (Mobile Full Width, Desktop Centered) -->
-    <div class="col-12 col-md-3 text-center text-md-start mb-3 mb-md-0">
-        <button type="button" class="btn btn-lg custom-btn-primary shadow-sm w-100 w-md-auto" data-bs-toggle="modal" data-bs-target="#exampleModal">
-            <i class="fa-solid fa-filter"></i> Filter
+<!-- Filter Toolbar -->
+<div class="txn-toolbar-wrap mx-2 mt-3 mb-2">
+    <div class="txn-toolbar">
+
+        <!-- Filter Button -->
+        <button type="button"
+                class="txn-tb-btn txn-tb-btn--primary"
+                data-bs-toggle="modal"
+                data-bs-target="#exampleModal"
+                title="Filter Transactions">
+            <i class="fa-solid fa-sliders me-1"></i>
+            <span>Filter</span>
         </button>
-    </div>
-  
-    <!-- Search Bar (Mobile Full Width, Desktop Centered) -->
-    <div class="col-12 col-md-6 text-center mb-3 mb-md-0">
-        <form class="d-flex w-100" action="/transaction-detail/" method="get">
-            <div class="input-group">
-                <input class="form-control form-control-lg shadow-sm" type="search" name="search" placeholder="Search transactions..." aria-label="Search">
-                <button class="btn btn-lg custom-btn-primary border shadow-sm" type="submit">
-                    <i class="fa-solid fa-search"></i>
+
+        <!-- Search Bar -->
+        <form class="txn-search-form" action="/transaction-detail/" method="get">
+            <div class="txn-search-wrap">
+                <i class="fa-solid fa-magnifying-glass txn-search-icon"></i>
+                <input class="txn-search-input"
+                       type="search"
+                       name="search"
+                       placeholder="Search transactions…"
+                       aria-label="Search">
+                <button class="txn-search-btn" type="submit" title="Search">
+                    <i class="fa-solid fa-arrow-right"></i>
                 </button>
             </div>
         </form>
+
+        <!-- Action Buttons -->
+        <div class="txn-tb-actions">
+            <!-- Clear -->
+            <a href="/transaction-detail/"
+               class="txn-tb-btn txn-tb-btn--ghost"
+               title="Clear Filters">
+                <i class="fa-solid fa-broom me-1"></i>
+                <span>Clear</span>
+            </a>
+
+            <!-- Export CSV -->
+            <button type="button"
+                    onclick="generateCSV()"
+                    id="export-csv-button"
+                    class="txn-tb-btn txn-tb-btn--primary"
+                    title="Export as CSV">
+                <i class="fa-solid fa-file-csv me-1"></i>
+                <span>Export</span>
+            </button>
+
+            <!-- Deleted Entries -->
+            <a href="/deleted-transaction-detail/"
+               class="txn-tb-btn txn-tb-btn--danger"
+               title="View Deleted Transactions">
+                <i class="fa-solid fa-trash-can me-1"></i>
+                <span>Deleted</span>
+            </a>
+        </div>
     </div>
-  
-    <!-- Action Buttons (Mobile Stacked, Desktop Inline) -->
-    <div class="col-12 col-md-3 d-flex justify-content-center justify-content-md-end mb-3 mb-md-0">
-        <!-- Clear Button -->
-        <a href="/transaction-detail/" class="btn btn-lg custom-btn-danger w-100 w-md-auto me-md-2 shadow-sm" >
-            <i class="fa-solid fa-broom"></i> 
-        </a>
-  
-        <!-- Export CSV Button -->
-        <button type="button" onclick="generateCSV()" id="export-csv-button" class="btn btn-lg custom-btn-primary w-100 w-md-auto mx-2 shadow-sm">
-            <i class="fa-solid fa-file-csv" ></i> 
-        </button>
-  
-        <!-- Deleted Entries Button -->
-        <a href="/deleted-transaction-detail/" class="btn btn-lg  custom-btn-primary w-100 w-md-auto shadow-sm">
-            <i class="fa-solid fa-trash-can" ></i> 
-        </a>
-    </div>
-  </div>
+</div>
+
+<style>
+/* ── Toolbar Wrapper ─────────────────────────────────────── */
+.txn-toolbar-wrap {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(32, 27, 5, 0.08);
+    border: 1px solid rgba(176, 163, 111, 0.18);
+    padding: 12px 16px;
+}
+.txn-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ── Shared Button Base ──────────────────────────────────── */
+.txn-tb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: all 0.22s ease;
+    letter-spacing: 0.02em;
+}
+.txn-tb-btn--primary {
+    background: #fff;
+    border-color: var(--primary);
+    color: var(--primary-dark);
+}
+.txn-tb-btn--primary:hover {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(176, 163, 111, 0.35);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+.txn-tb-btn--ghost {
+    background: #f9f7f0;
+    border-color: rgba(176, 163, 111, 0.3);
+    color: #6b7280;
+}
+.txn-tb-btn--ghost:hover {
+    background: #f1ede0;
+    color: var(--primary-dark);
+    border-color: var(--primary);
+    text-decoration: none;
+}
+.txn-tb-btn--danger {
+    background: #fff;
+    border-color: #dc2626;
+    color: #dc2626;
+}
+.txn-tb-btn--danger:hover {
+    background: #dc2626;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.28);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+/* ── Search Bar ──────────────────────────────────────────── */
+.txn-search-form {
+    flex: 1;
+    min-width: 200px;
+}
+.txn-search-wrap {
+    display: flex;
+    align-items: center;
+    background: #f9f7f0;
+    border: 1.5px solid rgba(176, 163, 111, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.txn-search-wrap:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(176, 163, 111, 0.18);
+}
+.txn-search-icon {
+    padding: 0 10px;
+    color: #9ca3af;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+.txn-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 9px 4px;
+    font-size: 0.85rem;
+    color: var(--primary-dark);
+    outline: none;
+    font-family: inherit;
+}
+.txn-search-input::placeholder { color: #9ca3af; }
+.txn-search-btn {
+    background: var(--primary);
+    border: none;
+    padding: 9px 14px;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-size: 0.82rem;
+}
+.txn-search-btn:hover { background: #a1905e; }
+
+/* ── Actions group ───────────────────────────────────────── */
+.txn-tb-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ── Mobile responsive ───────────────────────────────────── */
+@media (max-width: 576px) {
+    .txn-toolbar { flex-direction: column; align-items: stretch; }
+    .txn-search-form { min-width: unset; }
+    .txn-tb-actions { justify-content: stretch; }
+    .txn-tb-btn { flex: 1; justify-content: center; }
+}
+</style>
