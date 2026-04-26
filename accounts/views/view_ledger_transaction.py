@@ -87,7 +87,10 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
         transaction_type = request.POST.get('transaction_type', 'RECEIVABLE').upper()
         transaction_date_str = request.POST.get('transaction_date')
         amount = decimal.Decimal(request.POST.get('amount', 0.0))
-        counterparty = request.POST.get('counterparty', '').upper()
+        counterparty = request.POST.get('counterparty', '').strip().upper()
+        if counterparty == 'OTHER':
+            counterparty = request.POST.get('counterparty_txt', '').strip().upper()
+            
         description = request.POST.get('description', '')
         
         # Parse transaction date
@@ -98,28 +101,7 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
             transaction_date = datetime.today().date()
         
         # Extract additional fields
-        counterparty_contact = request.POST.get('counterparty_contact', '')
-        counterparty_email = request.POST.get('counterparty_email', '')
-        reference_number = request.POST.get('reference_number', '')
-        invoice_number = request.POST.get('invoice_number', '')
-        payment_method = request.POST.get('payment_method', '')
-        due_date_str = request.POST.get('due_date', '')
         notes = request.POST.get('notes', '')
-        
-        # Parse due date
-        due_date = None
-        if due_date_str:
-            try:
-                due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
-            except ValueError:
-                pass
-        
-        # Handle tags (comma-separated)
-        tags_str = request.POST.get('tags', '')
-        tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()]
-        
-        # Handle file attachment
-        attachment = request.FILES.get('attachment')
         
         # Installment configuration
         enable_installments = request.POST.get('enable_installments') == 'on'
@@ -145,18 +127,11 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
         # Common fields for all transactions
         common_fields = {
             'counterparty': counterparty,
-            'counterparty_contact': counterparty_contact,
-            'counterparty_email': counterparty_email,
             'description': description,
-            'reference_number': reference_number,
-            'invoice_number': invoice_number,
-            'payment_method': payment_method if payment_method else None,
             'notes': notes,
-            'tags': tags,
             'status': status,
             'completion_date': completion_date,
             'paid_amount': paid_amount,
-            'attachment': attachment,
             'transaction_type': transaction_type,
         }
         
@@ -170,7 +145,6 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
                 frequency=installment_frequency,
                 start_date=transaction_date,
                 custom_days=int(custom_days) if custom_days else None,
-                due_date=due_date,
                 **common_fields
             )
             
@@ -184,7 +158,6 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
                 created_by=user,
                 transaction_date=transaction_date,
                 amount=amount,
-                due_date=due_date,
                 **common_fields
             )
             
@@ -375,9 +348,7 @@ def get_ledger_transactions_by_party(
     if search_query:
         transactions = transactions.filter(
             Q(counterparty__icontains=search_query) |
-            Q(description__icontains=search_query) |
-            Q(reference_number__icontains=search_query) |
-            Q(invoice_number__icontains=search_query)
+            Q(description__icontains=search_query)
         )
     
     # Apply date range filters
@@ -418,15 +389,7 @@ def get_ledger_transactions_by_party(
             status__in=['PENDING', 'PARTIAL']
         )
     
-    # Apply tags filter
-    if tags_filter:
-        tag_list = [tag.strip() for tag in tags_filter.split(',') if tag.strip()]
-        if tag_list:
-            # Filter transactions that have any of the specified tags
-            q_objects = Q()
-            for tag in tag_list:
-                q_objects |= Q(tags__contains=[tag])
-            transactions = transactions.filter(q_objects)
+
     
     # Order by transaction date (most recent first)
     transactions = transactions.order_by('-transaction_date', '-id')
@@ -518,11 +481,11 @@ def update_ledger_transaction_status(
             entry = LedgerTransaction.objects.get(id=txn_id, created_by=user)
             
             # Only update Receivable/Payable transactions
-            if entry.transaction_type in ("Receivable", "Payable"):
+            if entry.transaction_type in ("RECEIVABLE", "PAYABLE"):
                 current_status = entry.status
-                entry.status = "Completed" if current_status == "Pending" else "Pending"
+                entry.status = "COMPLETED" if current_status == "PENDING" else "PENDING"
                 entry.completion_date = (
-                    datetime.datetime.today() if current_status == "Pending" else None
+                    datetime.datetime.today() if current_status == "PENDING" else None
                 )
                 entry.save()
                 updated_count += 1
@@ -581,15 +544,8 @@ def update_ledger_transaction(request: HttpRequest, id: int) -> HttpResponse:
                 'transaction_date': entry.transaction_date.strftime('%Y-%m-%d'),
                 'amount': str(entry.amount),
                 'counterparty': entry.counterparty,
-                'counterparty_contact': entry.counterparty_contact or '',
-                'counterparty_email': entry.counterparty_email or '',
                 'description': entry.description,
-                'reference_number': entry.reference_number or '',
-                'invoice_number': entry.invoice_number or '',
-                'due_date': entry.due_date.strftime('%Y-%m-%d') if entry.due_date else '',
-                'payment_method': entry.payment_method or '',
                 'notes': entry.notes or '',
-                'tags': ','.join(entry.tags) if entry.tags else '',
                 'status': entry.status,
             })
         
@@ -606,38 +562,14 @@ def update_ledger_transaction(request: HttpRequest, id: int) -> HttpResponse:
         entry.amount = decimal.Decimal(request.POST.get('amount', entry.amount))
         entry.description = request.POST.get('description', entry.description)
         
-        # Update counterparty details
-        counterparty = request.POST.get('counterparty', entry.counterparty)
-        if counterparty == 'other':
-            counterparty = request.POST.get('counterparty_txt', '').upper()
+        # Update counterparty
+        counterparty = request.POST.get('counterparty', entry.counterparty).strip()
+        if counterparty == 'other' or counterparty == 'OTHER':
+            counterparty = request.POST.get('counterparty_txt', '').strip().upper()
         entry.counterparty = counterparty.upper()
         
-        entry.counterparty_contact = request.POST.get('counterparty_contact', '')
-        entry.counterparty_email = request.POST.get('counterparty_email', '')
-        
-        # Update transaction details
-        entry.reference_number = request.POST.get('reference_number', '')
-        entry.invoice_number = request.POST.get('invoice_number', '')
+        # Update notes
         entry.notes = request.POST.get('notes', '')
-        
-        # Update dates
-        due_date_str = request.POST.get('due_date', '')
-        if due_date_str:
-            entry.due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
-        else:
-            entry.due_date = None
-        
-        # Update payment method
-        payment_method = request.POST.get('payment_method', '')
-        entry.payment_method = payment_method if payment_method else None
-        
-        # Update tags
-        tags_str = request.POST.get('tags', '')
-        entry.tags = [tag.strip() for tag in tags_str.split(',') if tag.strip()]
-        
-        # Handle file attachment (only if new file uploaded)
-        if 'attachment' in request.FILES:
-            entry.attachment = request.FILES['attachment']
         
         entry.save()
         
@@ -856,11 +788,9 @@ def record_payment(request: HttpRequest, id: int) -> HttpResponse:
     try:
         # Extract payment details
         payment_date_str = request.POST.get('payment_date')
-        amount_paid = decimal.Decimal(request.POST.get('amount_paid', 0))
-        payment_method = request.POST.get('payment_method')
-        reference_number = request.POST.get('reference_number', '')
+        amount_paid = decimal.Decimal(request.POST.get('amount_paid', '0'))
         notes = request.POST.get('notes', '')
-        receipt_file = request.FILES.get('receipt_file')
+        
         
         # Parse payment date
         from datetime import datetime
@@ -875,10 +805,10 @@ def record_payment(request: HttpRequest, id: int) -> HttpResponse:
             user=user,
             payment_date=payment_date,
             amount_paid=amount_paid,
-            payment_method=payment_method,
-            reference_number=reference_number,
+            payment_method='OTHER',  # Default since field was removed
+            reference_number='',
             notes=notes,
-            receipt_file=receipt_file
+            receipt_file=None
         )
         
         messages.success(
@@ -922,8 +852,6 @@ def get_transaction_payments(request: HttpRequest, id: int) -> JsonResponse:
             'id': payment.id,
             'payment_date': payment.payment_date.strftime('%Y-%m-%d'),
             'amount_paid': str(payment.amount_paid),
-            'payment_method': payment.get_payment_method_display(),
-            'reference_number': payment.reference_number,
             'notes': payment.notes,
             'created_at': payment.created_at.strftime('%Y-%m-%d %H:%M')
         } for payment in payments]

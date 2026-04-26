@@ -46,99 +46,48 @@
             </div>
           </div>
 
-          <!-- Counterparty Information -->
-          <div class="card mb-3 border-0 shadow-sm">
-            <div class="card-body">
-              <h6 class="card-title mb-3"><i class="fas fa-user-tie me-2"></i> Counterparty Details</h6>
-              
-              <div class="mb-3">
-                <label for="counterparty" class="form-label">Counterparty <span class="text-danger">*</span></label>
-                <select class="form-select" name="counterparty" id="counterparty" onchange="counterpartyChange()" required>
-                  <option value="">- Select Counterparty -</option>
-                  {% for counterparty in counterparties %}
-                  <option value="{{ counterparty }}">{{ counterparty }}</option>
-                  {% endfor %}
-                  <option value="other">+ Add New</option>
-                </select>
-              </div>
+          <!-- Counterparty -->
+          <div class="mb-3">
+            <label for="counterparty" class="form-label fw-bold">Counterparty <span class="text-danger">*</span></label>
+            <select class="form-select" name="counterparty" id="counterparty" onchange="counterpartyChange()" required>
+              <option value="">- Select Counterparty -</option>
+              {% for counterparty in counterparties %}
+              <option value="{{ counterparty }}">{{ counterparty }}</option>
+              {% endfor %}
+              <option value="other">+ Add New</option>
+            </select>
+          </div>
 
-              <div class="mb-3" id="counterparty_txt_div" style="display:none;">
-                <input type="text" class="form-control" name="counterparty" id="counterparty_txt" placeholder="Enter New Counterparty Name">
-              </div>
+          <div class="mb-3" id="counterparty_txt_div" style="display:none;">
+            <input type="text" class="form-control" name="counterparty_txt" id="counterparty_txt" placeholder="Enter New Counterparty Name">
+          </div>
 
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="counterparty_contact" class="form-label">Contact Number</label>
-                  <input type="tel" class="form-control" name="counterparty_contact" id="counterparty_contact" placeholder="+91 98765 43210">
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="counterparty_email" class="form-label">Email</label>
-                  <input type="email" class="form-control" name="counterparty_email" id="counterparty_email" placeholder="email@example.com">
-                </div>
-              </div>
+          <!-- Date & Amount -->
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="transaction_date" class="form-label fw-bold">Transaction Date <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" name="transaction_date" id="transaction_date" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="amount" class="form-label fw-bold">Amount (&#8377;) <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="amount" id="amount" placeholder="0.00" step="0.01" required>
             </div>
           </div>
 
-          <!-- Transaction Details -->
-          <div class="card mb-3 border-0 shadow-sm">
-            <div class="card-body">
-              <h6 class="card-title mb-3"><i class="fas fa-file-invoice me-2"></i> Transaction Information</h6>
-              
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="transaction_date" class="form-label">Transaction Date <span class="text-danger">*</span></label>
-                  <input type="date" class="form-control" name="transaction_date" id="transaction_date" required>
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="due_date" class="form-label">Due Date</label>
-                  <input type="date" class="form-control" name="due_date" id="due_date">
-                </div>
-              </div>
+          <!-- Description -->
+          <div class="mb-3">
+            <label for="description" class="form-label fw-bold">Description</label>
+            <textarea class="form-control" name="description" id="description" rows="2" placeholder="Transaction details..."></textarea>
+          </div>
 
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="amount" class="form-label">Amount (₹) <span class="text-danger">*</span></label>
-                  <input type="number" class="form-control" name="amount" id="amount" placeholder="0.00" step="0.01" required>
-                </div>
-                <div class="col-md-6 mb-3" id="payment_method_div" style="display:none;">
-                  <label for="payment_method" class="form-label">Payment Method</label>
-                  <select class="form-select" name="payment_method" id="payment_method">
-                    <option value="">- Select Method -</option>
-                    <option value="CASH">Cash</option>
-                    <option value="BANK_TRANSFER">Bank Transfer</option>
-                    <option value="UPI">UPI</option>
-                    <option value="CHEQUE">Cheque</option>
-                    <option value="CARD">Card</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="reference_number" class="form-label">Reference Number</label>
-                  <input type="text" class="form-control" name="reference_number" id="reference_number" placeholder="REF-001">
-                </div>
-                <div class="col-md-6 mb-3">
-                  <label for="invoice_number" class="form-label">Invoice Number</label>
-                  <input type="text" class="form-control" name="invoice_number" id="invoice_number" placeholder="INV-001">
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
-                <textarea class="form-control" name="description" id="description" rows="2" placeholder="Transaction details..."></textarea>
-              </div>
-
-              <div class="mb-3">
-                <label for="notes" class="form-label">Additional Notes</label>
-                <textarea class="form-control" name="notes" id="notes" rows="2" placeholder="Any additional information..."></textarea>
-              </div>
-            </div>
+          <!-- Additional Notes -->
+          <div class="mb-3">
+            <label for="notes" class="form-label fw-bold">Additional Notes</label>
+            <textarea class="form-control" name="notes" id="notes" rows="2" placeholder="Any additional information..."></textarea>
           </div>
 
           <!-- Installments Section -->
-          <div class="card mb-3 border-0 shadow-sm" id="installment_card">
+          <div class="card mb-4 border-0 shadow-sm" id="installment_card">
             <div class="card-body">
               <div class="form-check form-switch mb-3">
                 <input class="form-check-input" type="checkbox" id="enable_installments" name="enable_installments" onchange="toggleInstallments()">
@@ -172,25 +121,6 @@
                   <strong>Preview:</strong>
                   <div id="preview_content"></div>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tags and Attachment -->
-          <div class="card mb-3 border-0 shadow-sm">
-            <div class="card-body">
-              <h6 class="card-title mb-3"><i class="fas fa-tags me-2"></i> Organization</h6>
-              
-              <div class="mb-3">
-                <label for="tags" class="form-label">Tags</label>
-                <input type="text" class="form-control" name="tags" id="tags" placeholder="supplies, materials, urgent (comma-separated)">
-                <small class="text-muted">Separate tags with commas</small>
-              </div>
-
-              <div class="mb-3">
-                <label for="attachment" class="form-label">Attachment</label>
-                <input type="file" class="form-control" name="attachment" id="attachment" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
-                <small class="text-muted">Invoice, receipt, or supporting document</small>
               </div>
             </div>
           </div>
@@ -231,11 +161,11 @@
   .modal-dialog {
     margin: 0.5rem;
   }
-  
+
   .card-body {
     padding: 1rem;
   }
-  
+
   .btn {
     font-size: 0.875rem;
   }
