@@ -95,11 +95,6 @@
               <input type="number" name="max_amount" class="form-control form-control-sm" placeholder="999999" step="0.01" value="{{ filters.max_amount }}">
             </div>
 
-            <!-- Tags Filter -->
-            <div class="col-12 col-md-6 col-lg-3">
-              <label class="form-label small">Tags (comma-separated)</label>
-              <input type="text" name="tags" class="form-control form-control-sm" placeholder="urgent, payment" value="{{ filters.tags }}">
-            </div>
 
             <!-- Overdue Only -->
             <div class="col-12 col-md-6 col-lg-2">
@@ -172,7 +167,6 @@
                     <th>Amount (₹)</th>
                     <th>Status</th>
                     <th>Date</th>
-                    <th>Due Date</th>
                     <th>Completion Date</th>
                     <th>Description</th>
                     <th class="text-center">Actions</th>
@@ -200,13 +194,6 @@
                       </td>
                       <td>
                         <strong>{{ txn.counterparty }}</strong>
-                        {% if txn.tags %}
-                          <br><small>
-                            {% for tag in txn.tags|slice:":3" %}
-                              <span class="badge bg-light text-dark">{{ tag }}</span>
-                            {% endfor %}
-                          </small>
-                        {% endif %}
                       </td>
                       <td>
                         <strong class="{% if txn.transaction_type == 'RECEIVABLE' or txn.transaction_type == 'RECEIVED' %}text-receivable{% else %}text-payable{% endif %}">
@@ -234,13 +221,6 @@
                         {% endif %}
                       </td>
                       <td>{{ txn.transaction_date|date:"d M Y" }}</td>
-                      <td>
-                        {% if txn.due_date %}
-                          {{ txn.due_date|date:"d M Y" }}
-                        {% else %}
-                          <span class="text-muted">-</span>
-                        {% endif %}
-                      </td>
                       <td>
                         {% if txn.completion_date %}
                           {{ txn.completion_date|date:"d M Y" }}
@@ -338,13 +318,6 @@
                           </a>
                         </li>
                         {% endif %}
-                        {% if txn.attachment %}
-                        <li>
-                          <a class="dropdown-item" href="{{ txn.attachment.url }}" download>
-                            <i class="fas fa-download me-2"></i>Download File
-                          </a>
-                        </li>
-                        {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li>
                           <a class="dropdown-item text-danger" href="#" 
@@ -394,13 +367,6 @@
                     <span class="text-muted">
                       <i class="far fa-calendar me-1"></i>{{ txn.transaction_date|date:"d M" }}
                     </span>
-
-                    <!-- Tags -->
-                    {% if txn.tags %}
-                      {% for tag in txn.tags|slice:":2" %}
-                        <span class="badge bg-light text-dark">{{ tag }}</span>
-                      {% endfor %}
-                    {% endif %}
                   </div>
 
                   <!-- Progress Bar (if partial) -->

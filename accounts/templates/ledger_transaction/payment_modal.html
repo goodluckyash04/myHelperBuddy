@@ -61,35 +61,14 @@
             </div>
           </div>
 
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label for="payment_method_record" class="form-label">Payment Method <span class="text-danger">*</span></label>
-              <select class="form-select" name="payment_method" id="payment_method_record" required>
-                <option value="">- Select Method -</option>
-                <option value="CASH">Cash</option>
-                <option value="BANK_TRANSFER">Bank Transfer</option>
-                <option value="UPI">UPI</option>
-                <option value="CHEQUE">Cheque</option>
-                <option value="CARD">Card</option>
-                <option value="OTHER">Other</option>
-              </select>
-            </div>
-            <div class="col-md-6 mb-3">
-              <label for="reference_number_payment" class="form-label">Reference Number</label>
-              <input type="text" class="form-control" name="reference_number" id="reference_number_payment" placeholder="TXN12345">
-            </div>
-          </div>
+
 
           <div class="mb-3">
             <label for="payment_notes" class="form-label">Notes</label>
             <textarea class="form-control" name="notes" id="payment_notes" rows="2" placeholder="Additional payment details..."></textarea>
           </div>
 
-          <div class="mb-3">
-            <label for="receipt_file" class="form-label">Receipt/Proof</label>
-            <input type="file" class="form-control" name="receipt_file" id="receipt_file" accept=".pdf,.jpg,.jpeg,.png">
-            <small class="text-muted">Upload payment receipt or proof</small>
-          </div>
+
 
           <div class="d-grid gap-2">
             <button type="submit" class="btn btn-primary" id="recordPaymentBtn">
@@ -200,8 +179,6 @@ function showPaymentHistory() {
               <h6 class="mb-1">₹${payment.amount_paid}</h6>
               <small class="text-muted">${payment.payment_date}</small>
             </div>
-            <p class="mb-1"><strong>${payment.payment_method}</strong></p>
-            ${payment.reference_number ? `<small>Ref: ${payment.reference_number}</small>` : ''}
             ${payment.notes ? `<p class="mb-0 text-muted"><small>${payment.notes}</small></p>` : ''}
           </div>
         `).join('');

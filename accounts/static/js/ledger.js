@@ -39,63 +39,6 @@ function updateCounterpartyInModal(csrf) {
   modal.hide();
 }
 
-function openModalAndGetLedger(Id) {
-  document.getElementById(
-    "myLedgerForm"
-  ).action = `/update-ledger-transaction/${Id}`;
-  document.getElementById("submitButton").textContent = "Update";
-
-  fetch(`/update-ledger-transaction/${Id}`)
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("data", data);
-      document.getElementById(
-        "tname"
-      ).textContent = `Edit ${data.transaction_type}`;
-
-      // type
-      if (data.transaction_type == "Receivable") {
-        document.getElementById("receivable").checked = true;
-      } else if (data.transaction_type == "Payable") {
-        document.getElementById("payable").checked = true;
-      } else if (data.transaction_type == "Received") {
-        document.getElementById("received").checked = true;
-      } else {
-        document.getElementById("paid").checked = true;
-      }
-
-      // Counterparty
-      document.getElementById("counterparty").style.display = "none";
-      document.getElementById("counterparty").required = false;
-
-      // no_of_installments
-      document.getElementById("no_of_installments").style.display = "none";
-
-      // transaction_date
-      document.getElementById("transaction_date").value = data.transaction_date;
-
-      // amount
-      document.getElementById("amount").value = data.amount;
-
-      // description
-      document.getElementById("description").textContent = data.description;
-    });
-}
-
-function counterpartyChange() {
-  const cParty = document.getElementById('counterparty');
-  const cParty_txt = document.getElementById('counterparty_txt');
-
-  if (cParty.value === 'other') {
-    cParty.removeAttribute('name');
-    cParty_txt.setAttribute('name', 'counterparty');
-    cParty_txt.style.display = 'block';
-  } else {
-    cParty_txt.removeAttribute('name');
-    cParty.setAttribute('name', 'counterparty');
-    cParty_txt.style.display = 'none';
-  }
-}
 
 
 // Wait for DOM to be ready
@@ -105,46 +48,25 @@ document.addEventListener('DOMContentLoaded', function () {
   if (dateInput) {
     dateInput.value = new Date().toISOString().split('T')[0];
   }
-
-  // Show payment method for completed transactions
-  document.querySelectorAll('input[name="transaction_type"]').forEach(radio => {
-    radio.addEventListener('change', function () {
-      const paymentDiv = document.getElementById('payment_method_div');
-      if (paymentDiv) {
-        if (this.value === 'RECEIVED' || this.value === 'PAID') {
-          paymentDiv.style.display = 'block';
-        } else {
-          paymentDiv.style.display = 'none';
-        }
-      }
-    });
-  });
 });
 
 // Show/hide counterparty text input
 function counterpartyChange() {
   const select = document.getElementById('counterparty');
   const textDiv = document.getElementById('counterparty_txt_div');
+  const textInput = document.getElementById('counterparty_txt');
 
-  if (!select || !textDiv) {
-    console.error('Counterparty elements not found');
-    return;
-  }
+  if (!select || !textDiv) return;
 
   if (select.value === 'other') {
     textDiv.style.display = 'block';
-    // Disable the select and focus on text input
-    const textInput = document.getElementById('counterparty_txt');
     if (textInput) {
       textInput.focus();
-      // Remove required from select when using text input
       select.removeAttribute('required');
       textInput.setAttribute('required', 'required');
     }
   } else {
     textDiv.style.display = 'none';
-    // Re-enable select
-    const textInput = document.getElementById('counterparty_txt');
     if (textInput) {
       textInput.removeAttribute('required');
       select.setAttribute('required', 'required');
@@ -225,46 +147,40 @@ window.editTransaction = function (txnId) {
 
       // Set counterparty (case-insensitive search)
       const counterpartySelect = document.getElementById('counterparty');
+      const counterpartyTxtDiv = document.getElementById('counterparty_txt_div');
+      const counterpartyTxtInput = document.getElementById('counterparty_txt');
+      
       const options = Array.from(counterpartySelect.options);
+      const dataCpty = (data.counterparty || '').trim();
+      
       // Try exact match first
-      let foundOption = options.find(opt => opt.value === data.counterparty);
+      let foundOption = options.find(opt => opt.value.trim() === dataCpty);
       // Try case-insensitive match
-      if (!foundOption && data.counterparty) {
-        foundOption = options.find(opt => opt.value.toUpperCase() === data.counterparty.toUpperCase());
+      if (!foundOption && dataCpty) {
+        foundOption = options.find(opt => opt.value.trim().toUpperCase() === dataCpty.toUpperCase());
       }
 
       if (foundOption) {
         counterpartySelect.value = foundOption.value;
-        console.log('Counterparty set to:', foundOption.value);
+        counterpartyTxtDiv.style.display = 'none';
+        counterpartyTxtInput.removeAttribute('required');
+        counterpartySelect.setAttribute('required', 'required');
       } else if (data.counterparty) {
         // Not in dropdown, set as "other" and show text input
         counterpartySelect.value = 'other';
-        document.getElementById('counterparty_txt').value = data.counterparty;
-        document.getElementById('counterparty_txt_div').style.display = 'block';
-        console.log('Counterparty set as other:', data.counterparty);
+        counterpartyTxtInput.value = data.counterparty;
+        counterpartyTxtDiv.style.display = 'block';
+        counterpartySelect.removeAttribute('required');
+        counterpartyTxtInput.setAttribute('required', 'required');
       }
-
-      // Set counterparty details
-      document.getElementById('counterparty_contact').value = data.counterparty_contact || '';
-      document.getElementById('counterparty_email').value = data.counterparty_email || '';
 
       // Set dates and amounts
       document.getElementById('transaction_date').value = data.transaction_date;
-      document.getElementById('due_date').value = data.due_date || '';
       document.getElementById('amount').value = data.amount;
 
       // Set other fields
       document.getElementById('description').value = data.description || '';
-      document.getElementById('reference_number').value = data.reference_number || '';
-      document.getElementById('invoice_number').value = data.invoice_number || '';
       document.getElementById('notes').value = data.notes || '';
-      document.getElementById('tags').value = data.tags || '';
-
-      // Set payment method if applicable
-      if (data.payment_method) {
-        document.getElementById('payment_method').value = data.payment_method;
-        document.getElementById('payment_method_div').style.display = 'block';
-      }
 
       // Hide installment section when editing
       document.getElementById('installment_card').style.display = 'none';
@@ -305,6 +221,5 @@ document.getElementById('ledgerModal').addEventListener('hidden.bs.modal', funct
 
   // Hide optional divs
   document.getElementById('counterparty_txt_div').style.display = 'none';
-  document.getElementById('payment_method_div').style.display = 'none';
   document.getElementById('installment_settings').style.display = 'none';
 });
