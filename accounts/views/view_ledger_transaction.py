@@ -74,7 +74,6 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
     Returns:
         HttpResponse: Redirect with success/error message
     """
-    from accounts.services.ledger_utils import create_installment_transactions
     
     user = request.user
     
@@ -102,12 +101,6 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
         
         # Extract additional fields
         notes = request.POST.get('notes', '')
-        
-        # Installment configuration
-        enable_installments = request.POST.get('enable_installments') == 'on'
-        num_installments = int(request.POST.get('no_of_installments') or 1)
-        installment_frequency = request.POST.get('installment_frequency', 'MONTHLY')
-        custom_days = request.POST.get('custom_days')
         
         # Validate transaction type
         valid_types = ['RECEIVABLE', 'RECEIVED', 'PAYABLE', 'PAID']
@@ -139,36 +132,18 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
             'tab_name': tab_name,
         }
         
-        # Create transaction(s)
-        if enable_installments and num_installments > 1:
-            # Create installments using utility function
-            parent, installments = create_installment_transactions(
-                user=user,
-                base_amount=amount,
-                num_installments=num_installments,
-                frequency=installment_frequency,
-                start_date=transaction_date,
-                custom_days=int(custom_days) if custom_days else None,
-                **common_fields
-            )
-            
-            messages.success(
-                request,
-                f'{transaction_type} transaction created with {num_installments} installments'
-            )
-        else:
-            # Create single transaction
-            LedgerTransaction.objects.create(
-                created_by=user,
-                transaction_date=transaction_date,
-                amount=amount,
-                **common_fields
-            )
-            
-            messages.success(
-                request,
-                f'{transaction_type} transaction added successfully'
-            )
+        # Create single transaction
+        LedgerTransaction.objects.create(
+            created_by=user,
+            transaction_date=transaction_date,
+            amount=amount,
+            **common_fields
+        )
+        
+        messages.success(
+            request,
+            f'{transaction_type} transaction added successfully'
+        )
         
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
         
@@ -248,18 +223,49 @@ def ledger_transaction_details(request: HttpRequest) -> HttpResponse:
         )
     
     try:
-        # Calculate balances per counterparty
-        receivables_payables = LedgerTransaction.objects.filter(
-            created_by=user
-        ).values('counterparty').annotate(
-            total_receivable=get_sum("RECEIVABLE") - get_paid_and_received_sums("RECEIVED"),
-            total_payable=get_sum("PAYABLE") - get_paid_and_received_sums("PAID")
+        # Calculate balances per counterparty and per tab
+        qs = LedgerTransaction.objects.filter(
+            created_by=user,
+            is_deleted=False
+        ).values('counterparty', 'tab_name').annotate(
+            total_gave=Coalesce(
+                Sum('amount', filter=Q(transaction_type__in=['PAID', 'RECEIVABLE'])),
+                decimal.Decimal('0'),
+                output_field=DecimalField()
+            ),
+            total_got=Coalesce(
+                Sum('amount', filter=Q(transaction_type__in=['RECEIVED', 'PAYABLE'])),
+                decimal.Decimal('0'),
+                output_field=DecimalField()
+            ),
         ).annotate(
-            total=ExpressionWrapper(
-                F('total_receivable') - F('total_payable'),
+            net_balance=ExpressionWrapper(
+                F('total_gave') - F('total_got'),
                 output_field=DecimalField()
             )
         )
+        
+        counterparty_data = {}
+        for row in qs:
+            cp = row['counterparty']
+            if cp not in counterparty_data:
+                counterparty_data[cp] = {
+                    'counterparty': cp,
+                    'total': decimal.Decimal('0'),
+                    'tabs': []
+                }
+            
+            tab_name = row['tab_name'] or 'General'
+            net = row['net_balance']
+            
+            counterparty_data[cp]['total'] += net
+            # Only add tab if there's actually a balance or transaction there, but we grouped so it's fine
+            counterparty_data[cp]['tabs'].append({
+                'name': tab_name,
+                'balance': net
+            })
+            
+        receivables_payables = list(counterparty_data.values())
         
         counterparties = get_counter_parties(user)
         
@@ -338,12 +344,12 @@ def get_ledger_transactions_by_party(
         agg = qs.aggregate(
             total_gave=Coalesce(
                 Sum('amount', filter=Q(transaction_type__in=['PAID', 'RECEIVABLE'])),
-                Decimal('0'),
+                decimal.Decimal('0'),
                 output_field=DecimalField()
             ),
             total_got=Coalesce(
                 Sum('amount', filter=Q(transaction_type__in=['RECEIVED', 'PAYABLE'])),
-                Decimal('0'),
+                decimal.Decimal('0'),
                 output_field=DecimalField()
             ),
         )
@@ -353,7 +359,7 @@ def get_ledger_transactions_by_party(
         entry_count = qs.count()
 
         # Compute running balance (ascending), then reverse for newest-on-top display
-        running = Decimal('0')
+        running = decimal.Decimal('0')
         txn_list = list(qs)
         for txn in txn_list:
             if txn.transaction_type in ('PAID', 'RECEIVABLE'):
@@ -431,14 +437,14 @@ def get_ledger_transactions_by_party(
 
     if min_amount_str:
         try:
-            min_amount = Decimal(min_amount_str)
+            min_amount = decimal.Decimal(min_amount_str)
             transactions = transactions.filter(amount__gte=min_amount)
         except (ValueError, InvalidOperation):
             pass
 
     if max_amount_str:
         try:
-            max_amount = Decimal(max_amount_str)
+            max_amount = decimal.Decimal(max_amount_str)
             transactions = transactions.filter(amount__lte=max_amount)
         except (ValueError, InvalidOperation):
             pass

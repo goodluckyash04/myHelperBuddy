@@ -48,12 +48,6 @@ document.addEventListener('DOMContentLoaded', function () {
   if (dateInput) {
     dateInput.value = new Date().toISOString().split('T')[0];
   }
-  
-  // Update installment preview when transaction type changes
-  const typeRadios = document.querySelectorAll('input[name="transaction_type"]');
-  typeRadios.forEach(radio => {
-    radio.addEventListener('change', previewInstallments);
-  });
 });
 
 // Show/hide counterparty text input
@@ -80,70 +74,6 @@ function counterpartyChange() {
   }
 }
 
-// Toggle installment settings
-function toggleInstallments() {
-  const checkbox = document.getElementById('enable_installments');
-  const settings = document.getElementById('installment_settings');
-  if (!checkbox || !settings) return;
-
-  settings.style.display = checkbox.checked ? 'block' : 'none';
-  if (checkbox.checked) {
-    previewInstallments();
-  }
-}
-
-// Toggle custom days field
-function toggleCustomDays() {
-  const frequency = document.getElementById('installment_frequency');
-  const customDiv = document.getElementById('custom_days_div');
-  if (!frequency || !customDiv) return;
-
-  customDiv.style.display = frequency.value === 'CUSTOM' ? 'block' : 'none';
-  previewInstallments();
-}
-
-// Preview installments
-function previewInstallments() {
-  const amountInput = document.getElementById('amount');
-  const numInput = document.getElementById('no_of_installments');
-  const frequencyInput = document.getElementById('installment_frequency');
-
-  if (!amountInput || !numInput || !frequencyInput) return;
-
-  const amount = parseFloat(amountInput.value) || 0;
-  const numInstallments = parseInt(numInput.value) || 1;
-  const frequency = frequencyInput.value;
-
-  if (amount > 0 && numInstallments > 1) {
-    const installmentAmount = (amount / numInstallments).toFixed(2);
-    const preview = document.getElementById('installment_preview');
-    const content = document.getElementById('preview_content');
-
-    if (preview && content) {
-      let frequencyText = frequency === 'MONTHLY' ? 'month' : frequency === 'WEEKLY' ? 'week' : 'custom period';
-      
-      let typeText = "";
-      const selectedType = document.querySelector('input[name="transaction_type"]:checked');
-      if (selectedType) {
-        if (selectedType.value === 'RECEIVABLE') typeText = " will be received";
-        else if (selectedType.value === 'PAYABLE') typeText = " will be paid";
-      }
-
-      content.innerHTML = `
-  <div class="mt-2">
-    <p class="mb-1"><strong>${numInstallments}</strong> installments of <strong>₹${installmentAmount}</strong> each${typeText}</p>
-    <p class="mb-0 text-muted"><small>Frequency: ${frequency.toLowerCase()}</small></p>
-  </div>
-  `;
-      preview.style.display = 'block';
-    }
-  } else {
-    const preview = document.getElementById('installment_preview');
-    if (preview) {
-      preview.style.display = 'none';
-    }
-  }
-}
 
 // Global function to populate form for editing (called from parent page)
 window.editTransaction = function (txnId) {
@@ -204,8 +134,7 @@ window.editTransaction = function (txnId) {
         if (opt) tabSel.value = data.tab_name;
       }
 
-      // Hide installment section when editing
-      document.getElementById('installment_card').style.display = 'none';
+
 
       // Update modal title and button
       document.getElementById('ledgerModalLabel').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Transaction';
@@ -235,13 +164,11 @@ document.getElementById('ledgerModal').addEventListener('hidden.bs.modal', funct
   document.getElementById('ledgerModalLabel').innerHTML = '<i class="fas fa-receipt me-2"></i> Add Ledger Entry';
   document.getElementById('submitButton').innerHTML = '<i class="fas fa-save me-2"></i>Save Entry';
 
-  // Show installment section
-  document.getElementById('installment_card').style.display = 'block';
+
 
   // Reset date to today
   document.getElementById('transaction_date').value = new Date().toISOString().split('T')[0];
 
   // Hide optional divs
   document.getElementById('counterparty_txt_div').style.display = 'none';
-  document.getElementById('installment_settings').style.display = 'none';
 });

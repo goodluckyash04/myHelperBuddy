@@ -216,26 +216,6 @@ class LedgerTransaction(models.Model):
         null=True
     )
     
-    # Installment Support
-    parent_transaction = models.ForeignKey(
-        'self', 
-        on_delete=models.CASCADE, 
-        related_name='installments',
-        null=True, 
-        blank=True,
-        help_text=_("Parent transaction if this is an installment")
-    )
-    installment_number = models.PositiveIntegerField(
-        null=True, 
-        blank=True,
-        help_text=_("Installment number (e.g., 1 of 5)")
-    )
-    total_installments = models.PositiveIntegerField(
-        null=True, 
-        blank=True,
-        help_text=_("Total number of installments")
-    )
-    
     # Payment Tracking
     paid_amount = models.DecimalField(
         max_digits=15, 
@@ -290,7 +270,6 @@ class LedgerTransaction(models.Model):
             models.Index(fields=['counterparty', 'is_deleted']),
             models.Index(fields=['created_by', 'transaction_date']),
             models.Index(fields=['status', 'due_date']),
-            models.Index(fields=['parent_transaction']),
             models.Index(fields=['created_by', 'is_deleted']),
             models.Index(fields=['transaction_type']),
         ]

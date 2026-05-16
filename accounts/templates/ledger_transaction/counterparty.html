@@ -122,8 +122,8 @@ body {
   font-size: 0.95rem;
 }
 
-.val-receivable { color: #0284c7; }
-.val-payable { color: #be123c; }
+.val-positive { color: #16a34a; }
+.val-negative { color: #dc2626; }
 
 .net-balance-pill {
   display: inline-flex;
@@ -221,14 +221,29 @@ body {
     </div>
 
     <div class="cp-stats">
+      {% for tab in i.tabs|slice:":2" %}
       <div class="stat-row">
-        <span class="stat-label">To Collect</span>
-        <span class="stat-val val-receivable">₹{{ i.total_receivable|floatformat:2 }}</span>
+        <span class="stat-label">
+          <i class="fa-solid fa-folder-open me-2 opacity-50"></i>{{ tab.name }}
+        </span>
+        <span class="stat-val {% if tab.balance > 0 %}val-positive{% elif tab.balance < 0 %}val-negative{% endif %}">
+          {% if tab.balance > 0 %}
+            +₹{{ tab.balance|floatformat:2 }}
+          {% elif tab.balance < 0 %}
+            −₹{{ tab.balance|floatformat:2|slice:"1:" }}
+          {% else %}
+            ₹0.00
+          {% endif %}
+        </span>
       </div>
-      <div class="stat-row">
-        <span class="stat-label">To Pay</span>
-        <span class="stat-val val-payable">₹{{ i.total_payable|floatformat:2 }}</span>
+      {% endfor %}
+      {% if i.tabs|length > 2 %}
+      <div class="stat-row mt-1">
+        <span class="stat-label fst-italic opacity-75" style="font-size: 0.8rem;">
+          + {{ i.tabs|length|add:"-2" }} more tab{{ i.tabs|length|add:"-2"|pluralize }}...
+        </span>
       </div>
+      {% endif %}
     </div>
 
     <div class="cp-actions">

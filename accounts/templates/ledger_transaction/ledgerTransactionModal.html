@@ -122,45 +122,7 @@
                       placeholder="What is this for?"></textarea>
           </div>
 
-          <!-- Installments (only for pending types) -->
-          <div class="card mb-4 border-0 bg-light" id="installment_card">
-            <div class="card-body py-3">
-              <div class="form-check form-switch mb-2">
-                <input class="form-check-input" type="checkbox" id="enable_installments"
-                       name="enable_installments" onchange="toggleInstallments()">
-                <label class="form-check-label fw-bold" for="enable_installments">
-                  <i class="fas fa-calendar-alt me-2"></i>Split into Installments
-                </label>
-              </div>
-              <div id="installment_settings" style="display:none;">
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label for="no_of_installments" class="form-label">Number of Installments</label>
-                    <input type="number" class="form-control" name="no_of_installments"
-                           id="no_of_installments" value="1" min="1" max="100" onchange="previewInstallments()">
-                  </div>
-                  <div class="col-md-6 mb-3">
-                    <label for="installment_frequency" class="form-label">Frequency</label>
-                    <select class="form-select" name="installment_frequency" id="installment_frequency"
-                            onchange="toggleCustomDays()">
-                      <option value="MONTHLY">Monthly</option>
-                      <option value="WEEKLY">Weekly</option>
-                      <option value="CUSTOM">Custom</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="mb-3" id="custom_days_div" style="display:none;">
-                  <label for="custom_days" class="form-label">Custom Interval (Days)</label>
-                  <input type="number" class="form-control" name="custom_days" id="custom_days"
-                         placeholder="e.g. 15 for bi-weekly" min="1">
-                </div>
-                <div id="installment_preview" class="alert alert-info" style="display:none;">
-                  <strong>Preview:</strong>
-                  <div id="preview_content"></div>
-                </div>
-              </div>
-            </div>
-          </div>
+
 
           <div class="d-grid">
             <button type="submit" class="btn custom-btn-primary btn-lg" id="submitButton"
