@@ -1,11 +1,11 @@
-<!-- Enhanced Ledger Transaction Modal with All New Features -->
+<!-- Ledger Transaction Modal — create/edit with clear direction labels -->
 {% load static %}
 <div class="modal fade" id="ledgerModal" tabindex="-1" aria-labelledby="ledgerModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="ledgerModalLabel">
-          <i class="fas fa-receipt me-2"></i> Add Ledger Transaction
+          <i class="fas fa-receipt me-2"></i> Add Ledger Entry
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -15,32 +15,48 @@
           {% csrf_token %}
           <input type="hidden" id="transaction_id" name="transaction_id">
 
-          <!-- Transaction Type -->
+          <!-- Transaction Direction — 2×2 grid with plain-language labels -->
           <div class="mb-4">
-            <label class="form-label fw-bold">Transaction Type</label>
-            <div class="row g-2">
-              <div class="col-6 col-md-3">
+            <label class="form-label fw-bold mb-2">What kind of entry is this?</label>
+
+            <!-- Row 1: Pending / future -->
+            <p class="text-muted small mb-1">Pending (to settle later)</p>
+            <div class="row g-2 mb-2">
+              <div class="col-6">
                 <input class="btn-check" type="radio" name="transaction_type" id="receivable" value="RECEIVABLE" required>
-                <label class="btn btn-outline-success w-100" for="receivable">
-                  <i class="fas fa-arrow-down"></i> To Receive
+                <label class="btn btn-outline-success w-100 txn-label" for="receivable">
+                  <i class="fas fa-hand-holding-usd d-block mb-1" style="font-size:1.2rem;"></i>
+                  <span class="fw-bold">I'll Collect</span>
+                  <small class="d-block text-muted" style="font-size:.72rem;">They owe me — I'll receive later</small>
                 </label>
               </div>
-              <div class="col-6 col-md-3">
+              <div class="col-6">
                 <input class="btn-check" type="radio" name="transaction_type" id="payable" value="PAYABLE">
-                <label class="btn btn-outline-warning w-100" for="payable">
-                  <i class="fas fa-arrow-up"></i> To Pay
+                <label class="btn btn-outline-warning w-100 txn-label" for="payable">
+                  <i class="fas fa-money-bill-wave d-block mb-1" style="font-size:1.2rem;"></i>
+                  <span class="fw-bold">I'll Pay</span>
+                  <small class="d-block text-muted" style="font-size:.72rem;">I owe them — I'll pay later</small>
                 </label>
               </div>
-              <div class="col-6 col-md-3">
+            </div>
+
+            <!-- Row 2: Completed / already happened -->
+            <p class="text-muted small mb-1">Completed (already happened)</p>
+            <div class="row g-2">
+              <div class="col-6">
                 <input class="btn-check" type="radio" name="transaction_type" id="received" value="RECEIVED">
-                <label class="btn btn-outline-primary w-100" for="received">
-                  <i class="fas fa-check-circle"></i> Received
+                <label class="btn btn-outline-primary w-100 txn-label" for="received">
+                  <i class="fas fa-arrow-circle-down d-block mb-1" style="font-size:1.2rem;"></i>
+                  <span class="fw-bold">I Got</span>
+                  <small class="d-block text-muted" style="font-size:.72rem;">Money came to me from them</small>
                 </label>
               </div>
-              <div class="col-6 col-md-3">
+              <div class="col-6">
                 <input class="btn-check" type="radio" name="transaction_type" id="paid" value="PAID">
-                <label class="btn btn-outline-danger w-100" for="paid">
-                  <i class="fas fa-check-circle"></i> Paid
+                <label class="btn btn-outline-danger w-100 txn-label" for="paid">
+                  <i class="fas fa-arrow-circle-up d-block mb-1" style="font-size:1.2rem;"></i>
+                  <span class="fw-bold">I Gave</span>
+                  <small class="d-block text-muted" style="font-size:.72rem;">Money went from me to them</small>
                 </label>
               </div>
             </div>
@@ -48,87 +64,70 @@
 
           <!-- Counterparty -->
           <div class="mb-3">
-            <label for="counterparty" class="form-label fw-bold">Counterparty <span class="text-danger">*</span></label>
+            <label for="counterparty" class="form-label fw-bold">Person <span class="text-danger">*</span></label>
             <select class="form-select" name="counterparty" id="counterparty" onchange="counterpartyChange()" required>
-              <option value="">- Select Counterparty -</option>
-              {% for counterparty in counterparties %}
-              <option value="{{ counterparty }}">{{ counterparty }}</option>
+              <option value="">— Select Person —</option>
+              {% for cp in counterparties %}
+              <option value="{{ cp }}">{{ cp }}</option>
               {% endfor %}
-              <option value="other">+ Add New</option>
+              <option value="other">+ Add New Person</option>
             </select>
           </div>
 
           <div class="mb-3" id="counterparty_txt_div" style="display:none;">
-            <input type="text" class="form-control" name="counterparty_txt" id="counterparty_txt" placeholder="Enter New Counterparty Name">
+            <input type="text" class="form-control" name="counterparty_txt" id="counterparty_txt"
+                   placeholder="Enter new person's name">
+          </div>
+
+          <!-- Tab (sub-ledger) -->
+          <div class="mb-3" id="tab_name_section">
+            <label class="form-label fw-bold">Ledger Tab
+              <span class="text-muted fw-normal small ms-1">(group transactions for the same person)</span>
+            </label>
+            <div class="input-group">
+              <select class="form-select" name="tab_name" id="tab_name_select" onchange="tabSelectChange()">
+                {% if all_tabs %}
+                  {% for tab in all_tabs %}
+                  <option value="{{ tab }}">{{ tab }}</option>
+                  {% endfor %}
+                {% else %}
+                  <option value="General">General</option>
+                {% endif %}
+                <option value="__new__">+ New Tab</option>
+              </select>
+            </div>
+            <div id="tab_name_new_div" class="mt-2" style="display:none;">
+              <input type="text" class="form-control" id="tab_name_new_input" placeholder="e.g. Loan, Daily, Rent…"
+                     oninput="document.getElementById('tab_name_select').value='__new__'">
+              <input type="hidden" name="tab_name_new" id="tab_name_new_hidden">
+            </div>
           </div>
 
           <!-- Date & Amount -->
           <div class="row">
             <div class="col-md-6 mb-3">
-              <label for="transaction_date" class="form-label fw-bold">Transaction Date <span class="text-danger">*</span></label>
+              <label for="transaction_date" class="form-label fw-bold">Date <span class="text-danger">*</span></label>
               <input type="date" class="form-control" name="transaction_date" id="transaction_date" required>
             </div>
             <div class="col-md-6 mb-3">
-              <label for="amount" class="form-label fw-bold">Amount (&#8377;) <span class="text-danger">*</span></label>
-              <input type="number" class="form-control" name="amount" id="amount" placeholder="0.00" step="0.01" required>
+              <label for="amount" class="form-label fw-bold">Total Amount (₹) <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" name="amount" id="amount" placeholder="0.00" step="0.01" min="0.01" required>
             </div>
           </div>
 
           <!-- Description -->
           <div class="mb-3">
-            <label for="description" class="form-label fw-bold">Description</label>
-            <textarea class="form-control" name="description" id="description" rows="2" placeholder="Transaction details..."></textarea>
+            <label for="description" class="form-label fw-bold">Note / Description</label>
+            <textarea class="form-control" name="description" id="description" rows="2"
+                      placeholder="What is this for?"></textarea>
           </div>
 
-          <!-- Additional Notes -->
-          <div class="mb-3">
-            <label for="notes" class="form-label fw-bold">Additional Notes</label>
-            <textarea class="form-control" name="notes" id="notes" rows="2" placeholder="Any additional information..."></textarea>
-          </div>
 
-          <!-- Installments Section -->
-          <div class="card mb-4 border-0 shadow-sm" id="installment_card">
-            <div class="card-body">
-              <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" id="enable_installments" name="enable_installments" onchange="toggleInstallments()">
-                <label class="form-check-label fw-bold" for="enable_installments">
-                  <i class="fas fa-calendar-alt me-2"></i> Split into Installments
-                </label>
-              </div>
 
-              <div id="installment_settings" style="display:none;">
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label for="no_of_installments" class="form-label">Number of Installments</label>
-                    <input type="number" class="form-control" name="no_of_installments" id="no_of_installments" value="1" min="1" max="100" onchange="previewInstallments()">
-                  </div>
-                  <div class="col-md-6 mb-3">
-                    <label for="installment_frequency" class="form-label">Frequency</label>
-                    <select class="form-select" name="installment_frequency" id="installment_frequency" onchange="toggleCustomDays()">
-                      <option value="MONTHLY">Monthly</option>
-                      <option value="WEEKLY">Weekly</option>
-                      <option value="CUSTOM">Custom</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="mb-3" id="custom_days_div" style="display:none;">
-                  <label for="custom_days" class="form-label">Custom Interval (Days)</label>
-                  <input type="number" class="form-control" name="custom_days" id="custom_days" placeholder="e.g., 15 for bi-weekly" min="1">
-                </div>
-
-                <div id="installment_preview" class="alert alert-info" style="display:none;">
-                  <strong>Preview:</strong>
-                  <div id="preview_content"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Submit Button -->
           <div class="d-grid">
-            <button type="submit" class="btn custom-btn-primary btn-lg" id="submitButton">
-              <i class="fas fa-save me-2"></i> Save Transaction
+            <button type="submit" class="btn custom-btn-primary btn-lg" id="submitButton"
+                    onclick="prepareTabName()">
+              <i class="fas fa-save me-2"></i>Save Entry
             </button>
           </div>
         </form>
@@ -137,37 +136,43 @@
   </div>
 </div>
 
+<script>
+function counterpartyChange() {
+  const val = document.getElementById('counterparty').value;
+  document.getElementById('counterparty_txt_div').style.display = (val === 'other') ? 'block' : 'none';
+}
+
+function tabSelectChange() {
+  const val = document.getElementById('tab_name_select').value;
+  document.getElementById('tab_name_new_div').style.display = (val === '__new__') ? 'block' : 'none';
+}
+
+function prepareTabName() {
+  const sel = document.getElementById('tab_name_select');
+  const newInput = document.getElementById('tab_name_new_input');
+  const hiddenInput = document.getElementById('tab_name_new_hidden');
+  if (sel.value === '__new__') {
+    // Move the new tab name into the select so it submits as tab_name
+    const newVal = newInput.value.trim() || 'General';
+    sel.name = '';          // disable the select
+    hiddenInput.name = 'tab_name';
+    hiddenInput.value = newVal;
+  }
+}
+
+// Pre-fill today's date
+document.addEventListener('DOMContentLoaded', function() {
+  const d = document.getElementById('transaction_date');
+  if (d && !d.value) d.value = new Date().toISOString().split('T')[0];
+});
+</script>
 
 <style>
-.btn-check:checked + .btn-outline-success {
-  background-color: #28a745;
-  color: white;
+.txn-label {
+  padding: .6rem .5rem;
+  cursor: pointer;
+  transition: all .18s;
+  text-align: center;
 }
-.btn-check:checked + .btn-outline-warning {
-  background-color: #ffc107;
-  color: #000;
-}
-.btn-check:checked + .btn-outline-primary {
-  background-color: #007bff;
-  color: white;
-}
-.btn-check:checked + .btn-outline-danger {
-  background-color: #dc3545;
-  color: white;
-}
-
-/* Mobile optimizations */
-@media (max-width: 768px) {
-  .modal-dialog {
-    margin: 0.5rem;
-  }
-
-  .card-body {
-    padding: 1rem;
-  }
-
-  .btn {
-    font-size: 0.875rem;
-  }
-}
+.txn-label small { line-height: 1.2; }
 </style>

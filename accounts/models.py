@@ -186,18 +186,15 @@ class LedgerTransaction(models.Model):
     
     # Entity Information
     counterparty = models.CharField(max_length=100, db_index=True)
-    counterparty_contact = models.CharField(
-        max_length=15, 
-        blank=True, 
-        null=True,
-        help_text=_("Contact number of counterparty")
+    # Sub-ledger tab — multiple parallel ledgers per counterparty
+    tab_name = models.CharField(
+        max_length=100,
+        default='General',
+        blank=True,
+        db_index=True,
+        help_text=_("Sub-ledger tab within this counterparty (e.g. 'Loan', 'Daily')")
     )
-    counterparty_email = models.EmailField(
-        blank=True, 
-        null=True,
-        help_text=_("Email address of counterparty")
-    )
-    
+
     # Transaction Details
     description = models.TextField()
     reference_number = models.CharField(
@@ -206,13 +203,6 @@ class LedgerTransaction(models.Model):
         null=True,
         help_text=_("Transaction reference number")
     )
-    invoice_number = models.CharField(
-        max_length=50, 
-        blank=True, 
-        null=True,
-        help_text=_("Invoice or receipt number")
-    )
-    
     # Status & Payment
     status = models.CharField(
         max_length=20, 
@@ -224,26 +214,6 @@ class LedgerTransaction(models.Model):
         choices=PAYMENT_METHODS, 
         blank=True, 
         null=True
-    )
-    
-    # Installment Support
-    parent_transaction = models.ForeignKey(
-        'self', 
-        on_delete=models.CASCADE, 
-        related_name='installments',
-        null=True, 
-        blank=True,
-        help_text=_("Parent transaction if this is an installment")
-    )
-    installment_number = models.PositiveIntegerField(
-        null=True, 
-        blank=True,
-        help_text=_("Installment number (e.g., 1 of 5)")
-    )
-    total_installments = models.PositiveIntegerField(
-        null=True, 
-        blank=True,
-        help_text=_("Total number of installments")
     )
     
     # Payment Tracking
@@ -273,12 +243,6 @@ class LedgerTransaction(models.Model):
     )
     
     # Attachments & Notes
-    attachment = models.FileField(
-        upload_to='ledger_attachments/', 
-        blank=True, 
-        null=True,
-        help_text=_("Invoice, receipt, or supporting document")
-    )
     notes = models.TextField(
         blank=True,
         help_text=_("Additional notes or comments")
@@ -306,7 +270,6 @@ class LedgerTransaction(models.Model):
             models.Index(fields=['counterparty', 'is_deleted']),
             models.Index(fields=['created_by', 'transaction_date']),
             models.Index(fields=['status', 'due_date']),
-            models.Index(fields=['parent_transaction']),
             models.Index(fields=['created_by', 'is_deleted']),
             models.Index(fields=['transaction_type']),
         ]
@@ -390,14 +353,6 @@ class PaymentRecord(models.Model):
     notes = models.TextField(
         blank=True,
         help_text=_("Additional notes about this payment")
-    )
-    
-    # Receipt management
-    receipt_file = models.FileField(
-        upload_to='payment_receipts/', 
-        blank=True, 
-        null=True,
-        help_text=_("Receipt or proof of payment")
     )
     
     created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)

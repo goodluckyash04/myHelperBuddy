@@ -18,99 +18,6 @@ from django.utils import timezone
 from accounts.models import LedgerTransaction, PaymentRecord
 
 
-# ============================================================================
-# Installment Generation
-# ============================================================================
-
-def create_installment_transactions(
-    user,
-    base_amount: Decimal,
-    num_installments: int,
-    frequency: str,  # 'MONTHLY', 'WEEKLY', 'CUSTOM'
-    start_date: date,
-    custom_days: Optional[int] = None,
-    **common_fields
-) -> Tuple[LedgerTransaction, List[LedgerTransaction]]:
-    """
-    Create parent transaction and multiple installment transactions.
-    
-    Args:
-        user: User creating the transactions
-        base_amount: Total amount to be divided into installments
-        num_installments: Number of installments to create
-        frequency: Frequency of installments ('MONTHLY', 'WEEKLY', 'CUSTOM')
-        start_date: Start date for first installment
-        custom_days: Custom interval in days (required if frequency='CUSTOM')
-        **common_fields: Other fields to apply to all transactions
-        
-    Returns:
-        Tuple of (parent_transaction, list_of_installments)
-    """
-    installment_amount = base_amount / num_installments
-    
-    # Create parent transaction (summary record)
-    parent = LedgerTransaction.objects.create(
-        created_by=user,
-        amount=base_amount,
-        total_installments=num_installments,
-        transaction_date=start_date,
-        **common_fields
-    )
-    
-    # Create child installments
-    installments = []
-    for i in range(num_installments):
-        due_date = calculate_due_date(start_date, i, frequency, custom_days)
-        
-        installment = LedgerTransaction.objects.create(
-            created_by=user,
-            parent_transaction=parent,
-            installment_number=i + 1,
-            total_installments=num_installments,
-            amount=installment_amount,
-            transaction_date=start_date,
-            due_date=due_date,
-            **common_fields
-        )
-        installments.append(installment)
-    
-    return parent, installments
-
-
-def calculate_due_date(
-    start_date: date, 
-    installment_index: int, 
-    frequency: str,
-    custom_days: Optional[int] = None
-) -> date:
-    """
-    Calculate due date for an installment.
-    
-    Args:
-        start_date: Base start date
-        installment_index: Index of installment (0-based)
-        frequency: 'MONTHLY', 'WEEKLY', or 'CUSTOM'
-        custom_days: Custom interval in days
-        
-    Returns:
-        Due date for the installment
-    """
-    if frequency == 'MONTHLY':
-        # Add months (approximate by adding 30 days per month)
-        months = installment_index
-        return start_date + timedelta(days=30 * months)
-    
-    elif frequency == 'WEEKLY':
-        weeks = installment_index
-        return start_date + timedelta(weeks=weeks)
-    
-    elif frequency == 'CUSTOM':
-        if custom_days is None:
-            raise ValueError("custom_days required for CUSTOM frequency")
-        return start_date + timedelta(days=custom_days * installment_index)
-    
-    else:
-        raise ValueError(f"Invalid frequency: {frequency}")
 
 
 # ============================================================================
@@ -240,8 +147,7 @@ def record_payment(
     amount_paid: Decimal,
     payment_method: str,
     reference_number: str = "",
-    notes: str = "",
-    receipt_file=None
+    notes: str = ""
 ) -> PaymentRecord:
     """
     Record a payment against a ledger transaction.
@@ -254,7 +160,6 @@ def record_payment(
         payment_method: Method of payment
         reference_number: Optional reference number
         notes: Optional payment notes
-        receipt_file: Optional receipt file
         
     Returns:
         Created PaymentRecord instance
@@ -282,8 +187,7 @@ def record_payment(
         amount_paid=amount_paid,
         payment_method=payment_method,
         reference_number=reference_number,
-        notes=notes,
-        receipt_file=receipt_file
+        notes=notes
     )
     
     # The PaymentRecord.save() method will automatically update the parent transaction
