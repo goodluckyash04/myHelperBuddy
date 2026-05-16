@@ -240,8 +240,7 @@ def record_payment(
     amount_paid: Decimal,
     payment_method: str,
     reference_number: str = "",
-    notes: str = "",
-    receipt_file=None
+    notes: str = ""
 ) -> PaymentRecord:
     """
     Record a payment against a ledger transaction.
@@ -254,7 +253,6 @@ def record_payment(
         payment_method: Method of payment
         reference_number: Optional reference number
         notes: Optional payment notes
-        receipt_file: Optional receipt file
         
     Returns:
         Created PaymentRecord instance
@@ -282,8 +280,7 @@ def record_payment(
         amount_paid=amount_paid,
         payment_method=payment_method,
         reference_number=reference_number,
-        notes=notes,
-        receipt_file=receipt_file
+        notes=notes
     )
     
     # The PaymentRecord.save() method will automatically update the parent transaction

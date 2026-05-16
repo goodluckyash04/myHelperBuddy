@@ -48,6 +48,12 @@ document.addEventListener('DOMContentLoaded', function () {
   if (dateInput) {
     dateInput.value = new Date().toISOString().split('T')[0];
   }
+  
+  // Update installment preview when transaction type changes
+  const typeRadios = document.querySelectorAll('input[name="transaction_type"]');
+  typeRadios.forEach(radio => {
+    radio.addEventListener('change', previewInstallments);
+  });
 });
 
 // Show/hide counterparty text input
@@ -115,10 +121,17 @@ function previewInstallments() {
 
     if (preview && content) {
       let frequencyText = frequency === 'MONTHLY' ? 'month' : frequency === 'WEEKLY' ? 'week' : 'custom period';
+      
+      let typeText = "";
+      const selectedType = document.querySelector('input[name="transaction_type"]:checked');
+      if (selectedType) {
+        if (selectedType.value === 'RECEIVABLE') typeText = " will be received";
+        else if (selectedType.value === 'PAYABLE') typeText = " will be paid";
+      }
 
       content.innerHTML = `
   <div class="mt-2">
-    <p class="mb-1"><strong>${numInstallments}</strong> installments of <strong>₹${installmentAmount}</strong> each</p>
+    <p class="mb-1"><strong>${numInstallments}</strong> installments of <strong>₹${installmentAmount}</strong> each${typeText}</p>
     <p class="mb-0 text-muted"><small>Frequency: ${frequency.toLowerCase()}</small></p>
   </div>
   `;

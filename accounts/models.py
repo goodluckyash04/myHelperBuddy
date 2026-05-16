@@ -186,17 +186,6 @@ class LedgerTransaction(models.Model):
     
     # Entity Information
     counterparty = models.CharField(max_length=100, db_index=True)
-    counterparty_contact = models.CharField(
-        max_length=15, 
-        blank=True, 
-        null=True,
-        help_text=_("Contact number of counterparty")
-    )
-    counterparty_email = models.EmailField(
-        blank=True,
-        null=True,
-        help_text=_("Email address of counterparty")
-    )
     # Sub-ledger tab — multiple parallel ledgers per counterparty
     tab_name = models.CharField(
         max_length=100,
@@ -214,13 +203,6 @@ class LedgerTransaction(models.Model):
         null=True,
         help_text=_("Transaction reference number")
     )
-    invoice_number = models.CharField(
-        max_length=50, 
-        blank=True, 
-        null=True,
-        help_text=_("Invoice or receipt number")
-    )
-    
     # Status & Payment
     status = models.CharField(
         max_length=20, 
@@ -281,12 +263,6 @@ class LedgerTransaction(models.Model):
     )
     
     # Attachments & Notes
-    attachment = models.FileField(
-        upload_to='ledger_attachments/', 
-        blank=True, 
-        null=True,
-        help_text=_("Invoice, receipt, or supporting document")
-    )
     notes = models.TextField(
         blank=True,
         help_text=_("Additional notes or comments")
@@ -398,14 +374,6 @@ class PaymentRecord(models.Model):
     notes = models.TextField(
         blank=True,
         help_text=_("Additional notes about this payment")
-    )
-    
-    # Receipt management
-    receipt_file = models.FileField(
-        upload_to='payment_receipts/', 
-        blank=True, 
-        null=True,
-        help_text=_("Receipt or proof of payment")
     )
     
     created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)

@@ -97,7 +97,7 @@
       </thead>
       <tbody>
         {% for txn in transaction_data %}
-        <tr class="pb-row {% if txn.transaction_type == 'PAID' or txn.transaction_type == 'PAYABLE' %}row-gave{% else %}row-got{% endif %}">
+        <tr class="pb-row {% if txn.transaction_type == 'PAID' or txn.transaction_type == 'RECEIVABLE' %}row-gave{% else %}row-got{% endif %}">
           <td class="col-date">
             <span class="pb-date-day">{{ txn.transaction_date|date:"d" }}</span>
             <span class="pb-date-mon">{{ txn.transaction_date|date:"M 'y" }}</span>
@@ -115,7 +115,7 @@
             {% endif %}
           </td>
           <td class="col-amt text-end fw-semibold">
-            {% if txn.transaction_type == 'PAID' or txn.transaction_type == 'PAYABLE' %}
+            {% if txn.transaction_type == 'PAID' or txn.transaction_type == 'RECEIVABLE' %}
               <span class="amt-gave">+₹{{ txn.amount|floatformat:2 }}</span>
             {% else %}
               <span class="amt-got">−₹{{ txn.amount|floatformat:2 }}</span>
@@ -376,13 +376,13 @@ function openNewTabModal() {
           {% for txn in transaction_data %}
           <tr>
             <td>
-              {% if txn.transaction_type == 'PAID' or txn.transaction_type == 'PAYABLE' %}
+              {% if txn.transaction_type == 'PAID' or txn.transaction_type == 'RECEIVABLE' %}
                 <span class="badge" style="background:rgba(22,163,74,.1);color:#16a34a;border:1px solid #16a34a;">
-                  {% if txn.transaction_type == 'PAID' %}I Gave{% else %}I'll Pay{% endif %}
+                  {% if txn.transaction_type == 'PAID' %}I Gave{% else %}I'll Collect{% endif %}
                 </span>
               {% else %}
                 <span class="badge" style="background:rgba(220,38,38,.1);color:#dc2626;border:1px solid #dc2626;">
-                  {% if txn.transaction_type == 'RECEIVED' %}I Got{% else %}I'll Collect{% endif %}
+                  {% if txn.transaction_type == 'RECEIVED' %}I Got{% else %}I'll Pay{% endif %}
                 </span>
               {% endif %}
             </td>

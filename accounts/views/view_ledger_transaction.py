@@ -333,16 +333,16 @@ def get_ledger_transactions_by_party(
             .order_by('transaction_date', 'id')
         )
 
-        # net_balance: "I Gave" (PAID/PAYABLE) increases balance (they owe me);
-        #              "I Got"  (RECEIVED/RECEIVABLE) decreases it.
+        # net_balance: "I Gave" (PAID) / "To Collect" (RECEIVABLE) increases balance (they owe me);
+        #              "I Got" (RECEIVED) / "To Pay" (PAYABLE) decreases it (I owe them).
         agg = qs.aggregate(
             total_gave=Coalesce(
-                Sum('amount', filter=Q(transaction_type__in=['PAID', 'PAYABLE'])),
+                Sum('amount', filter=Q(transaction_type__in=['PAID', 'RECEIVABLE'])),
                 Decimal('0'),
                 output_field=DecimalField()
             ),
             total_got=Coalesce(
-                Sum('amount', filter=Q(transaction_type__in=['RECEIVED', 'RECEIVABLE'])),
+                Sum('amount', filter=Q(transaction_type__in=['RECEIVED', 'PAYABLE'])),
                 Decimal('0'),
                 output_field=DecimalField()
             ),
@@ -356,7 +356,7 @@ def get_ledger_transactions_by_party(
         running = Decimal('0')
         txn_list = list(qs)
         for txn in txn_list:
-            if txn.transaction_type in ('PAID', 'PAYABLE'):
+            if txn.transaction_type in ('PAID', 'RECEIVABLE'):
                 running += txn.amount
             else:
                 running -= txn.amount
@@ -387,7 +387,6 @@ def get_ledger_transactions_by_party(
     min_amount_str = request.GET.get('min_amount', '').strip()
     max_amount_str = request.GET.get('max_amount', '').strip()
     overdue_only = request.GET.get('overdue', '').lower() == 'true'
-    tags_filter = request.GET.get('tags', '').strip()
     per_page = int(request.GET.get('per_page', 25))
     page_number = request.GET.get('page', 1)
 
@@ -482,7 +481,6 @@ def get_ledger_transactions_by_party(
             'min_amount': min_amount_str,
             'max_amount': max_amount_str,
             'overdue': overdue_only,
-            'tags': tags_filter,
             'per_page': per_page,
         },
         'total_count': total_count,
@@ -841,6 +839,7 @@ def record_payment(request: HttpRequest, id: int) -> HttpResponse:
         # Extract payment details
         payment_date_str = request.POST.get('payment_date')
         amount_paid = decimal.Decimal(request.POST.get('amount_paid', '0'))
+        payment_method = request.POST.get('payment_method', 'OTHER')
         notes = request.POST.get('notes', '')
         
         
@@ -857,10 +856,9 @@ def record_payment(request: HttpRequest, id: int) -> HttpResponse:
             user=user,
             payment_date=payment_date,
             amount_paid=amount_paid,
-            payment_method='OTHER',  # Default since field was removed
+            payment_method=payment_method,
             reference_number='',
-            notes=notes,
-            receipt_file=None
+            notes=notes
         )
         
         messages.success(
