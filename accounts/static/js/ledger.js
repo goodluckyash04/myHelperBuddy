@@ -180,7 +180,16 @@ window.editTransaction = function (txnId) {
 
       // Set other fields
       document.getElementById('description').value = data.description || '';
-      document.getElementById('notes').value = data.notes || '';
+      // notes field is optional in the modal — guard against null
+      const notesEl = document.getElementById('notes');
+      if (notesEl) notesEl.value = data.notes || '';
+
+      // Set tab_name selector if present
+      const tabSel = document.getElementById('tab_name_select');
+      if (tabSel && data.tab_name) {
+        const opt = Array.from(tabSel.options).find(o => o.value === data.tab_name);
+        if (opt) tabSel.value = data.tab_name;
+      }
 
       // Hide installment section when editing
       document.getElementById('installment_card').style.display = 'none';
@@ -210,8 +219,8 @@ document.getElementById('ledgerModal').addEventListener('hidden.bs.modal', funct
 
   // Reset action and labels
   document.getElementById('myLedgerForm').action = '/create-ledger-transaction/';
-  document.getElementById('ledgerModalLabel').innerHTML = '<i class="fas fa-receipt me-2"></i>Add Ledger Transaction';
-  document.getElementById('submitButton').innerHTML = '<i class="fas fa-save me-2"></i>Save Transaction';
+  document.getElementById('ledgerModalLabel').innerHTML = '<i class="fas fa-receipt me-2"></i> Add Ledger Entry';
+  document.getElementById('submitButton').innerHTML = '<i class="fas fa-save me-2"></i>Save Entry';
 
   // Show installment section
   document.getElementById('installment_card').style.display = 'block';
