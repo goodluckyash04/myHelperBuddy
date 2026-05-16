@@ -124,6 +124,9 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
             completion_date = None
             paid_amount = decimal.Decimal('0')
         
+        # Read tab_name from form (defaults to 'General')
+        tab_name = request.POST.get('tab_name', 'General').strip() or 'General'
+
         # Common fields for all transactions
         common_fields = {
             'counterparty': counterparty,
@@ -133,6 +136,7 @@ def add_ledger_transaction(request: HttpRequest) -> HttpResponse:
             'completion_date': completion_date,
             'paid_amount': paid_amount,
             'transaction_type': transaction_type,
+            'tab_name': tab_name,
         }
         
         # Create transaction(s)
@@ -280,31 +284,101 @@ def get_ledger_transactions_by_party(
 ) -> HttpResponse:
     """
     Display ledger transactions filtered by counterparty or other criteria.
-    Supports comprehensive filtering and pagination.
-    
-    URL Parameters:
-        - status: Filter by status (ALL, PENDING, PARTIAL, COMPLETED, CANCELLED)
-        - type: Filter by transaction type (ALL, RECEIVABLE, PAYABLE, RECEIVED, PAID)
-        - search: Search in counterparty or description
-        - start_date: Filter from this date (YYYY-MM-DD)
-        - end_date: Filter to this date (YYYY-MM-DD)
-        - min_amount: Minimum transaction amount
-        - max_amount: Maximum transaction amount
-        - overdue: Show only overdue transactions (true/false)
-        - tags: Filter by tags (comma-separated)
-        - per_page: Results per page (10, 25, 50, 100)
-        - page: Page number
+
+    PASSBOOK MODE (named counterparty):
+        - Shows ALL entries (no pagination), newest on top
+        - Attaches running_balance to each transaction
+        - net_balance: positive = they owe me, negative = I owe them
+
+    FILTER MODE ('all', 'completed', 'pending'):
+        - Paginated + filtered view (unchanged behaviour)
     """
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    from django.db.models import Q
+    from django.db.models import Q, Sum, DecimalField
+    from django.db.models.functions import Coalesce
     from datetime import datetime, date
     from decimal import Decimal, InvalidOperation
-    
+
     user = request.user
     filter_type = id
-    counterparty = id if id not in ['all', 'completed', 'pending'] else None
-    
-    # Get filter parameters from URL
+    is_passbook_mode = filter_type not in ['all', 'completed', 'pending']
+    counterparty = id if is_passbook_mode else None
+
+    # ── PASSBOOK MODE ─────────────────────────────────────────────────────────
+    if is_passbook_mode:
+        # Active tab from query param; default = first available tab
+        active_tab = request.GET.get('tab', '').strip()
+
+        # All distinct tab names for this counterparty
+        all_tabs = (
+            LedgerTransaction.objects
+            .filter(created_by=user, counterparty__iexact=counterparty, is_deleted=False)
+            .values_list('tab_name', flat=True)
+            .distinct()
+            .order_by('tab_name')
+        )
+        all_tabs = list(all_tabs)
+        if not active_tab or active_tab not in all_tabs:
+            active_tab = all_tabs[0] if all_tabs else 'General'
+
+        # Fetch all non-deleted entries for active tab, oldest first
+        qs = (
+            LedgerTransaction.objects
+            .filter(
+                created_by=user,
+                counterparty__iexact=counterparty,
+                tab_name=active_tab,
+                is_deleted=False
+            )
+            .order_by('transaction_date', 'id')
+        )
+
+        # net_balance: "I Gave" (PAID/PAYABLE) increases balance (they owe me);
+        #              "I Got"  (RECEIVED/RECEIVABLE) decreases it.
+        agg = qs.aggregate(
+            total_gave=Coalesce(
+                Sum('amount', filter=Q(transaction_type__in=['PAID', 'PAYABLE'])),
+                Decimal('0'),
+                output_field=DecimalField()
+            ),
+            total_got=Coalesce(
+                Sum('amount', filter=Q(transaction_type__in=['RECEIVED', 'RECEIVABLE'])),
+                Decimal('0'),
+                output_field=DecimalField()
+            ),
+        )
+        net_balance = agg['total_gave'] - agg['total_got']
+
+        pending_count = qs.filter(status__in=['PENDING', 'PARTIAL']).count()
+        entry_count = qs.count()
+
+        # Compute running balance (ascending), then reverse for newest-on-top display
+        running = Decimal('0')
+        txn_list = list(qs)
+        for txn in txn_list:
+            if txn.transaction_type in ('PAID', 'PAYABLE'):
+                running += txn.amount
+            else:
+                running -= txn.amount
+            txn.running_balance = running
+
+        txn_list.reverse()
+
+        context = {
+            'user': user,
+            'is_passbook_mode': True,
+            'counter_party': counterparty,
+            'transaction_data': txn_list,
+            'net_balance': net_balance,
+            'pending_count': pending_count,
+            'entry_count': entry_count,
+            'counterparties': get_counter_parties(user),
+            'active_tab': active_tab,
+            'all_tabs': all_tabs,
+        }
+        return render(request, 'ledger_transaction/ledgerTransaction.html', context)
+
+    # ── FILTER / REPORT MODE ─────────────────────────────────────────────────
     status_filter = request.GET.get('status', 'ALL')
     type_filter = request.GET.get('type', 'ALL')
     search_query = request.GET.get('search', '').strip()
@@ -316,22 +390,15 @@ def get_ledger_transactions_by_party(
     tags_filter = request.GET.get('tags', '').strip()
     per_page = int(request.GET.get('per_page', 25))
     page_number = request.GET.get('page', 1)
-    
-    # Ensure per_page is within allowed values
+
     if per_page not in [10, 25, 50, 100]:
         per_page = 25
-    
-    # Start with base query
+
     transactions = LedgerTransaction.objects.filter(
         created_by=user,
         is_deleted=False
     ).select_related('created_by')
-    
-    # Apply counterparty filter if applicable
-    if filter_type not in ["all", "completed", "pending"]:
-        transactions = transactions.filter(counterparty__iexact=counterparty)
-    
-    # Apply status filter
+
     if status_filter != 'ALL':
         if filter_type == "completed" or status_filter == 'COMPLETED':
             transactions = transactions.filter(status='COMPLETED')
@@ -339,86 +406,73 @@ def get_ledger_transactions_by_party(
             transactions = transactions.filter(status='PENDING')
         elif status_filter in ['PARTIAL', 'CANCELLED']:
             transactions = transactions.filter(status=status_filter)
-    
-    # Apply transaction type filter
+
     if type_filter != 'ALL':
         transactions = transactions.filter(transaction_type=type_filter)
-    
-    # Apply search filter (counterparty or description)
+
     if search_query:
         transactions = transactions.filter(
             Q(counterparty__icontains=search_query) |
             Q(description__icontains=search_query)
         )
-    
-    # Apply date range filters
+
     if start_date_str:
         try:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
             transactions = transactions.filter(transaction_date__gte=start_date)
         except ValueError:
             pass
-    
+
     if end_date_str:
         try:
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
             transactions = transactions.filter(transaction_date__lte=end_date)
         except ValueError:
             pass
-    
-    # Apply amount range filters
+
     if min_amount_str:
         try:
             min_amount = Decimal(min_amount_str)
             transactions = transactions.filter(amount__gte=min_amount)
         except (ValueError, InvalidOperation):
             pass
-    
+
     if max_amount_str:
         try:
             max_amount = Decimal(max_amount_str)
             transactions = transactions.filter(amount__lte=max_amount)
         except (ValueError, InvalidOperation):
             pass
-    
-    # Apply overdue filter
+
     if overdue_only:
         today = date.today()
         transactions = transactions.filter(
             due_date__lt=today,
             status__in=['PENDING', 'PARTIAL']
         )
-    
 
-    
-    # Order by transaction date (most recent first)
     transactions = transactions.order_by('-transaction_date', '-id')
-    
-    # Get total count before pagination
     total_count = transactions.count()
-    
-    # Paginate results
+
     paginator = Paginator(transactions, per_page)
-    
     try:
         page_obj = paginator.get_page(page_number)
     except PageNotAnInteger:
         page_obj = paginator.get_page(1)
     except EmptyPage:
         page_obj = paginator.get_page(paginator.num_pages)
-    
-    # Calculate range for display
+
     start_index = (page_obj.number - 1) * per_page + 1 if total_count > 0 else 0
     end_index = min(start_index + per_page - 1, total_count) if total_count > 0 else 0
-    
+
     context = {
         "user": user,
-        'transaction_data': page_obj,  # Paginated results
+        'is_passbook_mode': False,
+        'transaction_data': page_obj,
         'page_obj': page_obj,
         'current_filter': filter_type,
         'counter_party': counterparty,
         'counterparties': get_counter_parties(user),
-        # Filter values to preserve state
         'filters': {
             'status': status_filter,
             'type': type_filter,
@@ -431,14 +485,12 @@ def get_ledger_transactions_by_party(
             'tags': tags_filter,
             'per_page': per_page,
         },
-        # Pagination info
         'total_count': total_count,
         'start_index': start_index,
         'end_index': end_index,
     }
-    
-    return render(request, 'ledger_transaction/ledgerTransaction.html', context)
 
+    return render(request, 'ledger_transaction/ledgerTransaction.html', context)
 
 # ============================================================================
 # Status Management

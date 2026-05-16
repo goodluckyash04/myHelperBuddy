@@ -193,11 +193,19 @@ class LedgerTransaction(models.Model):
         help_text=_("Contact number of counterparty")
     )
     counterparty_email = models.EmailField(
-        blank=True, 
+        blank=True,
         null=True,
         help_text=_("Email address of counterparty")
     )
-    
+    # Sub-ledger tab — multiple parallel ledgers per counterparty
+    tab_name = models.CharField(
+        max_length=100,
+        default='General',
+        blank=True,
+        db_index=True,
+        help_text=_("Sub-ledger tab within this counterparty (e.g. 'Loan', 'Daily')")
+    )
+
     # Transaction Details
     description = models.TextField()
     reference_number = models.CharField(
