@@ -25,11 +25,14 @@ from django.contrib.auth import (
 )
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Q
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from django.utils.crypto import get_random_string
+from django.utils.encoding import force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.views.decorators.http import require_POST, require_http_methods
 
 from accounts.models import UserProfile
@@ -217,21 +220,19 @@ def logout(request: HttpRequest) -> HttpResponse:
 # Password Management
 # ============================================================================
 
-def forgotPassword(request: HttpRequest) -> HttpResponse:
+def forgotPassword(request: HttpRequest) -> HttpResponse:  # now sends reset link, not raw password
     """
-    Handle password reset via email.
-    
-    Generates a random password and emails it to the user.
-    Accepts username or email as identifier.
-    
-    GET: Display forgot password form
-    POST: Generate new password and send via email
-    
+    Initiate a secure password reset via a time-limited email link.
+
+    GET:  Display the forgot-password form.
+    POST: Generate a signed reset token, send a link to the user's email.
+          The raw password is NEVER sent — only a URL-safe signed token.
+
     Args:
         request: HTTP request object
-        
+
     Returns:
-        HttpResponse: Forgot password page or redirect to login
+        HttpResponse: Forgot-password page or redirect to login with success flash
     """
     if request.method == "GET":
         return render(request, "auth/forgotPassword.html")
@@ -240,44 +241,100 @@ def forgotPassword(request: HttpRequest) -> HttpResponse:
         username = request.POST.get("username", "").lower().strip()
         user = User.objects.get(Q(username=username) | Q(email=username))
 
-        # Generate random password
-        new_password = get_random_string(12)
-        
-        # Send email
-        subject = "Password Reset Request"
+        # generate a signed, time-limited token (no raw password ever sent)
+        token = default_token_generator.make_token(user)
+        uid   = urlsafe_base64_encode(force_bytes(user.pk))
+        reset_url = f"{settings.SITE_URL}/reset/{uid}/{token}/"
+
+        subject = "Password Reset — myHelperBuddy"
         message = (
-            f"Your password has been reset.\n\n"
-            f"New Password: {new_password}\n\n"
-            f"Please change this password after logging in.\n"
-            f"Do not share this password with anyone."
+            f"Hi {user.first_name or user.username},\n\n"
+            f"We received a request to reset your password.\n"
+            f"Click the link below to set a new password (valid for 1 hour):\n\n"
+            f"{reset_url}\n\n"
+            f"If you did not request this, please ignore this email.\n"
+            f"Your password will NOT change unless you click the link above."
         )
-        send_mail(
-            subject,
-            message,
-            settings.EMAIL_HOST_USER,
-            [user.email],
-            fail_silently=False
-        )
-
-        # Update password
-        user.set_password(new_password)
-        user.save()
-
-        # Show success message
-        masked_email = mask_email(user.email)
-        request.session['forgot_password_msg'] = f"New password sent to {masked_email}"
+        if settings.EMAIL_SERVICE:
+            email_service = EmailService()
+            email_service.send_email(
+                subject=subject,
+                recipient_list=[user.email],
+                message=message,
+                is_html=False,
+            )
+            masked_email = mask_email(user.email)
+            request.session['forgot_password_msg'] = f"Reset link sent to {masked_email}"
+        else:
+            request.session['forgot_password_msg'] = "Unable to send email. Please try again later."
 
         return redirect('login')
-        
+
     except User.DoesNotExist:
         return render(request, "auth/forgotPassword.html", {
             "msg": "No account found with that username or email."
         })
     except Exception as e:
+        import traceback
         traceback.print_exc()
         return render(request, "auth/forgotPassword.html", {
             "msg": "An error occurred. Please try again later."
         })
+
+
+def confirm_password_reset(request: HttpRequest, uidb64: str, token: str) -> HttpResponse:
+    """
+    Confirm a password-reset request and allow the user to set a new password.
+
+    GET:  Validate the token — show the new-password form if valid.
+    POST: Set the new password if token is still valid and passwords match.
+
+    Args:
+        request: HTTP request object
+        uidb64:  URL-safe base64-encoded user PK from the reset link
+        token:   Signed reset token from the reset link
+
+    Returns:
+        HttpResponse: Reset form, success redirect, or error page
+    """
+    try:
+        uid  = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is None or not default_token_generator.check_token(user, token):
+        return render(request, "auth/password_reset_invalid.html", {
+            "msg": "This password reset link is invalid or has expired (links expire after 1 hour)."
+        })
+
+    if request.method == "GET":
+        return render(request, "auth/password_reset_confirm.html", {
+            "uidb64": uidb64, "token": token
+        })
+
+    # POST — set new password
+    new_password     = request.POST.get("new_password", "").strip()
+    confirm_password = request.POST.get("confirm_password", "").strip()
+
+    if not new_password or new_password != confirm_password:
+        return render(request, "auth/password_reset_confirm.html", {
+            "uidb64": uidb64, "token": token,
+            "msg": "Passwords do not match or are empty."
+        })
+
+    from ..utilitie_functions import validate_password
+    if not validate_password(new_password):
+        return render(request, "auth/password_reset_confirm.html", {
+            "uidb64": uidb64, "token": token,
+            "msg": "Password must be ≥8 chars with uppercase, lowercase, digit, and special character."
+        })
+
+    user.set_password(new_password)
+    user.save()
+
+    request.session['forgot_password_msg'] = "Password updated successfully. Please log in."
+    return redirect('login')
 
 
 @login_required

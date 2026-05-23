@@ -104,7 +104,7 @@ def mask_email(value: str):
         str: masked email
     """
 
-    local, domain = value.split("@", 1)
+    local, domain = value.lower().split("@", 1)
     return f"{local[:2]}******{local[-1:]}@{domain}"
 
 

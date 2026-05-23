@@ -14,31 +14,32 @@ class SimpleRateLimitMiddleware:
     Simple rate limiting middleware using Django's cache framework.
     """
     
-    # Define rate limits: (requests, time_window_in_seconds)
+    # Keys are WITHOUT trailing slash — __call__ normalizes path with rstrip('/')
     RATE_LIMITS = {
-        '/login': (5, 300),  # 5 requests per 5 minutes
-        '/send-otp/': (3, 300),  # 3 requests per 5 minutes
-        '/forgotPassword/': (3, 600),  # 3 requests per 10 minutes
-        '/signup/': (5, 600),  # 5 requests per 10 minutes
+        '/login': (5, 300),           # 5 requests per 5 minutes
+        '/send-otp': (3, 300),        # 3 requests per 5 minutes 
+        '/forgotPassword': (3, 600),  # 3 requests per 10 minutes
+        '/signup': (5, 600),          # 5 requests per 10 minutes
+        '/fcm/register': (10, 60),    # 10 token registrations per minute
     }
     
     def __init__(self, get_response):
         self.get_response = get_response
     
     def __call__(self, request):
-        # Check if rate limiting should be applied
-        path = request.path
-        
+        # Normalize path: strip trailing slash for consistent key lookup
+        path = request.path.rstrip('/')
+
         if path in self.RATE_LIMITS:
             # Get client IP
             ip_address = self.get_client_ip(request)
-            
+
             # Check rate limit
             if not self.check_rate_limit(ip_address, path):
                 return HttpResponseForbidden(
                     "Rate limit exceeded. Please try again later."
                 )
-        
+
         response = self.get_response(request)
         return response
     
