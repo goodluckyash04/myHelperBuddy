@@ -22,6 +22,7 @@ from .views.view_auth import (
     changePassword,
     check_email,
     check_username,
+    confirm_password_reset,
     forgotPassword,
     generate_refresh_token,
     get_auth,
@@ -140,6 +141,7 @@ from .views.views import (
     manual_backup,
     profile,
     redirect_to_streamlit,
+    register_fcm_token,
     update_profile,
     utilities,
 )
@@ -265,4 +267,14 @@ urlpatterns = [
     # Advanced Utilities
     # ========================================================================
     path("advance-utils/", redirect_to_streamlit, name="advance-utils"),
+
+    # ========================================================================
+    # FCM / Push Notifications
+    # ========================================================================
+    path("fcm/register/", register_fcm_token, name="fcm-register"),
+
+    # ========================================================================
+    # Password Reset
+    # ========================================================================
+    path("reset/<uidb64>/<token>/", confirm_password_reset, name="confirm-password-reset"),
 ]

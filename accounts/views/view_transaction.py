@@ -506,7 +506,7 @@ def undo_transaction(request: HttpRequest, id: Optional[int] = None) -> HttpResp
         
         restored_count = 0
         for txn_id in undo_list:
-            entry = Transaction.objects.get(id=txn_id)
+            entry = Transaction.objects.get(id=txn_id, created_by=user)  # CHANGED: added created_by=user (IDOR fix)
             
             # Restore associated financial product if needed
             if entry.source_id is not None:

@@ -15,14 +15,26 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,include
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 
 
 urlpatterns = [
     path('accounts/', include('allauth.urls')),  # Allauth URLs for OAuth
-    path('',include("accounts.urls"))
+    path('', include("accounts.urls")),
+
+    # FCM spec: service worker MUST be served from domain root
+    path(
+        "firebase-messaging-sw.js",
+        serve,
+        {
+            "document_root": settings.STATIC_ROOT or (settings.BASE_DIR / "accounts" / "static"),
+            "path": "firebase-messaging-sw.js",
+        },
+        name="firebase-messaging-sw",
+    ),
 ]
 
 if settings.ADMIN_ACCESS:
@@ -30,3 +42,5 @@ if settings.ADMIN_ACCESS:
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Also serve static files including firebase-messaging-sw.js in dev
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.BASE_DIR / "accounts" / "static")

@@ -112,4 +112,106 @@
     });
   </script>
   {% block script %} {% endblock script %}
+
+  {% if user.is_authenticated %}
+  {# =========================================================== #}
+  {# FCM Push Notification Setup — authenticated users only  NEW #}
+  {# =========================================================== #}
+  <script type="module">
+    // NEW: Firebase JS SDK v10 — ESM imports from Google CDN
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
+
+    // NEW: Firebase project config (non-secret, safe to expose in JS)
+    const firebaseConfig = {
+      apiKey:            "{{ firebase_api_key|default:'' }}",
+      authDomain:        "myhelperbuddy-04.firebaseapp.com",
+      projectId:         "myhelperbuddy-04",
+      storageBucket:     "myhelperbuddy-04.firebasestorage.app",
+      messagingSenderId: "{{ firebase_sender_id|default:'' }}",
+      appId:             "{{ firebase_app_id|default:'' }}"
+    };
+
+    const VAPID_KEY = "{{ FIREBASE_VAPID_PUBLIC_KEY }}";  // NEW: injected by context processor / view
+    const CSRF_TOKEN = "{{ csrf_token }}";  // CHANGED: Use template tag directly instead of parsing cookie
+
+    // NEW: Register firebase-messaging-sw.js at scope "/" — required by FCM spec
+    async function registerFCMServiceWorker() {
+      try {
+        const swUrl = `/firebase-messaging-sw.js?apiKey=${firebaseConfig.apiKey}&appId=${firebaseConfig.appId}&senderId=${firebaseConfig.messagingSenderId}`;
+        return await navigator.serviceWorker.register(swUrl, { scope: "/" });
+      } catch (err) {
+        console.warn("[FCM] SW registration failed:", err);
+        return null;
+      }
+    }
+
+    // NEW: Post FCM token to Django backend
+    async function saveFCMToken(token) {
+      try {
+        await fetch("/fcm/register/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": CSRF_TOKEN,
+          },
+          body: JSON.stringify({ token, type: "web" }),
+        });
+      } catch (err) {
+        console.warn("[FCM] Token save failed:", err);
+      }
+    }
+
+    // NEW: Main init — runs after page load
+    async function initFCM() {
+      if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+        console.log("[FCM] Push notifications not supported.");
+        return;
+      }
+
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        console.log("[FCM] Notification permission denied.");
+        return;
+      }
+
+      const swReg = await registerFCMServiceWorker();
+      if (!swReg) return;
+
+      try {
+        const app = initializeApp(firebaseConfig);
+        const messaging = getMessaging(app);
+
+        const token = await getToken(messaging, {
+          vapidKey: VAPID_KEY,
+          serviceWorkerRegistration: swReg,
+        });
+
+        if (token) {
+          console.log("[FCM] Token obtained, registering with server...");
+          await saveFCMToken(token);
+        } else {
+          console.warn("[FCM] No token returned — check VAPID key and SW scope.");
+        }
+
+        // NEW: Handle foreground messages (app is in focus)
+        onMessage(messaging, (payload) => {
+          const { title, body } = payload.notification || {};
+          if (title && Notification.permission === "granted") {
+            new Notification(title, {
+              body: body || "",
+              icon: "/static/icons/icon-192x192.png",
+            });
+          }
+        });
+
+      } catch (err) {
+        console.error("[FCM] Initialization error:", err);
+      }
+    }
+
+    // NEW: Delay init slightly to not block page render
+    window.addEventListener("load", () => setTimeout(initFCM, 2000));
+  </script>
+  {% endif %}
 </html>

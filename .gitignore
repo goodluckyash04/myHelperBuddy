@@ -50,3 +50,5 @@ Django.txt
 db.json
 token.json
 cred.json
+firebase-credentials.json
+*.md

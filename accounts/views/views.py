@@ -17,6 +17,7 @@ from django.db.models import Q, Sum, DecimalField
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from accounts.decorators import auth_user
 from accounts.models import (
@@ -959,3 +960,62 @@ def manual_backup(request):
             }, status=500)
         
         return redirect('profile')
+
+
+# ============================================================================
+# FCM Token Registration  # NEW
+# ============================================================================
+
+@login_required
+@require_POST  # NEW
+def register_fcm_token(request) -> JsonResponse:
+    """
+    Register (or refresh) a Firebase Cloud Messaging device token for the
+    currently authenticated user.
+
+    POST body (JSON or form-encoded):
+        token  (str): FCM registration token from the browser / device
+        type   (str): Device type — 'web', 'android', or 'ios' (default: 'web')
+
+    Returns:
+        JsonResponse: {'status': 'ok'} on success, {'status': 'error', 'message': ...} on failure
+
+    Notes:
+        - Uses update_or_create so re-registering an existing token simply
+          reactivates it without creating duplicates.
+        - Requires fcm_django to be in INSTALLED_APPS and migrated.
+    """
+    import json
+
+    try:
+        # Accept both JSON body and form-encoded POST
+        if request.content_type and 'application/json' in request.content_type:
+            body = json.loads(request.body)
+            token = body.get('token', '').strip()
+            device_type = body.get('type', 'web').lower()
+        else:
+            token = request.POST.get('token', '').strip()
+            device_type = request.POST.get('type', 'web').lower()
+
+        if not token:
+            return JsonResponse({'status': 'error', 'message': 'token is required'}, status=400)  # NEW
+
+        # Map string to fcm_django DeviceType
+        from fcm_django.models import FCMDevice
+
+        device, created = FCMDevice.objects.update_or_create(
+            registration_id=token,
+            defaults={
+                'user': request.user,
+                'type': device_type,
+                'active': True,
+            },
+        )
+
+        action = 'registered' if created else 'refreshed'
+        return JsonResponse({'status': 'ok', 'action': action})
+
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error("FCM token registration failed: %s", e)
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
