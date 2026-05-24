@@ -2,7 +2,6 @@
  * service-worker.js — myHelperBuddy PWA Service Worker
  *
  * FIXED: cache paths now match files that actually exist.
- * NEW:   FCM push event handler + notificationclick deep links.
  */
 
 const CACHE_NAME = "mhb-pwa-v2";  //  bumped version to force cache refresh
@@ -51,7 +50,6 @@ self.addEventListener("fetch", (event) => {
   if (
     url.pathname.startsWith("/admin/") ||
     url.pathname.startsWith("/accounts/") ||
-    url.pathname.startsWith("/fcm/") ||
     url.pathname.startsWith("/api/")
   ) return;
 
@@ -70,57 +68,3 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// ── Push: receive FCM push events  # NEW ─────────────────────────────────────
-self.addEventListener("push", (event) => {
-  let payload = {};
-  try {
-    payload = event.data ? event.data.json() : {};
-  } catch (_) {
-    payload = { notification: { title: "myHelperBuddy", body: event.data?.text() || "" } };
-  }
-
-  const notification = payload.notification || {};
-  const data         = payload.data         || {};
-
-  const title   = notification.title || "myHelperBuddy";
-  const body    = notification.body  || "";
-  const icon    = notification.icon  || "/static/icons/icon-192x192.png";
-  const badge   = "/static/icons/icon-192x192.png";
-  const tag     = data.type ? `mhb-${data.type}-${data.id || "0"}` : "mhb-push";
-  const dataUrl = data.url  || "/dashboard/";
-
-  event.waitUntil(
-    self.registration.showNotification(title, {
-      body,
-      icon,
-      badge,
-      tag,
-      data: { url: dataUrl },
-      requireInteraction: false,
-    })
-  );
-});
-
-// ── Notification click: deep-link routing  # NEW ──────────────────────────────
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-
-  const targetUrl = event.notification.data?.url || "/dashboard/";
-
-  event.waitUntil(
-    clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((windowClients) => {
-        // Focus existing tab if one already has the app open
-        for (const client of windowClients) {
-          if (client.url.includes(self.location.origin) && "focus" in client) {
-            client.focus();
-            client.navigate(targetUrl);
-            return;
-          }
-        }
-        // Otherwise open a new tab
-        return clients.openWindow(targetUrl);
-      })
-  );
-});

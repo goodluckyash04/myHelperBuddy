@@ -84,10 +84,6 @@ PyJWT==2.8.0
 # Six (Python 2/3 compatibility - required by some dependencies)
 six==1.16.0
 
-# Firebase and FCM
-firebase-admin
-fcm-django
-
 # ============================================================================
 # Development Dependencies (Optional - install with: pip install -r requirements-dev.txt)
 # ============================================================================

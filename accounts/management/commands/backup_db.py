@@ -33,7 +33,6 @@ from accounts.models import (
     UserProfile,
 )
 from accounts.services.email_services import EmailService
-from accounts.services.fcm_service import fcm_service
 from accounts.services.google_services import GoogleDriveService
 from accounts.views.view_reminder import calculate_reminder
 
@@ -428,72 +427,3 @@ class Command(BaseCommand):
                 self.style.ERROR(f"   ❌ Backup failed (email fallback): {e}")
             )
     
-    # ========================================================================
-    # Task & Reminder Notifications
-    # ========================================================================
-    
-    def send_todays_task_reminder(self) -> None:
-        """
-        Send daily push + email notifications for pending tasks and reminders.
-
-        Delivery strategy:
-            1. FCM push notification (instant, no email quota used)
-            2. Email fallback — always sent so users without devices still get notified
-
-        Notifies users about:
-            - Tasks due today or tomorrow
-            - Reminders scheduled for today
-
-        Only notifies users who have pending items.
-        """
-        self.stdout.write("\n📬 Sending task and reminder notifications...")
-
-        users_notified = 0
-        pending_tomorrow = self.now.date() + datetime.timedelta(days=1)
-
-        for user in User.objects.all():
-            # Get pending tasks
-            pending_tasks = Task.objects.filter(
-                created_by=user,
-                complete_by_date__lte=pending_tomorrow,
-                status="Pending"
-            )
-
-            # Get today's reminders
-            reminders = calculate_reminder(user)
-
-            # Skip if no tasks or reminders
-            if not (pending_tasks or reminders):
-                continue
-
-            # ----------------------------------------------------------------
-            # 1. FCM push — one notification per task, one per reminder
-            # ----------------------------------------------------------------
-            fcm_sent = False
-            for task in pending_tasks:
-                try:
-                    sent = fcm_service.send_task_due(user, task)
-                    fcm_sent = fcm_sent or sent
-                except Exception as fcm_err:
-                    self.stdout.write(
-                        self.style.WARNING(f"   ⚠️  FCM task push failed for {user.username}: {fcm_err}")
-                    )
-
-            for reminder in reminders:
-                try:
-                    sent = fcm_service.send_reminder(user, reminder)
-                    fcm_sent = fcm_sent or sent
-                except Exception as fcm_err:
-                    self.stdout.write(
-                        self.style.WARNING(f"   ⚠️  FCM reminder push failed for {user.username}: {fcm_err}")
-                    )
-
-            if fcm_sent:
-                self.stdout.write(f"   🔔 FCM push sent to {user.username}")
-                users_notified += 1
-
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"   🔔 Task reminders sent to {users_notified} user(s)"
-            )
-        )

@@ -1,8 +1,6 @@
 import os
 from pathlib import Path
 from decouple import config
-import firebase_admin
-from firebase_admin import credentials as fb_credentials
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,7 +26,6 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-    'fcm_django',
 
     # Local apps
     'accounts'
@@ -61,7 +58,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'accounts.context_processors.firebase_config',
             ],
         },
     },
@@ -188,25 +184,6 @@ BACKUP_FOLDER_ID = config("BACKUP_FOLDER_ID")
 MAX_TOTAL_BYTES_PER_USER = config("MAX_TOTAL_BYTES_PER_USER")
 TOTAL_DB_FILE_SIZE = config("TOTAL_DB_FILE_SIZE")
 
-# ============================================================================
-# Firebase / FCM Settings
-# ============================================================================
-
-# Initialize Firebase Admin SDK once at startup
-_FCM_CREDS_PATH = BASE_DIR / 'mysite' / 'firebase-credentials.json'
-if _FCM_CREDS_PATH.exists() and not firebase_admin._apps:
-    _fb_cred = fb_credentials.Certificate(str(_FCM_CREDS_PATH))
-    firebase_admin.initialize_app(_fb_cred)
-
-FIREBASE_VAPID_PUBLIC_KEY = config('FIREBASE_VAPID_PUBLIC_KEY', default='')
-
-FCM_DJANGO_SETTINGS = {
-    'APP_VERBOSE_NAME': 'myHelperBuddy',
-    'DEFAULT_FIREBASE_APP': None, 
-    'ONE_DEVICE_PER_USER': False, 
-    'DELETE_INACTIVE_DEVICES': True, 
-    'UPDATE_ON_DUPLICATE_REG_ID': True, 
-}
 
 # Security middleware settings
 SECURE_BROWSER_XSS_FILTER = True
