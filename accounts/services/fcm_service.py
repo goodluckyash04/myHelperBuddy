@@ -52,40 +52,41 @@ class FCMService:
                 logger.debug("No active FCM devices for user %s — skipping push", user.username)
                 return False
 
+            tokens = [device.registration_id for device in devices]
             notification = messaging.Notification(title=title, body=body)
             data_payload = {k: str(v) for k, v in (data or {}).items()}
 
-            sent_count = 0
-            for device in devices:
-                try:
-                    message = messaging.Message(
-                        notification=notification,
-                        data=data_payload,
-                        token=device.registration_id,
-                        android=messaging.AndroidConfig(priority="high"),
-                        apns=messaging.APNSConfig(
-                            payload=messaging.APNSPayload(
-                                aps=messaging.Aps(sound="default", badge=1)
-                            )
-                        ),
+            message = messaging.MulticastMessage(
+                notification=notification,
+                data=data_payload,
+                tokens=tokens,
+                android=messaging.AndroidConfig(priority="high"),
+                apns=messaging.APNSConfig(
+                    payload=messaging.APNSPayload(
+                        aps=messaging.Aps(sound="default", badge=1)
                     )
-                    messaging.send(message)
-                    sent_count += 1
-                    logger.debug("Push sent to %s (device %s)", user.username, device.pk)
-                except Exception as device_err:
-                    logger.warning(
-                        "FCM send failed for user %s device %s: %s",
-                        user.username, device.pk, device_err
-                    )
-                    # Deactivate stale tokens automatically
-                    if "registration-token-not-registered" in str(device_err).lower():
-                        device.active = False
-                        device.save(update_fields=["active"])
+                ),
+            )
+            
+            response = messaging.send_each_for_multicast(message)
+            logger.debug("Multicast push sent for user %s. Success count: %d, Failure count: %d", 
+                         user.username, response.success_count, response.failure_count)
+            
+            if response.failure_count > 0:
+                # Deactivate stale tokens automatically
+                for i, res in enumerate(response.responses):
+                    if not res.success:
+                        error_code = getattr(res.exception, 'code', '')
+                        if error_code in ('NOT_FOUND', 'UNREGISTERED'):
+                            stale_device = devices[i]
+                            logger.warning("Deactivating stale token for user %s (device %s)", user.username, stale_device.pk)
+                            stale_device.active = False
+                            stale_device.save(update_fields=["active"])
 
-            if sent_count:
+            if response.success_count > 0:
                 logger.info("Push notification '%s' delivered to %d device(s) for user %s",
-                            title, sent_count, user.username)
-            return sent_count > 0
+                            title, response.success_count, user.username)
+            return response.success_count > 0
 
         except ImportError as e:
             logger.error("FCM dependencies not installed: %s", e)
