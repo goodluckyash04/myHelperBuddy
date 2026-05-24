@@ -20,7 +20,6 @@ class SimpleRateLimitMiddleware:
         '/send-otp': (3, 300),        # 3 requests per 5 minutes 
         '/forgotPassword': (3, 600),  # 3 requests per 10 minutes
         '/signup': (5, 600),          # 5 requests per 10 minutes
-        '/fcm/register': (10, 60),    # 10 token registrations per minute
     }
     
     def __init__(self, get_response):

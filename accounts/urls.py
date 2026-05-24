@@ -141,7 +141,6 @@ from .views.views import (
     manual_backup,
     profile,
     redirect_to_streamlit,
-    register_fcm_token,
     update_profile,
     utilities,
 )
@@ -268,10 +267,6 @@ urlpatterns = [
     # ========================================================================
     path("advance-utils/", redirect_to_streamlit, name="advance-utils"),
 
-    # ========================================================================
-    # FCM / Push Notifications
-    # ========================================================================
-    path("fcm/register/", register_fcm_token, name="fcm-register"),
 
     # ========================================================================
     # Password Reset
