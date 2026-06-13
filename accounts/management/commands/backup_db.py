@@ -7,7 +7,7 @@ Django management command that provides automated database backup and maintenanc
 - Uploads backups to Google Drive
 - Sends backup email notifications as fallback
 - Maintains backup retention policy (7 days + monthly)
-- Sends daily task and reminder notifications to users
+- Sends daily task and reminder notifications to users  
 
 Usage:
     python manage.py backup_db
@@ -89,7 +89,6 @@ class Command(BaseCommand):
         Args:
             options: Command options including skip_reminders flag
         """
-        skip_reminders = options.get('skip_reminders', False)
         
         try:
             self.stdout.write(self.style.SUCCESS("\n" + "=" * 60))
@@ -99,14 +98,6 @@ class Command(BaseCommand):
                 )
             )
             self.stdout.write(self.style.SUCCESS("=" * 60))
-            
-            # Send task reminders to users (unless skipped)
-            if not skip_reminders:
-                self.send_todays_task_reminder()
-            else:
-                self.stdout.write(
-                    self.style.WARNING("\n⏭️  Skipping task reminder emails")
-                )
             
             # Backup database if needed
             self.backup_database()
@@ -149,16 +140,11 @@ class Command(BaseCommand):
             Task,
             Reminder,
         ]
-        
-        for model in models_to_check:
-            if model.objects.filter(query).exists():
-                self.stdout.write(
-                    self.style.WARNING(f"   📝 Changes detected in {model.__name__}")
-                )
-                return True
-        
-        self.stdout.write(self.style.SUCCESS("   ✅ No recent changes detected"))
-        return False
+
+        return any(
+            model.objects.filter(query).exists()
+            for model in models_to_check
+        )
     
     # ========================================================================
     # Encryption
