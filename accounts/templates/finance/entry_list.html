@@ -1,0 +1,172 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block header %}{{ block.super }}{% endblock %}
+
+{% block body %}
+<div class="container-fluid py-4 px-3 px-md-4">
+
+  <!-- Page Header -->
+  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4 gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--text-primary); letter-spacing: -0.5px;">Entries</h1>
+      <p class="small mb-0" style="color: var(--text-secondary);">Your complete financial ledger</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'finance:import_upload' %}" class="btn btn-fintech-secondary d-none d-sm-inline-flex align-items-center">
+        <i class="fa-solid fa-file-csv me-2"></i> Import
+      </a>
+      <a href="{% url 'finance:entry_create' %}" class="btn btn-fintech-primary d-inline-flex align-items-center shadow-sm">
+        <i class="fa-solid fa-plus me-2"></i> Add Entry
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-{{ msg.tags|default:'info' }} small shadow-sm py-2" style="background-color: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary);">
+        {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Filters -->
+  <div class="premium-card mb-4 border-0">
+    <div class="card-body p-3">
+      <form method="get" class="row g-2 align-items-end" id="filter-form">
+        <div class="col-6 col-sm-4 col-md-2">
+          <label class="form-label small fw-medium mb-1" style="color: var(--text-secondary);">Period</label>
+          <select name="period" class="form-select form-select-sm form-control-fintech" onchange="this.form.submit()">
+            <option value="this_month" {% if filters.period == 'this_month' %}selected{% endif %}>This Month</option>
+            <option value="last_month" {% if filters.period == 'last_month' %}selected{% endif %}>Last Month</option>
+            <option value="last_7" {% if filters.period == 'last_7' %}selected{% endif %}>Last 7 Days</option>
+            <option value="last_30" {% if filters.period == 'last_30' %}selected{% endif %}>Last 30 Days</option>
+            <option value="all" {% if filters.period == 'all' %}selected{% endif %}>All Time</option>
+          </select>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+          <label class="form-label small fw-medium mb-1" style="color: var(--text-secondary);">Type</label>
+          <select name="type" class="form-select form-select-sm form-control-fintech" onchange="this.form.submit()">
+            <option value="" {% if not filters.type %}selected{% endif %}>All Types</option>
+            <option value="expense" {% if filters.type == 'expense' %}selected{% endif %}>Expense</option>
+            <option value="income" {% if filters.type == 'income' %}selected{% endif %}>Income</option>
+          </select>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+          <label class="form-label small fw-medium mb-1" style="color: var(--text-secondary);">Account</label>
+          <select name="account" class="form-select form-select-sm form-control-fintech" onchange="this.form.submit()">
+            <option value="">All Accounts</option>
+            {% for acc in accounts %}
+              <option value="{{ acc.pk }}" {% if filters.account == acc.pk|stringformat:'s' %}selected{% endif %}>{{ acc.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-sm-4 col-md-2">
+          <label class="form-label small fw-medium mb-1" style="color: var(--text-secondary);">Category</label>
+          <select name="category" class="form-select form-select-sm form-control-fintech" onchange="this.form.submit()">
+            <option value="">All Categories</option>
+            {% for cat in categories %}
+              <option value="{{ cat.pk }}" {% if filters.category == cat.pk|stringformat:'s' %}selected{% endif %}>{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto ms-md-auto">
+          <a href="{% url 'finance:entry_list' %}" class="btn btn-sm btn-fintech-secondary" title="Clear Filters">
+            Clear
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Entry List -->
+  <div class="premium-card overflow-hidden">
+    {% if entries %}
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="entry-table" style="--bs-table-bg: transparent; --bs-table-hover-bg: var(--bg-base);">
+          <thead style="border-bottom: 2px solid var(--border-color);">
+            <tr>
+              <th class="border-0 text-uppercase small fw-bold ps-4 py-3" style="color: var(--text-tertiary); letter-spacing: 0.5px;">Date</th>
+              <th class="border-0 text-uppercase small fw-bold py-3" style="color: var(--text-tertiary); letter-spacing: 0.5px;">Details</th>
+              <th class="border-0 text-uppercase small fw-bold py-3" style="color: var(--text-tertiary); letter-spacing: 0.5px;">Account</th>
+              <th class="border-0 text-uppercase small fw-bold text-end pe-4 py-3" style="color: var(--text-tertiary); letter-spacing: 0.5px;">Amount</th>
+            </tr>
+          </thead>
+          <tbody class="border-top-0">
+            {% for entry in entries %}
+            <tr style="border-bottom: 1px solid var(--border-color);">
+              <td class="ps-4 text-nowrap py-3">
+                <div class="fw-bold tabular-nums" style="color: var(--text-primary);">{{ entry.date|date:"d M" }}</div>
+                <div class="small fw-medium" style="color: var(--text-secondary);">{{ entry.date|date:"Y" }}</div>
+              </td>
+              
+              <td class="py-3">
+                <div class="d-flex align-items-center">
+                  <!-- Minimal Indicator -->
+                  <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                       style="width: 32px; height: 32px; background-color: {% if entry.entry_type == 'income' %}rgba(5, 150, 105, 0.1){% else %}rgba(220, 38, 38, 0.1){% endif %};">
+                    {% if entry.entry_type == 'income' %}
+                      <i class="fa-solid fa-arrow-down small text-income"></i>
+                    {% else %}
+                      <i class="fa-solid fa-arrow-up small text-expense"></i>
+                    {% endif %}
+                  </div>
+                  
+                  <div>
+                    <div class="fw-bold" style="color: var(--text-primary);">
+                      {% if entry.category %}
+                        {{ entry.category.name }}
+                      {% elif entry.entry_type == 'loan_emi' %}
+                        Loan EMI
+                      {% elif entry.entry_type == 'split_installment' %}
+                        Split Installment
+                      {% else %}
+                        Uncategorized
+                      {% endif %}
+                    </div>
+                    {% if entry.note %}
+                      <div class="small fw-medium" style="color: var(--text-secondary); max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ entry.note }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              
+              <td class="py-3">
+                <span class="badge fw-medium" style="background-color: var(--bg-input); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                  {{ entry.account.name }}
+                </span>
+              </td>
+              
+              <td class="text-end pe-4 py-3">
+                <div class="fw-bold fs-5 tabular-nums {% if entry.entry_type == 'income' %}text-income{% else %}text-primary{% endif %}" style="letter-spacing: -0.5px;">
+                  {% if entry.entry_type == 'income' %}+{% endif %}₹{{ entry.amount|floatformat:2 }}
+                </div>
+                <div class="d-flex justify-content-end gap-3 mt-1 opacity-75">
+                  <a href="{% url 'finance:entry_edit' entry.pk %}" class="text-decoration-none small fw-medium" style="color: var(--text-secondary);">Edit</a>
+                  <form method="post" action="{% url 'finance:entry_delete' entry.pk %}" class="d-inline" onsubmit="return confirm('Delete this transaction?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link text-expense p-0 text-decoration-none small fw-medium border-0 m-0">Delete</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="text-center py-5">
+        <div class="mb-3">
+          <i class="fa-solid fa-receipt fa-2x" style="color: var(--border-color);"></i>
+        </div>
+        <h5 class="fw-medium mb-1" style="color: var(--text-primary);">No transactions found</h5>
+        <p class="small mb-4" style="color: var(--text-secondary);">Try adjusting filters or log a new transaction.</p>
+        <a href="{% url 'finance:entry_create' %}" class="btn btn-fintech-primary">
+          Log Transaction
+        </a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

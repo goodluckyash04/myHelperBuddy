@@ -1,0 +1,256 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block header %}{{ block.super }}{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'finance:entry_list' %}" class="text-decoration-none text-secondary">Entries</a></li>
+      <li class="breadcrumb-item active text-primary fw-medium" aria-current="page">
+        {% if mode == 'create' %}New Entry{% else %}Edit Entry{% endif %}
+      </li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      
+      <div class="premium-card p-4 p-md-5 mb-5">
+        <h2 class="h4 fw-bold mb-4" style="color: var(--text-primary);">
+          {% if mode == 'create' %}Log Transaction{% else %}Edit Transaction{% endif %}
+        </h2>
+
+        <div id="quick-entry-form-wrapper">
+          {% if messages %}
+            {% for msg in messages %}
+              <div class="alert alert-{{ msg.tags|default:'danger' }} small py-2">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post" id="entry-form" action="{% url 'finance:entry_create' %}">
+            {% csrf_token %}
+            
+            {% if mode == 'create' and recent_chips %}
+            <div class="mb-4">
+              <label class="form-label fw-bold small text-uppercase mb-2" style="color: var(--text-secondary); letter-spacing: 0.5px;">Quick Log</label>
+              <div class="d-flex flex-wrap gap-2">
+                {% for chip in recent_chips %}
+                  <button type="button" class="btn btn-fintech-secondary rounded-pill chip-btn py-1 px-3"
+                          data-amount="{{ chip.amount }}" 
+                          data-category="{{ chip.category_id }}" 
+                          data-note="{{ chip.note|default:'' }}"
+                          style="font-size: 0.85rem;">
+                    <span class="tabular-nums fw-bold text-primary">₹{{ chip.amount|floatformat:0 }}</span>
+                    <span class="mx-1 text-tertiary">•</span>
+                    <span class="text-secondary">{{ chip.category__name }}</span>
+                  </button>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Entry Type Toggle (Pill style) -->
+            <div class="mb-4">
+              <label class="form-label fw-medium small mb-2" style="color: var(--text-secondary);">Transaction Type</label>
+              <div class="d-flex bg-input rounded-3 p-1" style="background-color: var(--bg-input);">
+                <input type="radio" class="btn-check" name="entry_type" id="type-expense" value="expense" {% if mode == 'create' or entry.entry_type == 'expense' %}checked{% endif %}>
+                <label class="btn w-50 fw-medium border-0 m-0 py-2" for="type-expense" id="lbl-expense" style="border-radius: 6px; transition: all 0.2s;">
+                  Expense
+                </label>
+
+                <input type="radio" class="btn-check" name="entry_type" id="type-income" value="income" {% if entry.entry_type == 'income' %}checked{% endif %}>
+                <label class="btn w-50 fw-medium border-0 m-0 py-2" for="type-income" id="lbl-income" style="border-radius: 6px; transition: all 0.2s;">
+                  Income
+                </label>
+              </div>
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-4">
+              <label for="entry-amount" class="form-label fw-medium small mb-2" style="color: var(--text-secondary);">Amount</label>
+              <div class="input-group">
+                <span class="input-group-text border-0 fw-bold fs-5" style="background-color: var(--bg-input); color: var(--text-primary); border-top-left-radius: var(--radius-md); border-bottom-left-radius: var(--radius-md);">₹</span>
+                <input
+                  type="number"
+                  id="entry-amount"
+                  name="amount"
+                  class="form-control form-control-lg form-control-fintech fs-4 tabular-nums fw-bold p-3 border-start-0"
+                  style="border-top-left-radius: 0; border-bottom-left-radius: 0;"
+                  placeholder="0.00"
+                  min="0.01"
+                  step="0.01"
+                  value="{{ entry.amount|default:'' }}"
+                  required
+                  autofocus
+                >
+              </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+              <!-- Account -->
+              <div class="col-sm-6">
+                <label for="entry-account" class="form-label fw-medium small mb-2" style="color: var(--text-secondary);">Account</label>
+                <select id="entry-account" name="account_id" class="form-select form-select-fintech fw-medium" required>
+                  {% for acc in accounts %}
+                    <option value="{{ acc.pk }}"
+                      {% if entry and entry.account_id == acc.pk %}selected
+                      {% elif default_account_id == acc.pk %}selected
+                      {% endif %}>
+                      {{ acc.name }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Date -->
+              <div class="col-sm-6">
+                <label for="entry-date" class="form-label fw-medium small mb-2" style="color: var(--text-secondary);">Date</label>
+                <input
+                  type="date"
+                  id="entry-date"
+                  name="date"
+                  class="form-control form-control-fintech tabular-nums fw-medium"
+                  value="{{ entry.date|default:today }}"
+                  required
+                >
+              </div>
+            </div>
+
+            <!-- Category (dynamic) -->
+            <div class="mb-4" id="expense-category-group">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label for="entry-category-expense" class="form-label fw-medium small mb-0" style="color: var(--text-secondary);">Category</label>
+              </div>
+              <select id="entry-category-expense" name="category_id" class="form-select form-select-fintech">
+                <option value="">— Uncategorized —</option>
+                {% for cat in expense_categories %}
+                  <option value="{{ cat.pk }}"
+                    {% if entry and entry.category_id == cat.pk %}selected
+                    {% elif default_category_id == cat.pk %}selected
+                    {% endif %}>
+                    {{ cat.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-4 d-none" id="income-category-group">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <label for="entry-category-income" class="form-label fw-medium small mb-0" style="color: var(--text-secondary);">Category</label>
+              </div>
+              <select id="entry-category-income" name="category_id_income" class="form-select form-select-fintech">
+                <option value="">— Uncategorized —</option>
+                {% for cat in income_categories %}
+                  <option value="{{ cat.pk }}"
+                    {% if entry and entry.category_id == cat.pk %}selected{% endif %}>
+                    {{ cat.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Note -->
+            <div class="mb-4">
+              <label for="entry-note" class="form-label fw-medium small mb-2" style="color: var(--text-secondary);">Note <span class="fw-normal opacity-75">(Optional)</span></label>
+              <input
+                type="text"
+                id="entry-note"
+                name="note"
+                class="form-control form-control-fintech"
+                placeholder="What was this for?"
+                maxlength="255"
+                value="{{ entry.note|default:'' }}"
+              >
+            </div>
+
+            <!-- Actions -->
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-fintech-primary py-3 fs-6" id="btn-save-entry">
+                {% if mode == 'create' %}Save Transaction{% else %}Update Transaction{% endif %}
+              </button>
+            </div>
+          </form>
+
+          <script>
+          (function(){
+            // Check if we are inside a modal context (using our global wrapper)
+            const isModal = document.getElementById('globalEntryModal') !== null;
+            
+            // Toggle logic for entry type pill
+            const expenseGroup = document.getElementById('expense-category-group');
+            const incomeGroup  = document.getElementById('income-category-group');
+            const expenseCat   = document.getElementById('entry-category-expense');
+            const incomeCat    = document.getElementById('entry-category-income');
+
+            const lblExpense = document.getElementById('lbl-expense');
+            const lblIncome = document.getElementById('lbl-income');
+
+            function updateTypeToggle() {
+              const isExpense = document.getElementById('type-expense').checked;
+              
+              // Update categories visibility
+              expenseGroup.classList.toggle('d-none', !isExpense);
+              incomeGroup.classList.toggle('d-none', isExpense);
+              
+              // Style the pill buttons
+              if (isExpense) {
+                lblExpense.style.backgroundColor = 'var(--bg-surface)';
+                lblExpense.style.color = 'var(--color-expense)';
+                lblExpense.style.boxShadow = 'var(--shadow-sm)';
+                
+                lblIncome.style.backgroundColor = 'transparent';
+                lblIncome.style.color = 'var(--text-secondary)';
+                lblIncome.style.boxShadow = 'none';
+              } else {
+                lblIncome.style.backgroundColor = 'var(--bg-surface)';
+                lblIncome.style.color = 'var(--color-income)';
+                lblIncome.style.boxShadow = 'var(--shadow-sm)';
+                
+                lblExpense.style.backgroundColor = 'transparent';
+                lblExpense.style.color = 'var(--text-secondary)';
+                lblExpense.style.boxShadow = 'none';
+              }
+            }
+
+            document.querySelectorAll('input[name="entry_type"]').forEach(r => {
+              r.addEventListener('change', updateTypeToggle);
+            });
+            updateTypeToggle();
+
+            // Form submit handler
+            document.getElementById('entry-form').addEventListener('submit', function() {
+              if (document.getElementById('type-income').checked) {
+                expenseCat.name = '';
+                incomeCat.name = 'category_id';
+              }
+            });
+
+            // Quick Log Chips
+            document.querySelectorAll('.chip-btn').forEach(btn => {
+              btn.addEventListener('click', function() {
+                // Switch to expense
+                document.getElementById('type-expense').checked = true;
+                updateTypeToggle();
+                
+                // Fill values
+                document.getElementById('entry-amount').value = this.dataset.amount;
+                document.getElementById('entry-note').value = this.dataset.note;
+                if (this.dataset.category) {
+                  expenseCat.value = this.dataset.category;
+                }
+                
+                // Micro-animation flash
+                const originalBg = this.style.backgroundColor;
+                this.style.backgroundColor = 'var(--border-color)';
+                setTimeout(() => {
+                  this.style.backgroundColor = originalBg;
+                }, 150);
+              });
+            });
+          })();
+          </script>
+        </div>
+{% endblock %}

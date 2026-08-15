@@ -1,0 +1,117 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block header %}{{ block.super }}{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'finance:split_plan_list' %}">Split Plans</a></li>
+      <li class="breadcrumb-item active">New Split Plan</li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+          <h2 class="h5 fw-bold mb-0">Add Split Plan</h2>
+          <p class="text-muted small mt-1 mb-0">Automatically generate future installments.</p>
+        </div>
+        <div class="card-body p-4">
+
+          {% if messages %}
+            {% for msg in messages %}
+              <div class="alert alert-{{ msg.tags|default:'danger' }} small">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label for="plan-title" class="form-label fw-medium">Title</label>
+              <input type="text" id="plan-title" name="title" class="form-control"
+                     placeholder="e.g. New Phone - No Cost EMI"
+                     value="{{ form_data.title|default:'' }}" required autofocus>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-6">
+                <label for="plan-total" class="form-label fw-medium">Total Amount (₹)</label>
+                <input type="number" id="plan-total" name="total_amount" class="form-control"
+                       step="0.01" min="0.01" required
+                       value="{{ form_data.total_amount|default:'' }}">
+              </div>
+              <div class="col-6">
+                <label for="plan-months" class="form-label fw-medium">Months</label>
+                <input type="number" id="plan-months" name="num_months" class="form-control"
+                       step="1" min="1" required placeholder="e.g. 6"
+                       value="{{ form_data.num_months|default:'' }}">
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <div class="p-3 bg-light rounded text-center">
+                <span class="small text-muted">Estimated Installment: </span>
+                <span class="fw-bold" id="est-installment">₹0.00</span>
+                <span class="small text-muted">/ month</span>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="plan-account" class="form-label fw-medium">Payment Account</label>
+              <select id="plan-account" name="account_id" class="form-select" required>
+                <option value="">— Select account —</option>
+                {% for acc in accounts %}
+                  <option value="{{ acc.pk }}"
+                    {% if form_data.account_id == acc.pk|stringformat:'s' %}selected{% endif %}>
+                    {{ acc.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="mb-4">
+                <label for="start_month" class="form-label fw-medium">Start Month</label>
+                <input type="date" id="start_month" name="start_month" class="form-control"
+                       value="{{ form_data.start_month|default:today }}">
+                <div class="form-text">Installments will be generated on the 1st of each month starting from this date.</div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary flex-fill">Create Plan</button>
+              <a href="{% url 'finance:split_plan_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Simple JS to update the estimated installment amount
+  const totalInput = document.getElementById('plan-total');
+  const monthsInput = document.getElementById('plan-months');
+  const estOutput = document.getElementById('est-installment');
+  
+  function updateEstimate() {
+    const total = parseFloat(totalInput.value);
+    const months = parseInt(monthsInput.value, 10);
+    if (!isNaN(total) && !isNaN(months) && months > 0) {
+      const est = (total / months).toFixed(2);
+      estOutput.textContent = '₹' + est;
+    } else {
+      estOutput.textContent = '₹0.00';
+    }
+  }
+  
+  totalInput.addEventListener('input', updateEstimate);
+  monthsInput.addEventListener('input', updateEstimate);
+</script>
+{% endblock %}

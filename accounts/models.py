@@ -1,4 +1,4 @@
-from django.contrib.auth.hashers import check_password, make_password
+
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
@@ -9,12 +9,6 @@ class UserProfile(models.Model):
         'auth.User', 
         on_delete=models.CASCADE, 
         related_name='profile'
-    )
-    profile_picture = models.ImageField(
-        upload_to='profile_pictures/',
-        null=True,
-        blank=True,
-        help_text="User profile picture"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -128,16 +122,7 @@ class Transaction(models.Model):
         ]
 
 
-# Import enhanced task models from separate file
-from accounts.task_models import (
-    TaskCategory,
-    TaskTag,
-    RecurringPattern,
-    Task,
-    TaskTemplate,
-    TimeLog,
-    TaskAttachment,
-)
+
 
 
 
@@ -384,289 +369,7 @@ class PaymentRecord(models.Model):
         transaction.save()  # This will trigger auto-status update
 
 
-class Reminder(models.Model):
-    # Legacy frequency choices (kept for backward compatibility)
-    DAILY = "daily"
-    MONTHLY = "monthly"
-    YEARLY = "yearly"
-    CUSTOM = "custom"
 
-    REMINDER_FREQUENCY_CHOICES = [
-        (DAILY, "Daily"),
-        (MONTHLY, "Monthly"),
-        (YEARLY, "Yearly"),
-        (CUSTOM, "Custom"),
-    ]
-
-    # Smart Reminder Types
-    ONE_TIME = 'one_time'
-    DAILY_TYPE = 'daily'
-    WEEKLY = 'weekly'
-    MONTHLY_TYPE = 'monthly'
-    YEARLY_TYPE = 'yearly'
-    CUSTOM_TYPE = 'custom'
-    LINKED_TASK = 'linked_task'
-    LINKED_FINANCE = 'linked_finance'
-
-    TYPE_CHOICES = [
-        (ONE_TIME, _("One-time")),
-        (DAILY_TYPE, _("Daily")),
-        (WEEKLY, _("Weekly")),
-        (MONTHLY_TYPE, _("Monthly")),
-        (YEARLY_TYPE, _("Yearly")),
-        (CUSTOM_TYPE, _("Custom Recurring")),
-        (LINKED_TASK, _("Linked to Task")),
-        (LINKED_FINANCE, _("Linked to Payment")),
-    ]
-
-    # Priority Levels
-    CRITICAL = 'critical'
-    HIGH = 'high'
-    MEDIUM = 'medium'
-    LOW = 'low'
-
-    PRIORITY_CHOICES = [
-        (CRITICAL, _("Critical")),
-        (HIGH, _("High")),
-        (MEDIUM, _("Medium")),
-        (LOW, _("Low")),
-    ]
-
-    # Core fields
-    title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    reminder_date = models.DateField()
-    reminder_time = models.TimeField(null=True, blank=True, help_text="Specific time for reminder")
-
-    # Type and Priority
-    reminder_type = models.CharField(
-        max_length=20,
-        choices=TYPE_CHOICES,
-        default=ONE_TIME,
-        help_text="Type of reminder"
-    )
-    priority = models.CharField(
-        max_length=10,
-        choices=PRIORITY_CHOICES,
-        default=MEDIUM,
-        help_text="Priority level"
-    )
-
-    # Legacy field (kept for backward compatibility - will migrate to reminder_type)
-    frequency = models.CharField(
-        max_length=10,
-        choices=REMINDER_FREQUENCY_CHOICES,
-        default=DAILY,
-        null=True,
-        blank=True
-    )
-
-    # Recurring pattern fields
-    custom_repeat_days = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        help_text="Days interval for custom recurring"
-    )
-    weekdays = models.JSONField(
-        null=True,
-        blank=True,
-        help_text="List of weekdays (0=Mon, 6=Sun) for weekly reminders"
-    )
-    month_days = models.JSONField(
-        null=True,
-        blank=True,
-        help_text="List of days (1-31) for monthly reminders"
-    )
-
-    # Linked items
-    linked_task = models.ForeignKey(
-        'Task',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='reminders',
-        help_text="Task this reminder is linked to"
-    )
-    linked_finance = models.ForeignKey(
-        'FinancialProduct',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='reminders',
-        help_text="Finance product this reminder is linked to"
-    )
-
-    # Snooze functionality
-    is_snoozed = models.BooleanField(default=False)
-    snoozed_until = models.DateTimeField(null=True, blank=True)
-    last_notified = models.DateTimeField(null=True, blank=True)
-    notification_count = models.PositiveIntegerField(default=0)
-
-    # Status fields
-    is_dismissed = models.BooleanField(default=False)
-    dismissed_at = models.DateTimeField(null=True, blank=True)
-    is_deleted = models.BooleanField(default=False)
-    deleted_at = models.DateField(blank=True, null=True)
-
-    # Audit fields
-    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.title} ({self.get_priority_display()})"
-
-    def get_priority_color(self):
-        """Get color hex code for priority level"""
-        colors = {
-            self.CRITICAL: '#EF4444',  # Red
-            self.HIGH: '#F59E0B',      # Orange
-            self.MEDIUM: '#FBBF24',    # Yellow
-            self.LOW: '#3B82F6',       # Blue
-        }
-        return colors.get(self.priority, '#6B7280')  # Gray default
-
-    def get_priority_icon(self):
-        """Get emoji icon for priority level"""
-        icons = {
-            self.CRITICAL: '🔴',
-            self.HIGH: '🟠',
-            self.MEDIUM: '🟡',
-            self.LOW: '🔵',
-        }
-        return icons.get(self.priority, '⚪')
-
-    def get_type_icon(self):
-        """Get icon for reminder type"""
-        icons = {
-            self.ONE_TIME: '📌',
-            self.DAILY_TYPE: '🔁',
-            self.WEEKLY: '📅',
-            self.MONTHLY_TYPE: '📆',
-            self.YEARLY_TYPE: '🎂',
-            self.CUSTOM_TYPE: '🔄',
-            self.LINKED_TASK: '✅',
-            self.LINKED_FINANCE: '💰',
-        }
-        return icons.get(self.reminder_type, '🔔')
-
-    def is_due_today(self):
-        """Check if reminder is due today"""
-        from datetime import date
-        today = date.today()
-
-        # Check if snoozed
-        if self.is_snoozed and self.snoozed_until:
-            from django.utils import timezone
-            if timezone.now() < self.snoozed_until:
-                return False
-
-        # Check if dismissed
-        if self.is_dismissed:
-            return False
-
-        # One-time reminder
-        if self.reminder_type == self.ONE_TIME:
-            return self.reminder_date == today
-
-        # Daily reminder
-        if self.reminder_type == self.DAILY_TYPE:
-            return self.reminder_date <= today
-
-        # Weekly reminder
-        if self.reminder_type == self.WEEKLY:
-            if self.reminder_date > today:
-                return False
-            if self.weekdays:
-                return today.weekday() in self.weekdays
-            return False
-
-        # Monthly reminder
-        if self.reminder_type == self.MONTHLY_TYPE:
-            if self.reminder_date > today:
-                return False
-            if self.month_days:
-                return today.day in self.month_days
-            return self.reminder_date.day == today.day
-
-        # Yearly reminder
-        if self.reminder_type == self.YEARLY_TYPE:
-            if self.reminder_date > today:
-                return False
-            return (self.reminder_date.day == today.day and 
-                    self.reminder_date.month == today.month)
-
-        # Custom recurring
-        if self.reminder_type == self.CUSTOM_TYPE:
-            if self.custom_repeat_days and self.reminder_date <= today:
-                days_elapsed = (today - self.reminder_date).days
-                return days_elapsed % self.custom_repeat_days == 0
-            return False
-
-        # Linked reminders
-        if self.reminder_type == self.LINKED_TASK and self.linked_task:
-            return self.linked_task.deadline == today if hasattr(self.linked_task, 'deadline') else False
-
-        if self.reminder_type == self.LINKED_FINANCE and self.linked_finance:
-            # Check next payment date from finance transactions
-            return False  # Implement based on finance logic
-
-        return False
-
-    def get_next_occurrence(self):
-        """Calculate next occurrence date"""
-        from datetime import date, timedelta
-        today = date.today()
-
-        if self.reminder_type == self.ONE_TIME:
-            return self.reminder_date if self.reminder_date >= today else None
-
-        if self.reminder_type == self.DAILY_TYPE:
-            return today if self.reminder_date <= today else self.reminder_date
-
-        if self.reminder_type == self.WEEKLY and self.weekdays:
-            # Find next matching weekday
-            for i in range(7):
-                check_date = today + timedelta(days=i)
-                if check_date.weekday() in self.weekdays:
-                    return check_date
-
-        if self.reminder_type == self.MONTHLY_TYPE and self.month_days:
-            # Find next matching day of month
-            for i in range(31):
-                check_date = today + timedelta(days=i)
-                if check_date.day in self.month_days:
-                    return check_date
-
-        if self.reminder_type == self.CUSTOM_TYPE and self.custom_repeat_days:
-            days_since = (today - self.reminder_date).days
-            if days_since < 0:
-                return self.reminder_date
-            remainder = days_since % self.custom_repeat_days
-            days_until_next = self.custom_repeat_days - remainder if remainder != 0 else 0
-            return today + timedelta(days=days_until_next)
-
-        return None
-
-    def can_snooze(self):
-        """Check if reminder can be snoozed"""
-        return not self.is_dismissed and not self.is_deleted
-
-    class Meta:
-        verbose_name = _("Reminder")
-        verbose_name_plural = _("Reminders")
-        indexes = [
-            models.Index(fields=['created_by']),
-            models.Index(fields=['reminder_date']),
-            models.Index(fields=['is_deleted']),
-            models.Index(fields=['reminder_type']),
-            models.Index(fields=['priority']),
-            models.Index(fields=['is_snoozed']),
-            # Composite indexes
-            models.Index(fields=['created_by', 'is_deleted']),
-            models.Index(fields=['created_by', 'reminder_date']),
-            models.Index(fields=['reminder_type', 'priority']),
-        ]
 
 
 class RefreshToken(models.Model):
@@ -792,66 +495,354 @@ class UtilityModule(models.Model):
             return self.allowed_users_list.filter(id=user.id).exists()
 
 
-class UploadedFile(models.Model):
-    owner = models.ForeignKey(
-        'auth.User',
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="uploaded_files",
+
+
+
+# ============================================================================
+# Finance-First Core Models (Phase 2)
+# ============================================================================
+
+class Account(models.Model):
+    """
+    Represents a financial account (bank, cash, wallet).
+    Used as the source/destination for all Entry transactions.
+    """
+    ACCOUNT_TYPE_CHOICES = [
+        ('bank', _('Bank')),
+        ('cash', _('Cash')),
+        ('wallet', _('Wallet')),
+    ]
+
+    name = models.CharField(
+        max_length=100,
+        help_text=_("Account name, e.g. 'HDFC Bank', 'Cash', 'Paytm Wallet'")
     )
-    filename = models.CharField(max_length=255)
-    content_type = models.CharField(max_length=100, blank=True)
-    data = models.BinaryField()
-    keywords = models.CharField(max_length=500, blank=True)
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    download_password_hash = models.CharField(max_length=128, blank=True, null=True)
-
-    # small metadata
-    size = models.PositiveIntegerField(default=0)
-
-    class Meta:
-        ordering = ["-uploaded_at"]
+    account_type = models.CharField(
+        max_length=20,
+        choices=ACCOUNT_TYPE_CHOICES,
+        default='bank',
+    )
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='finance_accounts',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.filename} ({self.owner})"
+        return f"{self.name} ({self.get_account_type_display()})"
 
-    # helpers to set/check password
-    def set_download_password(self, raw_password: str | None):
-        if raw_password:
-            self.download_password_hash = make_password(raw_password)
-        else:
-            self.download_password_hash = None
+    class Meta:
+        verbose_name = _("Account")
+        verbose_name_plural = _("Accounts")
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['created_by', 'is_active']),
+        ]
 
-    def check_download_password(self, raw_password: str) -> bool:
-        if not self.download_password_hash:
-            return True  # no password required
-        return check_password(raw_password or "", self.download_password_hash)
 
-    def keyword_list(self):
-        """Return normalized list of keywords (lowercase, stripped, unique keeping order)."""
-        if not self.keywords:
-            return []
-        seen = set()
-        out = []
-        for k in (kw.strip() for kw in self.keywords.split(",") if kw.strip()):
-            nk = k.lower()
-            if nk in seen:
-                continue
-            seen.add(nk)
-            out.append(nk)
-        return out
+class Category(models.Model):
+    """
+    Expense or income category for Entry rows.
+    Only used for expense/income entries.
+    """
+    CATEGORY_TYPE_CHOICES = [
+        ('expense', _('Expense')),
+        ('income', _('Income')),
+    ]
 
-    def set_keywords_from_list(self, kw_list):
-        """Store keywords (list) back to comma-separated string with normalization."""
-        cleaned = []
-        seen = set()
-        for k in kw_list:
-            if not k:
-                continue
-            nk = k.strip().lower()
-            if not nk or nk in seen:
-                continue
-            seen.add(nk)
-            cleaned.append(nk)
-        self.keywords = ", ".join(cleaned)
+    name = models.CharField(
+        max_length=100,
+        help_text=_("Category name, e.g. 'Food', 'Rent', 'Salary'")
+    )
+    category_type = models.CharField(
+        max_length=20,
+        choices=CATEGORY_TYPE_CHOICES,
+        default='expense',
+    )
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='finance_categories',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.get_category_type_display()})"
+
+    class Meta:
+        verbose_name = _("Category")
+        verbose_name_plural = _("Categories")
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['created_by', 'is_active']),
+            models.Index(fields=['created_by', 'category_type']),
+        ]
+
+
+class Loan(models.Model):
+    """
+    A loan with a fixed monthly EMI. Each month's payment is logged as
+    Entry(entry_type='loan_emi') by the user. No auto-scheduling.
+    """
+    name = models.CharField(max_length=100, help_text=_("e.g. 'Bike Loan'"))
+    principal = models.DecimalField(
+        max_digits=15, decimal_places=2,
+        help_text=_("Total principal - informational only"),
+    )
+    monthly_emi = models.DecimalField(
+        max_digits=15, decimal_places=2,
+        help_text=_("Fixed EMI amount per month, user-entered"),
+    )
+    account = models.ForeignKey(
+        'Account', on_delete=models.PROTECT, related_name='loans',
+    )
+    start_date = models.DateField()
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='loans')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _("Loan")
+        verbose_name_plural = _("Loans")
+        ordering = ['name']
+
+
+class Investment(models.Model):
+    """
+    An investment (e.g. SIP) with a fixed monthly contribution.
+    Each month's payment is logged as Entry(entry_type='investment_contribution').
+    """
+    name = models.CharField(max_length=100, help_text=_("e.g. 'SIP - Mutual Fund X'"))
+    monthly_amount = models.DecimalField(
+        max_digits=15, decimal_places=2,
+        help_text=_("Fixed monthly contribution, user-entered"),
+    )
+    account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='investments')
+    start_date = models.DateField()
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='investments')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _("Investment")
+        verbose_name_plural = _("Investments")
+        ordering = ['name']
+
+
+class SplitPlan(models.Model):
+    """
+    A lump-sum payment spread into N future monthly installments.
+    When saved, auto-generates N Entry(entry_type='split_installment') rows (Phase 5).
+    """
+    title = models.CharField(max_length=100, help_text=_("e.g. 'New Phone - No Cost EMI'"))
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2)
+    num_months = models.PositiveIntegerField(help_text=_("Number of installments"))
+    start_month = models.DateField(
+        help_text=_("First day of month when installments start")
+    )
+    account = models.ForeignKey('Account', on_delete=models.PROTECT, related_name='split_plans')
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='split_plans')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = _("Split Plan")
+        verbose_name_plural = _("Split Plans")
+        ordering = ['-created_at']
+
+
+class Entry(models.Model):
+    """
+    The single unified transaction ledger for all money movement.
+
+    entry_type determines what kind of entry this is:
+    - expense / income: regular transactions (category required)
+    - loan_emi: monthly loan payment (linked_loan required)
+    - investment_contribution: monthly SIP payment (linked_investment required)
+    - split_installment: future installment from a SplitPlan (linked_split required)
+    """
+    ENTRY_TYPE_CHOICES = [
+        ('expense', _('Expense')),
+        ('income', _('Income')),
+        ('loan_emi', _('Loan EMI')),
+        ('investment_contribution', _('Investment Contribution')),
+        ('split_installment', _('Split Installment')),
+    ]
+
+    account = models.ForeignKey(
+        Account, on_delete=models.PROTECT, related_name='entries',
+        help_text=_("Account this entry is charged to / credited from"),
+    )
+    entry_type = models.CharField(max_length=30, choices=ENTRY_TYPE_CHOICES, default='expense')
+    amount = models.DecimalField(
+        max_digits=15, decimal_places=2,
+        help_text=_("Always positive; direction is determined by entry_type"),
+    )
+    date = models.DateField()
+    category = models.ForeignKey(
+        Category, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='entries', help_text=_("Only for expense/income entries"),
+    )
+    note = models.CharField(max_length=255, blank=True)
+
+    linked_loan = models.ForeignKey(
+        Loan, on_delete=models.SET_NULL, null=True, blank=True, related_name='emi_entries',
+    )
+    linked_investment = models.ForeignKey(
+        Investment, on_delete=models.SET_NULL, null=True, blank=True, related_name='contribution_entries',
+    )
+    linked_split = models.ForeignKey(
+        SplitPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name='installment_entries',
+    )
+
+    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='entries')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.get_entry_type_display()} Rs.{self.amount} on {self.date}"
+
+    class Meta:
+        verbose_name = _("Entry")
+        verbose_name_plural = _("Entries")
+        ordering = ['-date', '-created_at']
+        indexes = [
+            models.Index(fields=['created_by', 'date']),
+            models.Index(fields=['created_by', 'entry_type']),
+            models.Index(fields=['created_by', 'account']),
+            models.Index(fields=['created_by', 'category']),
+        ]
+
+
+# ============================================================================
+# Phase 6: Ledger Models
+# ============================================================================
+
+class LedgerContact(models.Model):
+    """
+    A person or entity with whom the user has financial transactions (given/taken).
+    """
+    name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20, blank=True)
+    created_by = models.ForeignKey(
+        'auth.User', on_delete=models.CASCADE, related_name='ledger_contacts'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = _("Ledger Contact")
+        verbose_name_plural = _("Ledger Contacts")
+        ordering = ['name']
+
+
+class LedgerEntry(models.Model):
+    """
+    A specific ledger transaction (Given or Taken) with a contact.
+    """
+    TYPE_CHOICES = [
+        ('given', _('Given (You lent money)')),
+        ('taken', _('Taken (You borrowed money)')),
+    ]
+    STATUS_CHOICES = [
+        ('open', _('Open')),
+        ('settled', _('Settled')),
+    ]
+
+    contact = models.ForeignKey(
+        LedgerContact, on_delete=models.CASCADE, related_name='ledger_entries'
+    )
+    entry_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    date = models.DateField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
+    note = models.CharField(max_length=255, blank=True)
+    
+    # Track when the entry was marked as settled
+    settled_at = models.DateTimeField(null=True, blank=True)
+
+    created_by = models.ForeignKey(
+        'auth.User', on_delete=models.CASCADE, related_name='ledger_entries'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.get_entry_type_display()} Rs.{self.amount} with {self.contact.name}"
+
+    class Meta:
+        verbose_name = _("Ledger Entry")
+        verbose_name_plural = _("Ledger Entries")
+        ordering = ['-date', '-created_at']
+        indexes = [
+            models.Index(fields=['created_by', 'contact']),
+            models.Index(fields=['created_by', 'status']),
+        ]
+
+
+# ============================================================================
+# Phase 8: CSV Import Staging
+# ============================================================================
+
+class StagingEntry(models.Model):
+    """
+    Temporary table to hold parsed CSV rows before user reviews and commits them.
+    """
+    SOURCE_CHOICES = [
+        ('phonepe', _('PhonePe')),
+        ('gpay', _('Google Pay')),
+        ('other', _('Other')),
+    ]
+    STATUS_CHOICES = [
+        ('pending', _('Pending Review')),
+        ('committed', _('Committed')),
+        ('duplicate', _('Duplicate (Skipped)')),
+    ]
+
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES)
+    original_txn_id = models.CharField(
+        max_length=100, 
+        blank=True, 
+        help_text=_("Transaction ID from CSV to prevent duplicates")
+    )
+    
+    date = models.DateField()
+    amount = models.DecimalField(max_digits=15, decimal_places=2)
+    entry_type = models.CharField(max_length=30, choices=Entry.ENTRY_TYPE_CHOICES)
+    raw_description = models.CharField(max_length=500, blank=True)
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+
+    created_by = models.ForeignKey(
+        'auth.User', on_delete=models.CASCADE, related_name='staging_entries'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"[{self.get_status_display()}] {self.date} - Rs.{self.amount}"
+
+    class Meta:
+        verbose_name = _("Staging Entry")
+        verbose_name_plural = _("Staging Entries")
+        ordering = ['date', 'created_at']
+        indexes = [
+            models.Index(fields=['created_by', 'status']),
+            models.Index(fields=['original_txn_id']),
+        ]

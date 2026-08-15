@@ -1,0 +1,59 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block header %}{{ block.super }}{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+      
+      <div class="premium-card mb-4 overflow-hidden">
+        <div class="p-4" style="border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface);">
+          <h2 class="h4 fw-bold mb-1" style="color: var(--text-primary); letter-spacing: -0.5px;">Upload CSV Statement</h2>
+          <p class="small mb-0" style="color: var(--text-secondary);">Parse PhonePe or Google Pay statements into your ledger</p>
+        </div>
+        
+        <div class="p-4" style="background-color: var(--bg-surface);">
+          {% if messages %}
+            {% for msg in messages %}
+              <div class="alert alert-{{ msg.tags|default:'danger' }} small shadow-sm py-2" style="background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary);">
+                {{ msg }}
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="mb-4">
+              <label for="csv_file" class="form-label small fw-medium" style="color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Select CSV File</label>
+              <input class="form-control form-control-lg fw-medium" type="file" id="csv_file" name="csv_file" accept=".csv" required 
+                     style="background-color: var(--bg-input); border: 1px dashed var(--border-color); color: var(--text-primary);">
+            </div>
+            
+            <div class="d-flex gap-3">
+              <a href="{% url 'finance:entry_list' %}" class="btn btn-fintech-secondary flex-fill text-center py-3">Cancel</a>
+              <button type="submit" class="btn btn-fintech-primary flex-fill py-3">
+                <i class="fa-solid fa-cloud-arrow-up me-2"></i> Upload & Process
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+      
+      <!-- Info Box -->
+      <div class="premium-card p-4" style="background-color: var(--bg-input); border-left: 4px solid var(--accent-gold);">
+        <h6 class="fw-bold mb-3" style="color: var(--text-primary); letter-spacing: -0.5px;"><i class="fa-solid fa-shield-halved me-2" style="color: var(--accent-gold-dark);"></i> Safe Import Guarantee</h6>
+        <ul class="small mb-0 ps-3" style="color: var(--text-secondary); line-height: 1.6;">
+          <li class="mb-2"><strong style="color: var(--text-primary);">Duplicate Check:</strong> Exact Transaction IDs are matched to prevent double-logging.</li>
+          <li class="mb-2"><strong style="color: var(--text-primary);">Fuzzy Match:</strong> Transactions on the same day with the exact amount and type are safely skipped.</li>
+          <li><strong style="color: var(--text-primary);">Review Phase:</strong> Nothing is permanently saved until you review and confirm all rows on the next screen.</li>
+        </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+{% endblock %}

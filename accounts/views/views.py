@@ -23,13 +23,11 @@ from accounts.models import (
     UtilityModule,
     LedgerTransaction,
     RefreshToken,
-    Task,
     Transaction,
 )
 from accounts.services.module_registry import module_registry
 from accounts.services.security_services import security_service
 from accounts.utilitie_functions import convert_decimal, format_amount
-from accounts.views.view_reminder import calculate_reminder
 
 
 # ============================================================================
@@ -708,22 +706,6 @@ def dashboard(request):
         "income_sources": calculate_income_sources(transactions, user),
     }
 
-    # Get today's reminders
-    from accounts.views.view_reminder import calculate_reminder
-    todays_reminders = calculate_reminder(user)
-
-    # Get pending tasks till today
-    from datetime import date
-    today = date.today()
-    pending_tasks = Task.objects.filter(
-        created_by=user,
-        is_deleted=False,
-        status='Pending',
-        complete_by_date__lte=today
-    ).order_by('complete_by_date')[:10]  # Latest 10 pending tasks
-    
-
-
     context = {
         "data": json.dumps(analytics, default=convert_decimal),
         "financial_data": financial_data,
@@ -731,9 +713,6 @@ def dashboard(request):
         "emi_due_display": financial_data.get("EMI Due", "₹0"),
         "user_info": user_info,
         "user": user,
-        "todays_reminders": todays_reminders[:5],  # Show top 5 reminders
-        "pending_tasks": pending_tasks,
-        "today": today,
         "current_period": period,
         "period_label": date_range['label'],
     }
@@ -758,7 +737,6 @@ def utilities(request):
     user = request.user
 
     items = module_registry.get_modules_for_user(user)
-    reminder_count = len(calculate_reminder(user))
     counterparties = get_counter_parties(user)
 
     return render(
@@ -768,7 +746,6 @@ def utilities(request):
             "user": user,
             "items": items,
             "counterparties": counterparties,
-            "badge": reminder_count,
         },
     )
 
@@ -831,16 +808,13 @@ def profile(request):
 @login_required
 def update_profile(request):
     """
-    Handle profile picture upload and name update via AJAX.
-
-    Accepts POST requests with profile picture file and/or name update.
-    Deletes old profile picture before saving new one.
+    Handle name update via AJAX.
 
     Args:
         request: Django HTTP request object.
 
     Returns:
-        JsonResponse: Success/failure status with message and updated data.
+        JsonResponse: Success/failure status with message.
     """
     if request.method != "POST":
         return JsonResponse(
@@ -857,26 +831,8 @@ def update_profile(request):
         user.last_name = name_parts[1].strip() if len(name_parts) > 1 else ''
         user.save()
 
-    # Handle profile picture upload
-    if request.FILES.get("profile_picture"):
-        # Delete old picture if exists
-        if user.profile_picture:
-            user.profile_picture.delete(save=False)
+    return JsonResponse({"success": True, "message": "Profile updated successfully"})
 
-        user.profile_picture = request.FILES["profile_picture"]
-        user.save()
-
-        return JsonResponse(
-            {
-                "success": True,
-                "message": "Profile updated successfully",
-                "profile_picture_url": (
-                    user.profile_picture.url if user.profile_picture else None
-                ),
-            }
-        )
-
-    return JsonResponse({"success": True, "message": "Name updated successfully"})
 
 
 @login_required
@@ -902,61 +858,10 @@ def redirect_to_streamlit(request):
 @login_required
 def manual_backup(request):
     """
-    Manually trigger database backup (superuser only).
-    
-    Executes the backup_db management command programmatically.
-    Restricted to superusers only.
-    
-    Args:
-        request: Django HTTP request object
-        
-    Returns:
-        JsonResponse: Backup status and message
+    Manual backup has been removed as part of the finance-first rebuild.
+    The Google Drive backup feature has been removed per PROJECT_PLAN.md Section 1.3.
     """
     from django.contrib import messages
-    from django.core.management import call_command
-    from io import StringIO
-    import sys
-    
-    # Restrict to superusers only
-    if not request.user.is_superuser:
-        messages.error(request, "Access denied. Admin privileges required.")
-        return redirect('profile')
-    
-    try:
-        # Capture management command output
-        output = StringIO()
-        # Skip task reminders when manually triggered from UI
-        call_command('backup_db', stdout=output, skip_reminders=True)
-        
-        # Get the output
-        backup_output = output.getvalue()
-        
-        messages.success(request, "Database backup completed successfully!")
-        
-        # Return JSON if AJAX request
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Backup completed successfully',
-                'output': backup_output
-            })
-        
-        # Redirect to profile for normal requests
-        return redirect('profile')
-        
-    except Exception as e:
-        import traceback
-        error_details = traceback.format_exc()
-        
-        messages.error(request, f"Backup failed: {str(e)}")
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({
-                'status': 'error',
-                'message': str(e),
-                'details': error_details
-            }, status=500)
-        
-        return redirect('profile')
+    messages.info(request, "Manual backup is no longer available.")
+    return redirect('profile')
 

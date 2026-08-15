@@ -1,0 +1,122 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block header %}{{ block.super }}{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+
+  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-5 gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--text-primary); letter-spacing: -0.5px;">Review Import</h1>
+      <p class="small mb-0" style="color: var(--text-secondary);">Categorize transactions before saving them to your ledger</p>
+    </div>
+    <div class="d-flex gap-3">
+      <form method="post" action="{% url 'finance:import_cancel' %}" onsubmit="return confirm('Discard all pending imports?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-fintech-secondary">Discard All</button>
+      </form>
+      <button type="submit" form="review-form" class="btn btn-fintech-primary d-inline-flex align-items-center">
+        <i class="fa-solid fa-check-double me-2"></i> Commit Entries
+      </button>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-{{ msg.tags|default:'info' }} small shadow-sm py-2" style="background-color: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary);">
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if entries %}
+    <form method="post" action="{% url 'finance:import_commit' %}" id="review-form">
+      {% csrf_token %}
+      
+      <div class="premium-card overflow-hidden mb-5">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0" style="--bs-table-bg: transparent; --bs-table-hover-bg: var(--bg-input);">
+            <thead style="background-color: var(--bg-input); border-bottom: 1px solid var(--border-color);">
+              <tr>
+                <th class="border-0 text-uppercase small fw-bold ps-4 py-3" style="color: var(--text-secondary); letter-spacing: 0.5px;">Date</th>
+                <th class="border-0 text-uppercase small fw-bold py-3" style="color: var(--text-secondary); letter-spacing: 0.5px;">Details</th>
+                <th class="border-0 text-uppercase small fw-bold text-end py-3" style="color: var(--text-secondary); letter-spacing: 0.5px;">Amount</th>
+                <th class="border-0 text-uppercase small fw-bold py-3 ps-4" style="width: 220px; color: var(--text-secondary); letter-spacing: 0.5px;">Account</th>
+                <th class="border-0 text-uppercase small fw-bold py-3 pe-4" style="width: 220px; color: var(--text-secondary); letter-spacing: 0.5px;">Category</th>
+              </tr>
+            </thead>
+            <tbody class="border-top-0">
+              {% for entry in entries %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                  <!-- Hidden ID -->
+                  <input type="hidden" name="staging_id" value="{{ entry.id }}">
+                  
+                  <td class="ps-4 text-nowrap">
+                    <div class="fw-bold tabular-nums" style="color: var(--text-primary); letter-spacing: -0.5px;">{{ entry.date|date:"d M y" }}</div>
+                  </td>
+                  
+                  <td class="py-3">
+                    <div class="fw-bold mb-1" style="letter-spacing: -0.5px; {% if entry.entry_type == 'income' %}color: var(--color-income);{% else %}color: var(--color-expense);{% endif %}">
+                      {% if entry.entry_type == 'income' %}
+                        <i class="fa-solid fa-arrow-down me-1 small opacity-75"></i> Income
+                      {% else %}
+                        <i class="fa-solid fa-arrow-up me-1 small opacity-75"></i> Expense
+                      {% endif %}
+                    </div>
+                    <div class="small fw-medium text-truncate" style="max-width: 280px; color: var(--text-secondary);" title="{{ entry.raw_description }}">
+                      {{ entry.raw_description|default:"(No Description)" }}
+                    </div>
+                    {% if entry.original_txn_id %}
+                      <div class="mt-1 font-monospace text-uppercase" style="font-size: 0.65rem; color: var(--text-tertiary); letter-spacing: 0.5px;">ID: {{ entry.original_txn_id }}</div>
+                    {% endif %}
+                  </td>
+                  
+                  <td class="text-end">
+                    <div class="fs-5 fw-bold tabular-nums text-nowrap {% if entry.entry_type == 'income' %}text-income{% else %}text-expense{% endif %}" style="letter-spacing: -0.5px;">
+                      ₹{{ entry.amount|floatformat:2 }}
+                    </div>
+                  </td>
+                  
+                  <td class="ps-4">
+                    <select name="account_id" class="form-select form-select-sm fw-medium" required style="background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary);">
+                      {% for acc in accounts %}
+                        <option value="{{ acc.pk }}" {% if acc.pk == default_account.pk %}selected{% endif %}>{{ acc.name }}</option>
+                      {% endfor %}
+                    </select>
+                  </td>
+                  
+                  <td class="pe-4">
+                    <select name="category_id" class="form-select form-select-sm fw-medium" style="background-color: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-primary);">
+                      <option value="">— Uncategorized —</option>
+                      {% if entry.entry_type == 'expense' %}
+                        {% for cat in expense_categories %}
+                          <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                        {% endfor %}
+                      {% else %}
+                        {% for cat in income_categories %}
+                          <option value="{{ cat.pk }}">{{ cat.name }}</option>
+                        {% endfor %}
+                      {% endif %}
+                    </select>
+                    <!-- Hidden note field so we can submit the note too -->
+                    <input type="hidden" name="note" value="{{ entry.raw_description|truncatechars:50 }}">
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+    </form>
+  {% else %}
+    <div class="premium-card p-5 text-center">
+      <i class="fa-solid fa-check-circle fa-3x mb-3" style="color: var(--border-color);"></i>
+      <h5 class="fw-medium mb-4" style="color: var(--text-primary);">No pending imports</h5>
+      <a href="{% url 'finance:entry_list' %}" class="btn btn-fintech-primary">Back to Entries</a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

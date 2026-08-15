@@ -1,0 +1,94 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block header %}{{ block.super }}{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+
+  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-5 gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--text-primary); letter-spacing: -0.5px;">Loans</h1>
+      <p class="small mb-0" style="color: var(--text-secondary);">Track your loans and quickly log EMI payments</p>
+    </div>
+    <a href="{% url 'finance:loan_create' %}" class="btn btn-fintech-primary d-inline-flex align-items-center">
+      <i class="fa-solid fa-plus me-2"></i> Add Loan
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-{{ msg.tags|default:'info' }} small shadow-sm py-2" style="background-color: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary);">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if loan_data %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {% for item in loan_data %}
+        {% with loan=item.loan count=item.emi_count %}
+        <div class="col">
+          <div class="premium-card h-100 d-flex flex-column p-0" style="{% if not loan.is_active %}opacity: 0.7;{% endif %}">
+            
+            <div class="p-4 flex-grow-1">
+              <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <h5 class="fw-bold mb-0" style="color: var(--text-primary); letter-spacing: -0.5px;">{{ loan.name }}</h5>
+                    {% if not loan.is_active %}<span class="badge bg-input text-secondary border">Inactive</span>{% endif %}
+                  </div>
+                  <div class="small fw-medium" style="color: var(--text-tertiary);">
+                    From: {{ loan.account.name }}
+                  </div>
+                </div>
+                <a href="{% url 'finance:loan_edit' loan.pk %}" class="btn btn-sm d-flex justify-content-center align-items-center" style="width: 32px; height: 32px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 50%; color: var(--text-secondary); transition: all 0.2s;" onmouseover="this.style.color='var(--text-primary)'; this.style.borderColor='var(--text-tertiary)';" onmouseout="this.style.color='var(--text-secondary)'; this.style.borderColor='var(--border-color)';">
+                  <i class="fa-solid fa-pen" style="font-size: 0.75rem;"></i>
+                </a>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small fw-medium" style="color: var(--text-secondary);">Principal:</span>
+                <span class="fw-bold tabular-nums" style="color: var(--text-primary); letter-spacing: -0.5px;">₹{{ loan.principal|default:"0.00"|floatformat:0 }}</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="small fw-medium" style="color: var(--text-secondary);">Monthly EMI:</span>
+                <span class="fs-5 fw-bold tabular-nums text-expense" style="letter-spacing: -0.5px;">₹{{ loan.monthly_emi|floatformat:0 }}</span>
+              </div>
+
+              <div class="d-flex justify-content-between align-items-center pt-3" style="border-top: 1px dashed var(--border-color);">
+                <span class="small text-uppercase fw-bold" style="color: var(--text-tertiary); letter-spacing: 0.5px;">EMIs Logged</span>
+                <span class="fw-bold fs-5 tabular-nums" style="color: var(--text-primary);">{{ count }}</span>
+              </div>
+            </div>
+
+            <form method="post" action="{% url 'finance:loan_log_emi' loan.pk %}" class="mt-auto m-0 p-0">
+              {% csrf_token %}
+              <button type="submit" class="btn w-100 fw-bold py-3 text-uppercase" 
+                      style="letter-spacing: 0.5px; font-size: 0.85rem; border-radius: 0 0 var(--radius-lg) var(--radius-lg); {% if loan.is_active %}background: var(--gradient-signature); color: #1a1a1a;{% else %}background-color: var(--bg-input); color: var(--text-tertiary); cursor: not-allowed; border-top: 1px solid var(--border-color);{% endif %}"
+                      {% if not loan.is_active %}disabled{% endif %}>
+                <i class="fa-solid fa-bolt me-2"></i> Log EMI Now
+              </button>
+            </form>
+            
+          </div>
+        </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5">
+      <div class="mb-3">
+        <i class="fa-solid fa-building-columns fa-2x" style="color: var(--border-color);"></i>
+      </div>
+      <h5 class="fw-medium mb-1" style="color: var(--text-primary);">No loans tracked</h5>
+      <p class="small mb-4" style="color: var(--text-secondary);">Set up your loans to easily log monthly EMI payments.</p>
+      <a href="{% url 'finance:loan_create' %}" class="btn btn-fintech-primary">
+        Add Loan
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

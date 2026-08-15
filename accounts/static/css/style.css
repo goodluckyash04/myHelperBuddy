@@ -1,153 +1,210 @@
 :root {
-    --primary: #b0a36f;
-    /* --primary: #635c3dba; */
-    --primary-dark: #201b05;
-    --primary-dark-secondary: #9a8217;
-    --primary-dark-tertiary: #b0a36f;
-    --primary-dark-four: #635c3dba;
-    --secondary: #f6f6f6;
-    --primary-light: #b0a36f82
+  /* ==========================================================================
+     V3 Bespoke "Private Ledger" Design System Tokens
+     Derived from the gold/champagne signature logo.
+     ========================================================================== */
+  
+  /* Light Mode (Warm off-white base) */
+  --bg-base: #faf9f7;       /* Warm off-white canvas */
+  --bg-surface: #ffffff;    /* Pure white for cards */
+  --bg-input: #f4f3ef;      /* Warm subtle input background */
+  
+  --text-primary: #1c1b1a;  /* Warm near-black */
+  --text-secondary: #5a5753;/* Muted warm grey */
+  --text-tertiary: #928f8a; /* Low emphasis */
+  
+  --border-color: #e8e6e1;  /* Subtle warm borders */
+  
+  /* The Signature Accents */
+  --accent-gold-dark: #b08d3a;
+  --accent-gold: #d4af37;
+  --accent-champagne: #f3e5ab;
+  --gradient-signature: linear-gradient(135deg, var(--accent-gold-dark), var(--accent-gold), var(--accent-champagne));
+  
+  --accent-dark: #1c1b1a;
+  
+  /* Semantic Colors (Warm, cohesive, not neon) */
+  --color-income: #276340;  /* Deep, trustworthy forest green */
+  --color-expense: #94322d; /* Deep, muted brick red */
+  
+  /* Shadows - Extremely soft, slightly warm */
+  --shadow-sm: 0 1px 2px 0 rgba(28, 27, 26, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(28, 27, 26, 0.04), 0 2px 4px -1px rgba(28, 27, 26, 0.02);
+  --shadow-lg: 0 12px 30px -4px rgba(28, 27, 26, 0.05), 0 4px 10px -2px rgba(28, 27, 26, 0.02);
+  
+  /* Radius */
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  
+  /* Type Pairing */
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Montserrat', sans-serif;
 }
 
-* {
-    font-family: "Montserrat";
+/* Dark Mode Tokens (Warm charcoal) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-base: #141312;     /* Deep warm charcoal */
+    --bg-surface: #1c1b1a;  /* Lighter charcoal for cards */
+    --bg-input: #2a2826;
+    
+    --text-primary: #f2efe9;
+    --text-secondary: #aba7a1;
+    --text-tertiary: #75726e;
+    
+    --border-color: #33312e;
+    
+    --color-income: #3d8a5c;
+    --color-expense: #c2534d;
+    
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 12px 30px -4px rgba(0, 0, 0, 0.5);
+  }
 }
 
-/* Slim scrollbar with header color */
+/* ==========================================================================
+   Global Reset & Base
+   ========================================================================== */
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, .font-serif, .balance-figure {
+  font-family: var(--font-serif);
+}
+
+/* Numeric alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ==========================================================================
+   Fintech Components
+   ========================================================================== */
+
+/* Premium Card */
+.premium-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* Interactive Card Hover */
+a.premium-card:hover, 
+button.premium-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+
+/* Primary Signature CTA Button */
+.btn-fintech-primary {
+  background: var(--gradient-signature);
+  color: #1a1a1a;
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  padding: 0.6rem 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+.btn-fintech-primary:hover {
+  background: linear-gradient(135deg, var(--accent-gold), var(--accent-champagne), #fff5d1);
+  color: #111;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.btn-fintech-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.3);
+}
+
+/* Secondary Button */
+.btn-fintech-secondary {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  padding: 0.6rem 1.5rem;
+  transition: all 0.2s ease;
+}
+.btn-fintech-secondary:hover {
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+}
+
+/* Inputs */
+.form-control-fintech, .form-select-fintech {
+  background-color: var(--bg-input);
+  border: 1px solid transparent;
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+.form-control-fintech:focus, .form-select-fintech:focus {
+  background-color: var(--bg-surface);
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 3px rgba(176, 163, 111, 0.2);
+  outline: none;
+}
+.form-control-fintech::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* Semantic Text Colors */
+.text-income {
+  color: var(--color-income) !important;
+}
+.text-expense {
+  color: var(--color-expense) !important;
+}
+
+/* Pulse Animation for FAB */
+@keyframes fintech-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(32, 27, 5, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(32, 27, 5, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(32, 27, 5, 0); }
+}
+.fab-pulse {
+  animation: fintech-pulse 2s infinite;
+}
+
+/* Floating Navbar */
+.navbar-fintech {
+  background-color: rgba(255, 255, 255, 0.85); /* Will need a dark mode equivalent via JS or media query later, but this is a start */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+}
+@media (prefers-color-scheme: dark) {
+  .navbar-fintech {
+    background-color: rgba(31, 41, 55, 0.85);
+  }
+}
+
+/* Slim scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
-  height: 6px; /* For horizontal scrollbar */
+  height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--bg-base);
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #b0a36f; /* Header color */
+  background: var(--border-color);
   border-radius: 10px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #a1905e; /* Slightly darker shade for hover effect */
+  background: var(--text-tertiary);
 }
-
-/* For Firefox */
-.scrollable {
-  scrollbar-width: thin;
-  scrollbar-color: #b0a36f #f1f1f1;
-}
-
-  
-
-  .nav-text a:not(.profile a){
-    color: var(--secondary);
-    font-family: "Rubik Vinyl", "serif";
-}
-
-  .nav-text a:hover{
-    color: var(--primary-dark);
-    font-family: "Rubik Vinyl", "serif";
-  }
-
-  .card-design {
-    background-color: white;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .custom-btn-danger {
-    color: #7c0a0a; 
-    background-color: white;
-    border: 1px solid transparent;  
-    transition: all 0.3s ease;  
-}
-
-/* Hover Effect */
-.custom-btn-danger:hover {
-    background-color: #7c0a0a; 
-    color: white;               
-    transform: scale(1.05);      
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); 
-}
-
-
-.custom-btn-primary {
-  color: var(--primary); 
-  background-color: white;
-  border: 1px solid;  
-  transition: all 0.3s ease;  
-}
-
-/* Hover Effect */
-.custom-btn-primary:hover {
-  background-color: var(--primary); 
-  color: white;               
-  transform: scale(1.05);      
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); 
-}
-
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: 'Roboto', sans-serif; /* Example of font-family */
-}
-
-th, td {
-  padding: 8px 12px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-}
-
-th {
-  background-color: #f8f9fa;
-  font-weight: bold;
-  color: rgb(16, 0, 0);
-}
-
-tr:hover {
-  background-color: #f1f1f1;
-}
-
-
-.form-check-input {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  border-color:var(--primary-dark) ;
-  background-color: #fff; 
-  transition: background-color 0.3s ease;
-}
-
-.form-check-input:checked {
-  background-color: var(--primary); 
-  border-color:var(--primary-dark) ;
-}
-
-.form-check-input:checked::before {
-  color: #fff; /* Checkmark color */
-  border-color:var(--primary-dark) ;
-}
-
-.form-check-input:focus {
-  border-color: var(--primary-dark);
-  outline: none;
-  box-shadow: none;
-}
-
-.form-select:focus {
-  border-color: var(--primary-dark);
-  outline: none;
-  box-shadow: none;
-}
-
-
-.form-control:focus {
-  border-color: var(--primary-dark);  /* Blue color for focus */
-  box-shadow: 0 0 5px var(--primary-dark);  /* Subtle glow effect */
-  transition: border-color 0.3s, box-shadow 0.3s;
-}
-

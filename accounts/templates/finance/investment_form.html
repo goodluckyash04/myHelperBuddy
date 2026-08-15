@@ -1,0 +1,95 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block header %}{{ block.super }}{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'finance:investment_list' %}">Investments</a></li>
+      <li class="breadcrumb-item active">
+        {% if mode == 'create' %}New Investment{% else %}Edit: {{ investment.name }}{% endif %}
+      </li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+          <h2 class="h5 fw-bold mb-0">
+            {% if mode == 'create' %}Add Investment{% else %}Edit Investment{% endif %}
+          </h2>
+        </div>
+        <div class="card-body p-4">
+
+          {% if messages %}
+            {% for msg in messages %}
+              <div class="alert alert-{{ msg.tags|default:'danger' }} small">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label for="inv-name" class="form-label fw-medium">Investment Name</label>
+              <input type="text" id="inv-name" name="name" class="form-control"
+                     placeholder="e.g. SIP - Mutual Fund X"
+                     value="{{ investment.name|default:form_data.name|default:'' }}" required autofocus>
+            </div>
+
+            <div class="mb-3">
+              <label for="inv-amount" class="form-label fw-medium">Monthly Amount (₹)</label>
+              <input type="number" id="inv-amount" name="monthly_amount" class="form-control"
+                     step="0.01" min="0" required
+                     value="{{ investment.monthly_amount|default:form_data.monthly_amount|default:'' }}">
+            </div>
+
+            <div class="mb-3">
+              <label for="inv-account" class="form-label fw-medium">Payment Account</label>
+              <select id="inv-account" name="account_id" class="form-select" required>
+                <option value="">— Select account —</option>
+                {% for acc in accounts %}
+                  <option value="{{ acc.pk }}"
+                    {% if investment and investment.account_id == acc.pk %}selected
+                    {% elif form_data.account_id == acc.pk|stringformat:'s' %}selected
+                    {% endif %}>
+                    {{ acc.name }}
+                  </option>
+                {% endfor %}
+              </select>
+              <div class="form-text">Account from which the SIP is deducted</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="start_date" class="form-label fw-medium">Start Date</label>
+                <input type="date" id="start_date" name="start_date" class="form-control"
+                       value="{{ investment.start_date|date:'Y-m-d'|default:form_data.start_date|default:today }}">
+            </div>
+
+            {% if mode == 'edit' %}
+              <div class="mb-4 form-check">
+                <input type="checkbox" id="inv-active" name="is_active" class="form-check-input"
+                       {% if investment.is_active %}checked{% endif %}>
+                <label for="inv-active" class="form-check-label">Investment is Active</label>
+              </div>
+            {% endif %}
+
+            <div class="d-flex gap-2 mt-2">
+              <button type="submit" class="btn btn-primary flex-fill">
+                {% if mode == 'create' %}Create Investment{% else %}Save Changes{% endif %}
+              </button>
+              <a href="{% url 'finance:investment_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

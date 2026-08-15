@@ -1,7 +1,7 @@
 # ============================================================================
 # myHelperBuddy - Python Package Requirements
 # Django 4.2.x | Python 3.12+
-# Last reviewed: 2026-05-24
+# Finance-first rebuild — updated 2026-08-15
 # ============================================================================
 
 # Core Django Framework
@@ -12,35 +12,18 @@ asgiref==3.7.2
 # Used in: mysite/settings.py via decouple.config()
 python-decouple==3.8
 
-# Authentication & Authorization
-# Used in: settings.py INSTALLED_APPS (allauth, allauth.account, etc.)
+# Authentication & Authorization (Google OAuth via allauth)
 # NOTE: PyPI package name is "django-allauth", imports as "allauth"
 django-allauth==0.57.0
 
-# Google Services Integration
-# Used in: accounts/services/google_services.py
-#   - google.auth, google.oauth2, googleapiclient.discovery, googleapiclient.http
-google-auth==2.23.4
-google-auth-oauthlib==1.1.0
-google-auth-httplib2==0.1.1
-google-api-python-client==2.108.0
-
-# HTTP Requests
-# Used in: accounts/services/google_services.py (requests.post)
-requests==2.31.0
-urllib3==2.1.0
-
 # Security & Cryptography
 # Used in: accounts/services/security_services.py (cryptography.fernet.Fernet)
+# Used in: accounts/decorators.py
 cryptography==41.0.7
 
-# Image Processing
-# Required by Django ImageField (accounts/models.py - UserProfile.profile_picture)
-Pillow
-
 # Date & Time Utilities
-# python-dateutil: transitive dep of google-auth & allauth; kept for explicit pinning
-# pytz: used internally by Django for timezone-aware datetimes (settings: USE_TZ=True)
+# python-dateutil: used by dateutil.relativedelta in views
+# pytz: used internally by Django for timezone-aware datetimes (USE_TZ=True)
 python-dateutil==2.8.2
 pytz==2023.3
 
@@ -48,27 +31,11 @@ pytz==2023.3
 charset-normalizer==3.3.2
 idna==3.6
 
-# OAuth2 Dependencies (transitive deps of google-auth-oauthlib and allauth)
+# OAuth2 Dependencies (transitive deps of allauth)
 oauthlib==3.2.2
 requests-oauthlib==1.3.1
+requests==2.31.0
+urllib3==2.1.0
 
-# Protocol Buffers (transitive dep of google-api-python-client)
-protobuf==4.25.1
-
-# RSA Cryptography (transitive deps of google-auth)
-rsa==4.9
-pyasn1==0.5.1
-pyasn1-modules==0.3.0
-
-# Caching (transitive dep of google-auth)
-cachetools==5.3.2
-
-# HTTP Parsing (transitive dep of google-api-python-client)
-httplib2==0.22.0
-pyparsing==3.1.1
-
-# JSON Web Tokens (transitive dep of django-allauth & google-auth)
+# JSON Web Tokens (transitive dep of django-allauth)
 PyJWT==2.8.0
-
-# Six: Python 2/3 compatibility shim (required by some google-auth deps)
-six==1.16.0

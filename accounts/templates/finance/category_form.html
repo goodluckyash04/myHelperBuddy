@@ -1,0 +1,99 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block header %}{{ block.super }}{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'finance:category_list' %}">Categories</a></li>
+      <li class="breadcrumb-item active">
+        {% if mode == 'create' %}New Category{% else %}Edit: {{ category.name }}{% endif %}
+      </li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+          <h2 class="h5 fw-bold mb-0">
+            {% if mode == 'create' %}Add Category{% else %}Edit Category{% endif %}
+          </h2>
+        </div>
+        <div class="card-body p-4">
+
+          {% if messages %}
+            {% for msg in messages %}
+              <div class="alert alert-{{ msg.tags|default:'danger' }} small">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label for="cat-name" class="form-label fw-medium">Category Name</label>
+              <input
+                type="text"
+                id="cat-name"
+                name="name"
+                class="form-control"
+                placeholder="e.g. Food, Rent, Salary"
+                value="{{ category.name|default:'' }}"
+                required
+                autofocus
+              >
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-medium">Type</label>
+              <div class="d-flex gap-3">
+                {% for val, label in category_types %}
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="radio"
+                      name="category_type"
+                      id="cat-type-{{ val }}"
+                      value="{{ val }}"
+                      {% if category and category.category_type == val %}checked
+                      {% elif not category and val == 'expense' %}checked
+                      {% endif %}
+                    >
+                    <label class="form-check-label" for="cat-type-{{ val }}">{{ label }}</label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            {% if mode == 'edit' %}
+              <div class="mb-3 form-check">
+                <input
+                  type="checkbox"
+                  id="cat-active"
+                  name="is_active"
+                  class="form-check-input"
+                  {% if category.is_active %}checked{% endif %}
+                >
+                <label for="cat-active" class="form-check-label">Active</label>
+              </div>
+            {% endif %}
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary flex-fill">
+                {% if mode == 'create' %}Create Category{% else %}Save Changes{% endif %}
+              </button>
+              <a href="{% url 'finance:category_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block header %}{{ block.super }}{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+
+  <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-5 gap-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1" style="color: var(--text-primary); letter-spacing: -0.5px;">Ledger Contacts</h1>
+      <p class="small mb-0" style="color: var(--text-secondary);">Track who you owe and who owes you</p>
+    </div>
+    <a href="{% url 'finance:ledger_contact_create' %}" class="btn btn-fintech-primary d-inline-flex align-items-center">
+      <i class="fa-solid fa-plus me-2"></i> Add Contact
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-{{ msg.tags|default:'info' }} small shadow-sm py-2" style="background-color: var(--bg-surface); border: 1px solid var(--border-color); color: var(--text-primary);">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if contact_data %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+      {% for item in contact_data %}
+        {% with contact=item.contact given=item.given taken=item.taken net=item.net_balance %}
+        <div class="col">
+          <a href="{% url 'finance:ledger_detail' contact.pk %}" class="premium-card d-block p-4 h-100 text-decoration-none">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+              <div>
+                <h5 class="fw-bold mb-1" style="color: var(--text-primary); letter-spacing: -0.5px;">{{ contact.name }}</h5>
+                {% if contact.phone %}
+                  <div class="small fw-medium tabular-nums" style="color: var(--text-tertiary);"><i class="fa-solid fa-phone me-1 opacity-75"></i> {{ contact.phone }}</div>
+                {% endif %}
+              </div>
+              <div class="rounded-circle d-flex justify-content-center align-items-center" style="width: 32px; height: 32px; background-color: var(--bg-input);">
+                <i class="fa-solid fa-chevron-right small" style="color: var(--text-tertiary);"></i>
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="small fw-medium" style="color: var(--text-secondary);">You Gave:</span>
+              <span class="fw-bold tabular-nums text-expense">₹{{ given|floatformat:0 }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <span class="small fw-medium" style="color: var(--text-secondary);">You Took:</span>
+              <span class="fw-bold tabular-nums text-income">₹{{ taken|floatformat:0 }}</span>
+            </div>
+            
+            <div class="pt-3" style="border-top: 1px dashed var(--border-color);">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="small fw-bold text-uppercase" style="color: var(--text-tertiary); letter-spacing: 0.5px;">Net Balance</span>
+                {% if net > 0 %}
+                  <span class="fw-bold fs-5 tabular-nums text-expense" style="letter-spacing: -0.5px;">You Owe: ₹{{ net|floatformat:0 }}</span>
+                {% elif net < 0 %}
+                  <span class="fw-bold fs-5 tabular-nums text-income" style="letter-spacing: -0.5px;">Owes You: ₹{{ net|default:"0"|stringformat:"s"|slice:"1:"|floatformat:0 }}</span>
+                {% else %}
+                  <span class="fw-bold fs-5 tabular-nums" style="color: var(--text-tertiary); letter-spacing: -0.5px;">Settled</span>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+        </div>
+        {% endwith %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5">
+      <div class="mb-3">
+        <i class="fa-solid fa-users fa-2x" style="color: var(--border-color);"></i>
+      </div>
+      <h5 class="fw-medium mb-1" style="color: var(--text-primary);">No ledger contacts yet</h5>
+      <p class="small mb-4" style="color: var(--text-secondary);">Add a contact to start tracking split expenses or loans.</p>
+      <a href="{% url 'finance:ledger_contact_create' %}" class="btn btn-fintech-primary">
+        Add First Contact
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

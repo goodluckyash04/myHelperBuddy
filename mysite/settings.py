@@ -40,8 +40,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',  # Required for allauth
-    'accounts.middleware.SimpleRateLimitMiddleware',  # Rate limiting for sensitive endpoints
 ]
+
 
 MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
@@ -172,17 +172,9 @@ SITE_URL = config('SITE_URL')
 EMAIL_SERVICE = config('EMAIL_SERVICE', default=False, cast=bool)
 STREAMLIT_URL = config('STREAMLIT_URL')
 
-# Google Drive API settings
-CLIENT_ID = config("CLIENT_ID")
-CLIENT_SECRET = config("CLIENT_SECRET")
-REDIRECT_URI = config("REDIRECT_URI")
-REFRESH_TOKEN = config("REFRESH_TOKEN")
-TOKEN_URI = config("TOKEN_URI")
-BACKUP_FOLDER_ID = config("BACKUP_FOLDER_ID")
 
-# Document Manager settings
-MAX_TOTAL_BYTES_PER_USER = config("MAX_TOTAL_BYTES_PER_USER")
-TOTAL_DB_FILE_SIZE = config("TOTAL_DB_FILE_SIZE")
+
+
 
 
 # Security middleware settings

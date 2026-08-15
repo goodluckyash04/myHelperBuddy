@@ -1,0 +1,97 @@
+{% extends 'header.html' %}
+{% load static %}
+
+{% block header %}{{ block.super }}{% endblock %}
+
+{% block body %}
+<div class="container py-4">
+
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{% url 'finance:account_list' %}">Accounts</a></li>
+      <li class="breadcrumb-item active">
+        {% if mode == 'create' %}New Account{% else %}Edit: {{ account.name }}{% endif %}
+      </li>
+    </ol>
+  </nav>
+
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+          <h2 class="h5 fw-bold mb-0">
+            {% if mode == 'create' %}Add Account{% else %}Edit Account{% endif %}
+          </h2>
+        </div>
+        <div class="card-body p-4">
+
+          {% if messages %}
+            {% for msg in messages %}
+              <div class="alert alert-{{ msg.tags|default:'danger' }} small">{{ msg }}</div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+
+            <!-- Name -->
+            <div class="mb-3">
+              <label for="acc-name" class="form-label fw-medium">Account Name</label>
+              <input
+                type="text"
+                id="acc-name"
+                name="name"
+                class="form-control"
+                placeholder="e.g. HDFC Bank, Cash, Paytm Wallet"
+                value="{{ account.name|default:form_data.name|default:'' }}"
+                required
+                autofocus
+              >
+            </div>
+
+            <!-- Account Type -->
+            <div class="mb-3">
+              <label for="acc-type" class="form-label fw-medium">Account Type</label>
+              <select id="acc-type" name="account_type" class="form-select">
+                {% for val, label in account_types %}
+                  <option value="{{ val }}"
+                    {% if account and account.account_type == val %}selected
+                    {% elif form_data and form_data.account_type == val %}selected
+                    {% endif %}>
+                    {{ label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Active toggle (edit only) -->
+            {% if mode == 'edit' %}
+              <div class="mb-3 form-check">
+                <input
+                  type="checkbox"
+                  id="acc-active"
+                  name="is_active"
+                  class="form-check-input"
+                  {% if account.is_active %}checked{% endif %}
+                >
+                <label for="acc-active" class="form-check-label">Active</label>
+              </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary flex-fill">
+                {% if mode == 'create' %}Create Account{% else %}Save Changes{% endif %}
+              </button>
+              <a href="{% url 'finance:account_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
