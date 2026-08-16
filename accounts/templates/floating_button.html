@@ -5,51 +5,18 @@
     <link rel="stylesheet" href="{% static 'css/floatingButton.css' %}">
     {% endblock style %}
 
+  <!-- Floating button — opens global Quick Entry modal (new finance system) -->
+  <a href="javascript:void(0)"
+     onclick="openGlobalQuickEntry()"
+     class="floating-button"
+     id="floatingBtn"
+     title="Quick Add Entry"
+     aria-label="Quick Add Transaction">
+    <i class="fa-solid fa-plus" style="color:var(--secondary)"></i>
+  </a>
 
-  <!-- Floating button -->
-  <button class="floating-button" id="floatingBtn" onclick="toggleActivityList()"><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
-
-  <!-- Activity list -->
-  <div class="activity-list" id="activityList">
-    <ul>
-      {% if m_type == 'transaction' or m_type == '*'  %}
-      <a data-bs-toggle="modal" data-bs-target="#expensemodal" ><li>Transaction</li></a>
-      {% endif %}
-      {% if m_type == 'finance' or m_type == '*'  %}
-      <a data-bs-toggle="modal" data-bs-target="#financeModal" ><li>Financial Entry</li></a>
-      {% endif %}
-      {% if m_type == 'task' or m_type == '*'  %}
-      <a data-bs-toggle="modal" data-bs-target="#taskmodal" ><li>Task</li></a>
-      {% endif %}
-      {% if m_type == 'ledger' or m_type == '*'  %}
-      <a data-bs-toggle="modal" data-bs-target="#ledgerModal" ><li>Ledger Entry</li></a>
-      {% endif %}
-      {% if m_type == 'reminder' or m_type == '*'  %}
-      <a data-bs-toggle="modal" data-bs-target="#reminderModal" ><li>Reminder</li></a>
-      {% endif %}
-    </ul>
-  </div>
-
-  {% include 'transaction/transactionModal.html' %}
-  {% include 'financial_instrument/addFinanceModal.html' %}
-  {% include 'task/taskModal.html' %}
-  {% include 'ledger_transaction/ledgerTransactionModal.html' with counterparties=counterparties %} 
-  {% include 'reminder/createReminderModal.html' %} 
   {% endblock body %}
 
   {% block script %}
-  <script src='{% static "js/transaction.js" %}'></script>
-
-  <script>
-    // Function to toggle the activity list visibility
-    function toggleActivityList() {
-      var activityList = document.getElementById('activityList');
-      if (activityList.style.display === 'none' || activityList.style.display === '') {
-        activityList.style.display = 'block';
-      } else {
-        activityList.style.display = 'none';
-      }
-    }
-  </script>
-    {% endblock script %}
+  {% endblock script %}
 

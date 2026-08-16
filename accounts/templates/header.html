@@ -139,6 +139,13 @@
               </li>
               <li><hr class="dropdown-divider"></li>
               <li>
+                <a class="dropdown-item" href="#" id="theme-toggle-btn" onclick="toggleAppTheme(event)">
+                  <i class="fa-solid fa-circle-half-stroke me-2" style="width: 14px; color: var(--text-tertiary);"></i>
+                  <span id="theme-toggle-label">Toggle Theme</span>
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
                 <a class="dropdown-item text-expense" href="/logout/">
                   <i class="fa-solid fa-right-from-bracket me-2" style="width: 14px;"></i>Sign Out
                 </a>
@@ -172,6 +179,29 @@
       dd.addEventListener('shown.bs.dropdown',  () => { if (chevron) chevron.style.transform = 'rotate(180deg)'; });
       dd.addEventListener('hidden.bs.dropdown', () => { if (chevron) chevron.style.transform = 'rotate(0)'; });
     });
+
+    // Update theme toggle label on load
+    updateThemeLabel();
   });
+
+  // ── Theme Toggle ─────────────────────────────────────────────────────────
+  function toggleAppTheme(e) {
+    e.preventDefault();
+    const html = document.getElementById('html-root');
+    const current = html.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    localStorage.setItem('mhb_theme', next);
+    updateThemeLabel();
+  }
+
+  function updateThemeLabel() {
+    const html = document.getElementById('html-root');
+    const current = html ? html.getAttribute('data-theme') : 'dark';
+    const label = document.getElementById('theme-toggle-label');
+    if (label) {
+      label.textContent = current === 'dark' ? '☀ Light Mode' : '🌙 Dark Mode';
+    }
+  }
 </script>
 {% endblock script %}

@@ -8,11 +8,10 @@
   {% endblock header %}
 </header>
 
-<body>
-  <div style="min-height: 80vh; padding-bottom: 120px;">
-    {% block body %}
-    {% endblock body %}
-  </div>
+<div style="min-height: 80vh; padding-bottom: 120px;">
+  {% block body %}
+  {% endblock body %}
+</div>
 
   {% if user.is_authenticated %}
   <!-- ── Global Quick Entry FAB ── -->
@@ -123,7 +122,5 @@
   }
   </script>
   {% endif %}
-
-</body>
 
 {% endblock mainbody %}

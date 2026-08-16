@@ -60,7 +60,7 @@
         <div class="d-flex flex-column gap-2">
 
           <a href="javascript:void(0)" onclick="openGlobalQuickEntry()" class="d-flex align-items-center gap-3 p-3 interactive" style="
-            background: linear-gradient(135deg, #1e1a0e 0%, #1a1917 100%);
+            background: var(--gold-soft);
             border: 1px solid var(--border-accent);
             border-radius: var(--radius-md);
             text-decoration: none;
@@ -100,6 +100,21 @@
         </div>
       </div>
 
+      <!-- Top Expense Categories -->
+      {% if top_categories %}
+      <div class="animate-in animate-in-delay-2">
+        <p class="db-section-label"><i class="fa-solid fa-chart-pie"></i> Top Expenses This Month</p>
+        <div class="premium-card p-0 overflow-hidden">
+          {% for cat in top_categories %}
+          <div class="px-4 py-2 d-flex justify-content-between align-items-center" style="{% if not forloop.last %}border-bottom:1px solid var(--border-color);{% endif %}">
+            <span style="font-size:0.85rem;font-weight:600;color:var(--text-primary);">{{ cat.category__name }}</span>
+            <span class="tabular-nums fw-bold" style="color:var(--color-expense);font-size:0.875rem;">₹{{ cat.total|floatformat:0 }}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
       <!-- Ledger Summary -->
       <div class="animate-in animate-in-delay-2">
         <p class="db-section-label"><i class="fa-solid fa-users"></i> Ledger Summary</p>
@@ -132,8 +147,45 @@
 
     </div>
 
-    <!-- ── RIGHT COL: Active Split Plans + Loan/Investment shortcuts ── -->
+    <!-- ── RIGHT COL: Action Items + Split Plans + Loan/Investment shortcuts ── -->
     <div class="col-12 col-lg-7 d-flex flex-column gap-4">
+
+      <!-- Action Items: Loans/Investments needing this month's log -->
+      {% if loans_needing_emi or investments_needing_log %}
+      <div class="animate-in animate-in-delay-1">
+        <p class="db-section-label"><i class="fa-solid fa-circle-exclamation" style="color:var(--warning);"></i> Action Required This Month</p>
+        <div class="d-flex flex-column gap-2">
+          {% for loan in loans_needing_emi %}
+          <div class="premium-card p-3 d-flex justify-content-between align-items-center" style="border-left: 3px solid var(--color-expense);">
+            <div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;">{{ loan.name }}</div>
+              <div style="font-size:0.72rem;color:var(--text-tertiary);">Loan EMI · ₹{{ loan.monthly_emi|floatformat:0 }}/mo</div>
+            </div>
+            <form method="post" action="{% url 'finance:loan_log_emi' loan.pk %}" class="ms-3">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-fintech-primary btn-sm py-1 px-3" style="font-size:0.8rem;">
+                <i class="fa-solid fa-bolt me-1"></i>Log EMI
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+          {% for inv in investments_needing_log %}
+          <div class="premium-card p-3 d-flex justify-content-between align-items-center" style="border-left: 3px solid var(--color-invest);">
+            <div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;">{{ inv.name }}</div>
+              <div style="font-size:0.72rem;color:var(--text-tertiary);">Investment · ₹{{ inv.monthly_amount|floatformat:0 }}/mo</div>
+            </div>
+            <form method="post" action="{% url 'finance:investment_log_contribution' inv.pk %}" class="ms-3">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm py-1 px-3" style="font-size:0.8rem;background:var(--color-invest);color:white;border:none;border-radius:var(--radius-sm);">
+                <i class="fa-solid fa-bolt me-1"></i>Log
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
 
       <!-- Active Split Plans -->
       <div class="animate-in animate-in-delay-2">

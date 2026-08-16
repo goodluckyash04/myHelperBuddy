@@ -129,10 +129,21 @@ def ledger_detail(request: HttpRequest, pk: int) -> HttpResponse:
     given = totals['total_given'] or 0
     taken = totals['total_taken'] or 0
     net_balance = taken - given
-    
+
+    # Paginate entries (50 per page for ledger detail)
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    paginator = Paginator(entries, 50)
+    page_number = request.GET.get('page', 1)
+    try:
+        page_obj = paginator.page(page_number)
+    except (EmptyPage, PageNotAnInteger):
+        page_obj = paginator.page(1)
+
     return render(request, 'finance/ledger_detail.html', {
         'contact': contact,
-        'entries': entries,
+        'entries': page_obj,
+        'page_obj': page_obj,
+        'paginator': paginator,
         'given': given,
         'taken': taken,
         'net_balance': net_balance,

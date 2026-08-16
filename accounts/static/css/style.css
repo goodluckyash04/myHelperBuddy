@@ -79,6 +79,60 @@
 }
 
 /* --------------------------------------------------------------------------
+   2b. Light Theme Overrides
+   -------------------------------------------------------------------------- */
+[data-theme="light"] {
+  /* Backgrounds — warm linen / ivory stack */
+  --bg-base:      #fafaf8;   /* warm off-white canvas */
+  --bg-surface:   #ffffff;   /* pure white cards */
+  --bg-elevated:  #f4f3ef;   /* slightly tinted elevated panels */
+  --bg-input:     #edecea;   /* input fields */
+  --bg-overlay:   rgba(250, 250, 248, 0.7);
+
+  /* Text */
+  --text-primary:   #1a1917;   /* dark near-black */
+  --text-secondary: #4a4540;   /* warm medium grey */
+  --text-tertiary:  #8a8278;   /* light muted */
+  --text-on-accent: #1a1200;   /* stays same on gold */
+
+  /* Gold accent — same family, slightly deeper for light-mode contrast */
+  --gold:           #b0923e;   /* slightly richer for light bg */
+  --gold-bright:    #c9a84c;   /* hover brightens to original gold */
+  --gold-dim:       #7a6229;
+  --gold-soft:      rgba(176,146,62,0.10);
+  --gold-glow:      rgba(176,146,62,0.22);
+  --gold-gradient:  linear-gradient(135deg, #b0923e 0%, #7a6229 100%);
+  --gold-gradient-bright: linear-gradient(135deg, #c9a84c 0%, #b0923e 100%);
+
+  /* Borders */
+  --border-color:   #dedad5;
+  --border-accent:  rgba(176,146,62,0.28);
+
+  /* Semantic — slightly adjusted for readability on light bg */
+  --color-income:   #16a34a;  /* deeper green */
+  --color-expense:  #dc2626;  /* deeper red */
+  --color-invest:   #2563eb;  /* deeper blue */
+  --color-saving:   #b0923e;
+  --color-split:    #ea580c;
+  --color-emi:      #9333ea;
+  --success:        #16a34a;
+  --danger:         #dc2626;
+  --warning:        #d97706;
+  --info:           #2563eb;
+
+  /* Shadows — lighter, warm */
+  --shadow-xs:  0 1px 2px rgba(0,0,0,0.06);
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md:  0 8px 24px rgba(0,0,0,0.10);
+  --shadow-lg:  0 20px 60px rgba(0,0,0,0.12);
+  --shadow-gold: 0 4px 20px rgba(176,146,62,0.18);
+  --shadow-gold-lg: 0 8px 40px rgba(176,146,62,0.22);
+
+  /* Focus ring */
+  --focus-ring: 0 0 0 3px rgba(176,146,62,0.22);
+}
+
+/* --------------------------------------------------------------------------
    3. Global Reset & Base
    -------------------------------------------------------------------------- */
 *, *::before, *::after {
@@ -188,10 +242,10 @@ a:hover { color: var(--gold-bright); }
 .animate-in-delay-5 { animation-delay: 0.40s; }
 
 /* --------------------------------------------------------------------------
-   6. Navigation — Glassmorphism Dark
+   6. Navigation — Adaptive Glassmorphism
    -------------------------------------------------------------------------- */
 .navbar-fintech {
-  background: rgba(15, 14, 13, 0.88);
+  background: var(--bg-overlay);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-color);

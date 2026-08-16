@@ -235,8 +235,19 @@ def entry_list(request: HttpRequest) -> HttpResponse:
     accounts = Account.objects.filter(created_by=user, is_active=True).order_by('name')
     categories = Category.objects.filter(created_by=user, is_active=True).order_by('name')
 
+    # --- Pagination (25 rows per page) ---
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    paginator = Paginator(entries, 25)
+    page_number = request.GET.get('page', 1)
+    try:
+        page_obj = paginator.page(page_number)
+    except (EmptyPage, PageNotAnInteger):
+        page_obj = paginator.page(1)
+
     return render(request, 'finance/entry_list.html', {
-        'entries': entries[:200],  # cap at 200 for now; pagination in later phase
+        'entries': page_obj,
+        'page_obj': page_obj,
+        'paginator': paginator,
         'accounts': accounts,
         'categories': categories,
         'total_expense': total_expense,

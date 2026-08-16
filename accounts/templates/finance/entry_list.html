@@ -162,5 +162,58 @@
     {% endif %}
   </div>
 
+  {% if paginator.num_pages > 1 %}
+  <!-- Pagination Controls -->
+  <div class="d-flex align-items-center justify-content-between mt-4">
+    <div class="small fw-medium" style="color: var(--text-tertiary);">
+      Page {{ page_obj.number }} of {{ paginator.num_pages }}
+      &nbsp;·&nbsp;
+      {{ paginator.count }} total entr{{ paginator.count|pluralize:"y,ies" }}
+    </div>
+    <nav aria-label="Entry pagination">
+      <ul class="pagination pagination-sm mb-0 gap-1">
+        {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link btn-fintech-secondary"
+               href="?period={{ filters.period }}&type={{ filters.type }}&account={{ filters.account }}&category={{ filters.category }}&page={{ page_obj.previous_page_number }}"
+               style="border-radius: var(--radius-sm); background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-color);">
+              ← Prev
+            </a>
+          </li>
+        {% endif %}
+
+        {% for num in paginator.page_range %}
+          {% if page_obj.number == num %}
+            <li class="page-item active">
+              <span class="page-link"
+                    style="border-radius: var(--radius-sm); background: var(--gold-gradient); color: var(--text-on-accent); border: none; font-weight: 700;">
+                {{ num }}
+              </span>
+            </li>
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item">
+              <a class="page-link"
+                 href="?period={{ filters.period }}&type={{ filters.type }}&account={{ filters.account }}&category={{ filters.category }}&page={{ num }}"
+                 style="border-radius: var(--radius-sm); background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                {{ num }}
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link"
+               href="?period={{ filters.period }}&type={{ filters.type }}&account={{ filters.account }}&category={{ filters.category }}&page={{ page_obj.next_page_number }}"
+               style="border-radius: var(--radius-sm); background: var(--bg-elevated); color: var(--text-secondary); border: 1px solid var(--border-color);">
+              Next →
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+    </nav>
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}

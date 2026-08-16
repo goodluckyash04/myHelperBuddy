@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" id="html-root">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -71,7 +71,17 @@
     </script>
 
     {% block style %}{% endblock style %}
+
+    <!-- ── Theme bootstrap (runs before paint to avoid flash) ── -->
+    <script>
+      (function() {
+        var saved = localStorage.getItem('mhb_theme') || 'dark';
+        document.getElementById('html-root').setAttribute('data-theme', saved);
+      })();
+    </script>
   </head>
+
+  <body>
 
   {% block mainbody %}{% endblock mainbody %}
   {% block authbody %}{% endblock authbody %}
@@ -94,4 +104,6 @@
   </script>
 
   {% block script %}{% endblock script %}
+
+  </body>
 </html>
