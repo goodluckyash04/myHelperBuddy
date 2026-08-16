@@ -7,25 +7,24 @@
     <div class="row justify-content-center">
       <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
 
-        <form method="post" action="/signup/" class="p-4 rounded shadow-sm" style="background: white;" id="signup-form">
+        <form method="post" action="/signup/" class="premium-card p-4 p-md-5" id="signup-form">
 
           {% csrf_token %}
           <h2 class="text-center mb-3">
-            <a class="text-decoration-none" style="color: var(--primary); font-family: 'Rubik Vinyl', cursive; font-weight: 500; font-size: 2.5rem;" href="/">MyHelperBuddy</a>
+            <a class="text-decoration-none" style="color: var(--accent-gold-dark); font-family: var(--font-serif); font-weight: 700; font-size: 2.5rem; letter-spacing: -0.05em;" href="/">MyHelperBuddy</a>
           </h2>
-          <p class="fs-5 text-center mb-4" style="color: var(--primary); font-weight: 500;">Create Account</p>
+          <p class="fs-5 text-center mb-4" style="color: var(--text-secondary); font-weight: 500;">Create Account</p>
 
           <!-- Name Field -->
           <div class="mb-3">
             <input
               type="text"
               placeholder="Full Name"
-              class="form-control form-control-lg"
+              class="form-control form-control-fintech form-control-lg"
               name="name"
               id="name"
               value="{{ name }}"
               required
-              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
             />
           </div>
 
@@ -34,12 +33,11 @@
             <input
               type="text"
               placeholder="Username"
-              class="form-control form-control-lg"
+              class="form-control form-control-fintech form-control-lg"
               name="username"
               id="username"
               value="{{ username }}"
               required
-              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
             />
             <small class="field-hint"><i class="fa-solid fa-circle-info"></i> At least 3 characters</small>
           </div>
@@ -47,26 +45,25 @@
           <!-- Email Field with auto-send OTP -->
           <div class="mb-3">
             <label for="email" class="form-label">Email Address</label>
-            <div class="input-group" style="border-radius: 0.5rem; border: 1.5px solid #ddd;">
+            <div class="input-group" style="border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-input);">
               <input
                 type="email"
                 placeholder="your@email.com"
-                class="form-control form-control-lg border-0"
+                class="form-control form-control-lg border-0 bg-transparent"
                 name="email"
                 id="email"
                 value="{{ email }}"
                 required
-                style="font-size: medium; border-radius: 0.5rem 0 0 0.5rem;"
               />
               <button
                 type="button"
-                class="input-group-text bg-white border-0"
+                class="input-group-text bg-transparent border-0"
                 id="send-otp-btn"
-                style="border-radius: 0 0.5rem 0.5rem 0; cursor: pointer;"
+                style="cursor: pointer;"
                 onclick="sendOTP()"
                 title="Send OTP"
               >
-                <i class="fa-regular fa-paper-plane" style="color: var(--primary);"></i>
+                <i class="fa-regular fa-paper-plane" style="color: var(--text-secondary);"></i>
               </button>
             </div>
             <small class="field-hint"><i class="fa-solid fa-circle-info"></i> We'll send you a verification code</small>
@@ -102,11 +99,10 @@
             <input
               type="password"
               placeholder="Create a strong password"
-              class="form-control form-control-lg"
+              class="form-control form-control-fintech form-control-lg"
               name="password"
               id="password"
               required
-              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
             />
             <div class="password-strength-container mt-2" style="display: none;">
               <div class="password-strength-bg" style="height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden;">
@@ -123,11 +119,10 @@
             <input
               type="password"
               placeholder="Re-enter your password"
-              class="form-control form-control-lg"
+              class="form-control form-control-fintech form-control-lg"
               name="rpassword"
               id="rpassword"
               required
-              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
             />
           </div>
 
@@ -139,11 +134,10 @@
           {% endif %}
 
           <!-- Submit Button -->
-          <div class="d-grid mb-3">
+          <div class="d-grid mb-3 mt-4">
             <button
               type="submit"
-              class="btn btn-primary btn-lg"
-              style="background-color: var(--primary); border: none; border-radius: 0.5rem; font-weight: 600;"
+              class="btn btn-fintech-primary btn-lg"
             >
               CREATE ACCOUNT
             </button>
@@ -176,7 +170,7 @@
           <!-- Sign In Link -->
           <div class="text-center">
             <a href="/login" class="text-secondary text-decoration-none" style="font-weight: 500;">
-              Already have an account? <b style="color: var(--primary);">Sign In</b>
+              Already have an account? <b style="color: var(--accent-gold-dark);">Sign In</b>
             </a>
           </div>
 

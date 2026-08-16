@@ -17,7 +17,7 @@
       </nav>
       <div class="d-flex align-items-center gap-2">
         <h1 class="h3 fw-bold mb-0" style="color: var(--text-primary); letter-spacing: -0.5px;">{{ contact.name }}</h1>
-        <a href="{% url 'finance:ledger_contact_edit' contact.pk %}" class="btn btn-sm btn-light rounded-circle" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-pen small" style="color: var(--text-tertiary);"></i></a>
+        <a href="{% url 'finance:ledger_contact_edit' contact.pk %}" class="btn btn-sm" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 50%; transition: all var(--transition-fast);" onmouseover="this.style.borderColor='var(--border-accent)';" onmouseout="this.style.borderColor='var(--border-color)';"><i class="fa-solid fa-pen small" style="color: var(--text-tertiary);"></i></a>
       </div>
       {% if contact.phone %}
         <p class="small mb-0 mt-1 tabular-nums" style="color: var(--text-secondary);"><i class="fa-solid fa-phone me-1 opacity-75"></i> {{ contact.phone }}</p>

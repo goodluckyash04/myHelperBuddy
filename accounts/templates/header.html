@@ -1,53 +1,148 @@
 {% extends 'body.html' %}
 {% load static %}
 {% block header %}
-  <!-- Fonts (Montserrat & Playfair Display) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
 
-<nav class="navbar navbar-expand-lg py-3 mb-4" style="background-color: var(--bg-surface); border-bottom: 1px solid var(--border-color); box-shadow: var(--shadow-sm);">
+<!-- Inter + Playfair Display are loaded in index.html already -->
+
+<nav class="navbar navbar-expand-lg navbar-fintech py-0" style="height: 64px;">
   <div class="container-fluid px-4">
-    <!-- Logo -->
+
+    <!-- ── Logo ── -->
     <a class="navbar-brand d-flex align-items-center gap-3" href="/dashboard/">
-      <!-- Since logo background is described as a warm gradient with a white pen, we just display the image here. -->
-      <img src="{% static 'image/myHelperBuddyLogo.png' %}" alt="myHelperBuddy" style="height:44px; width: auto; border-radius: 50%; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-      <span class="d-none d-sm-inline fw-bold fs-5" style="font-family: var(--font-serif); color: var(--text-primary); letter-spacing: -0.5px;">myHelperBuddy</span>
+      <div style="
+        width: 38px; height: 38px;
+        border-radius: 10px;
+        background: var(--gold-soft);
+        border: 1px solid var(--border-accent);
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
+        box-shadow: var(--shadow-xs);
+        flex-shrink: 0;
+      ">
+        <img src="{% static 'image/myHelperBuddyLogo.png' %}"
+             alt="myHelperBuddy"
+             style="height: 26px; width: auto; filter: brightness(0.85);" />
+      </div>
+      <span class="d-none d-sm-inline" style="
+        font-family: var(--font-serif);
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: -0.03em;
+      ">myHelper<span style="color: var(--gold);">Buddy</span></span>
     </a>
-    
-    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <i class="fa-solid fa-bars fa-lg" style="color: var(--text-primary);"></i>
+
+    <!-- ── Toggle (mobile) ── -->
+    <button class="navbar-toggler border-0 shadow-none ms-auto me-2"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+      <i class="fa-solid fa-bars" style="color: var(--text-secondary); font-size: 1.1rem;"></i>
     </button>
-    
+
+    <!-- ── Links ── -->
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-1 py-3 py-lg-0">
         <li class="nav-item">
-          <a class="nav-link px-3 fw-medium" href="/dashboard/" style="color: var(--text-primary);">
-            <i class="fa-solid fa-chart-pie me-2 d-lg-none opacity-75"></i> Dashboard
+          <a class="nav-link" href="{% url 'dashboard' %}">
+            <i class="fa-solid fa-gauge-high me-1 d-lg-none opacity-60"></i>Dashboard
           </a>
         </li>
         <li class="nav-item">
-          <a class="nav-link px-3 fw-medium" href="{% url 'finance:entry_list' %}" style="color: var(--text-primary);">
-            <i class="fa-solid fa-list me-2 d-lg-none opacity-75"></i> Entries
+          <a class="nav-link" href="{% url 'finance:entry_list' %}">
+            <i class="fa-solid fa-receipt me-1 d-lg-none opacity-60"></i>Entries
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link px-3 fw-medium" href="/utilities/" style="color: var(--text-primary);">
-            <i class="fa-solid fa-screwdriver-wrench me-2 d-lg-none opacity-75"></i> Utils
-          </a>
-        </li>
-        
-        <li class="nav-item ms-lg-4 mt-3 mt-lg-0">
+        <!-- Finance Tools Dropdown -->
+        <li class="nav-item ms-lg-1">
           <div class="dropdown">
-            <a class="btn d-flex align-items-center gap-2 px-3 py-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: var(--bg-input); border-radius: var(--radius-full); border: 1px solid var(--border-color); color: var(--text-primary);">
-              <i class="fa-solid fa-circle-user text-secondary"></i>
-              <span class="fw-bold small">{{ user.first_name|default:user.username }}</span>
+            <a class="nav-link d-flex align-items-center gap-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-solid fa-grid-2 me-1 d-lg-none opacity-60"></i>Tools
+              <i class="fa-solid fa-chevron-down tools-chevron" style="font-size:0.6rem;color:var(--text-tertiary);transition:transform 0.2s;"></i>
             </a>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm border mt-2 py-2" style="border-radius: var(--radius-lg); border-color: var(--border-color); min-width: 220px; background-color: var(--bg-surface);">
-              <li><a class="dropdown-item py-2 small fw-medium" style="color: var(--text-primary);" href="/profile/"><i class="fa-solid fa-user me-3 text-secondary"></i> Profile</a></li>
-              <li><a class="dropdown-item py-2 small fw-medium" style="color: var(--text-primary);" href="/changePassword/"><i class="fa-solid fa-key me-3 text-secondary"></i> Change Password</a></li>
-              <li><hr class="dropdown-divider mx-3 my-2" style="border-color: var(--border-color);"></li>
-              <li><a class="dropdown-item py-2 small fw-bold text-expense" href="/logout/"><i class="fa-solid fa-right-from-bracket me-3"></i> Logout</a></li>
+            <ul class="dropdown-menu dropdown-menu-end mt-2 py-1" style="min-width:200px;">
+              <li>
+                <a class="dropdown-item" href="{% url 'finance:loan_list' %}">
+                  <i class="fa-solid fa-building-columns me-2" style="width:14px;color:var(--color-expense);"></i>Loans &amp; EMI
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'finance:investment_list' %}">
+                  <i class="fa-solid fa-chart-line me-2" style="width:14px;color:var(--color-invest);"></i>Investments
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'finance:split_plan_list' %}">
+                  <i class="fa-solid fa-layer-group me-2" style="width:14px;color:var(--color-split);"></i>Split Plans
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item" href="{% url 'finance:ledger_contact_list' %}">
+                  <i class="fa-solid fa-users me-2" style="width:14px;color:var(--gold);"></i>Ledger
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'finance:import_upload' %}">
+                  <i class="fa-solid fa-file-csv me-2" style="width:14px;color:var(--text-tertiary);"></i>Import CSV
+                </a>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <!-- ── User Dropdown ── -->
+        <li class="nav-item ms-lg-3 mt-2 mt-lg-0">
+          <div class="dropdown">
+            <a class="btn d-flex align-items-center gap-2"
+               href="#"
+               role="button"
+               data-bs-toggle="dropdown"
+               aria-expanded="false">
+              <div style="
+                width: 26px; height: 26px; border-radius: 50%;
+                background: var(--gold-soft);
+                border: 1.5px solid var(--border-accent);
+                display: flex; align-items: center; justify-content: center;
+                font-size: 0.75rem; color: var(--gold); font-weight: 700;
+              ">
+                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+              </div>
+              <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-primary);">
+                {{ user.first_name|default:user.username }}
+              </span>
+              <i class="fa-solid fa-chevron-down" style="font-size: 0.65rem; color: var(--text-tertiary); transition: transform 0.2s;"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end mt-2 py-1"
+                style="min-width: 200px;">
+              <!-- User info header -->
+              <li>
+                <div style="padding: 0.75rem 0.875rem 0.5rem; border-bottom: 1px solid var(--border-color); margin-bottom: 0.3rem;">
+                  <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); line-height: 1.2;">
+                    {{ user.first_name }} {{ user.last_name }}
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--text-tertiary);">{{ user.email }}</div>
+                </div>
+              </li>
+              <li>
+                <a class="dropdown-item" href="/profile/">
+                  <i class="fa-solid fa-user me-2" style="width: 14px; color: var(--text-tertiary);"></i>Profile
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="/changePassword/">
+                  <i class="fa-solid fa-key me-2" style="width: 14px; color: var(--text-tertiary);"></i>Change Password
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item text-expense" href="/logout/">
+                  <i class="fa-solid fa-right-from-bracket me-2" style="width: 14px;"></i>Sign Out
+                </a>
+              </li>
             </ul>
           </div>
         </li>
@@ -60,4 +155,23 @@
 {% endblock header %}
 
 {% block script %}
+<script>
+  // Highlight active nav link
+  document.addEventListener('DOMContentLoaded', () => {
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('.navbar-fintech .nav-link').forEach(link => {
+      if (currentPath === link.getAttribute('href') ||
+          (link.getAttribute('href') !== '/' && currentPath.startsWith(link.getAttribute('href')))) {
+        link.classList.add('active');
+      }
+    });
+    // Rotate chevron on dropdown open
+    const dropdowns = document.querySelectorAll('.navbar-fintech .dropdown');
+    dropdowns.forEach(dd => {
+      const chevron = dd.querySelector('.fa-chevron-down');
+      dd.addEventListener('shown.bs.dropdown',  () => { if (chevron) chevron.style.transform = 'rotate(180deg)'; });
+      dd.addEventListener('hidden.bs.dropdown', () => { if (chevron) chevron.style.transform = 'rotate(0)'; });
+    });
+  });
+</script>
 {% endblock script %}

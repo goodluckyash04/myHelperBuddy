@@ -62,7 +62,7 @@
             <form method="post" action="{% url 'finance:investment_log_contribution' inv.pk %}" class="mt-auto m-0 p-0">
               {% csrf_token %}
               <button type="submit" class="btn w-100 fw-bold py-3 text-uppercase" 
-                      style="letter-spacing: 0.5px; font-size: 0.85rem; border-radius: 0 0 var(--radius-lg) var(--radius-lg); {% if inv.is_active %}background: var(--gradient-signature); color: #1a1a1a;{% else %}background-color: var(--bg-input); color: var(--text-tertiary); cursor: not-allowed; border-top: 1px solid var(--border-color);{% endif %}"
+                      style="letter-spacing: 0.5px; font-size: 0.85rem; border-radius: 0 0 var(--radius-lg) var(--radius-lg); {% if inv.is_active %}background: var(--gold-gradient); color: var(--text-on-accent);{% else %}background-color: var(--bg-input); color: var(--text-tertiary); cursor: not-allowed; border-top: 1px solid var(--border-color);{% endif %}"
                       {% if not inv.is_active %}disabled{% endif %}>
                 <i class="fa-solid fa-bolt me-2"></i> Log Contribution
               </button>

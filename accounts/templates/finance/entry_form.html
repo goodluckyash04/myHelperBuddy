@@ -9,7 +9,7 @@
   <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb small">
       <li class="breadcrumb-item"><a href="{% url 'finance:entry_list' %}" class="text-decoration-none text-secondary">Entries</a></li>
-      <li class="breadcrumb-item active text-primary fw-medium" aria-current="page">
+      <li class="breadcrumb-item active fw-medium" style="color: var(--gold-dim);" aria-current="page">
         {% if mode == 'create' %}New Entry{% else %}Edit Entry{% endif %}
       </li>
     </ol>
@@ -26,7 +26,7 @@
         <div id="quick-entry-form-wrapper">
           {% if messages %}
             {% for msg in messages %}
-              <div class="alert alert-{{ msg.tags|default:'danger' }} small py-2">{{ msg }}</div>
+              <div class="mb-3" style="padding: 0.6rem 0.875rem; border-radius: var(--radius-md); font-size: 0.82rem; background: var(--bg-elevated); border: 1px solid var(--border-color); color: var(--text-primary);">{{ msg }}</div>
             {% endfor %}
           {% endif %}
 
@@ -55,7 +55,7 @@
             <!-- Entry Type Toggle (Pill style) -->
             <div class="mb-4">
               <label class="form-label fw-medium small mb-2" style="color: var(--text-secondary);">Transaction Type</label>
-              <div class="d-flex bg-input rounded-3 p-1" style="background-color: var(--bg-input);">
+              <div class="d-flex rounded-3 p-1 mb-0" style="background-color: var(--bg-input);">
                 <input type="radio" class="btn-check" name="entry_type" id="type-expense" value="expense" {% if mode == 'create' or entry.entry_type == 'expense' %}checked{% endif %}>
                 <label class="btn w-50 fw-medium border-0 m-0 py-2" for="type-expense" id="lbl-expense" style="border-radius: 6px; transition: all 0.2s;">
                   Expense

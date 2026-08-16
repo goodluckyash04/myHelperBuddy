@@ -1,31 +1,22 @@
-  .chart-canvas {
-      width: 100%;
-      max-width: 600px;
-      height: 300px;
-  }
+/* Chart canvas sizing */
+.chart-canvas {
+  width: 100%;
+  max-width: 600px;
+  height: 300px;
+}
 
-  /* Styling for Task List */
-  .list-group-item {
-      border: none;
-      padding: 10px 15px;
-      background-color: #f8f9fa;
-      margin-bottom: 10px;
-  }
-
-  .list-group-item:hover {
-      background-color: #e9ecef;
-      cursor: pointer;
-  }
-
-  .form-check-input {
-      width: 20px;
-      height: 20px;
-  }
-
-  .form-check-label {
-      font-size: 16px;
-  }
-
-  h5 {
-      font-size: 20px;
-  }
+/* Dark list group items */
+.list-group-item {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.list-group-item:hover {
+  background: var(--bg-input);
+  border-color: var(--border-accent);
+  cursor: pointer;
+}

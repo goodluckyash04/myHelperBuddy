@@ -1,12 +1,45 @@
 {% if messages %}
-    <div class="alert-container" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 9999;">
-        {% for message in messages %}
-            <div class="alert alert-dismissible fade show m-2 py-3 text-center {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}" role="alert" id="autoCloseAlert"
-                 style="max-width: 500px; margin: 0 auto; font-size: 0.9rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); background-color: #ffffff; opacity: 1; transition: opacity 0.3s ease;">
-                <strong style="font-weight: 500; color:var(--primary-dark-secondary)">{{ message }}</strong>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" 
-                        style="font-size: 0.8rem; color: rgba(0, 0, 0, 0.5);" onclick="this.parentElement.style.opacity = '0'; setTimeout(() => this.parentElement.classList.add('d-none'), 300);"></button>
-            </div>
-        {% endfor %}
+<div style="position: fixed; top: 80px; right: 1.25rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.6rem; pointer-events: none; max-width: 420px;">
+  {% for message in messages %}
+  <div
+    class="alert alert-dismissible fade show"
+    id="autoCloseAlert"
+    role="alert"
+    style="
+      pointer-events: all;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid
+        {% if message.tags == 'success' %}var(--color-income)
+        {% elif message.tags == 'error' %}var(--color-expense)
+        {% elif message.tags == 'warning' %}var(--warning)
+        {% else %}var(--gold){% endif %};
+      border-radius: var(--radius-md);
+      padding: 0.875rem 1.25rem;
+      color: var(--text-primary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-md);
+      animation: fadeSlideIn 0.3s ease both;
+      min-width: 260px;
+    "
+  >
+    <div class="d-flex align-items-center gap-2">
+      <i class="fa-solid
+        {% if message.tags == 'success' %}fa-circle-check" style="color: var(--color-income)
+        {% elif message.tags == 'error' %}fa-circle-xmark" style="color: var(--color-expense)
+        {% elif message.tags == 'warning' %}fa-triangle-exclamation" style="color: var(--warning)
+        {% else %}fa-circle-info" style="color: var(--gold){% endif %}; font-size: 1rem; flex-shrink: 0;"></i>
+      <span style="flex: 1;">{{ message }}</span>
+      <button type="button"
+              class="btn-close ms-2"
+              data-bs-dismiss="alert"
+              aria-label="Close"
+              style="font-size: 0.7rem; flex-shrink: 0;"
+              onclick="this.closest('.alert').style.opacity='0'; setTimeout(()=>this.closest('.alert').remove(), 300);">
+      </button>
     </div>
+  </div>
+  {% endfor %}
+</div>
 {% endif %}

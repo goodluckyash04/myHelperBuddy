@@ -50,16 +50,19 @@ function showEmptyState(canvasId, message, icon = 'fa-inbox') {
 }
 
 
-// Color palette
+// Color palette — dark theme
 const colors = {
-  income: '#10b981',
-  expense: '#ef4444',
-  savings: '#3b82f6',
-  primary: 'rgba(176, 163, 111, 1)',
-  primaryLight: 'rgba(176, 163, 111, 0.2)',
+  income:  '#4ade80',
+  expense: '#f87171',
+  savings: '#60a5fa',
+  primary: '#c9a84c',
+  primaryLight: 'rgba(201,168,76,0.15)',
+  grid: 'rgba(255,255,255,0.06)',
+  tick: 'rgba(255,255,255,0.45)',
+  legend: 'rgba(255,255,255,0.6)',
   categories: [
-    '#f76c5e', '#a1e6c6', '#9b7bbf', '#f1c40f', '#1abc9c',
-    '#e67e22', '#7f8c8d', '#d1b2a1', '#f5a623', '#8e8b3b'
+    '#f87171', '#4ade80', '#a78bfa', '#fbbf24', '#34d399',
+    '#fb923c', '#60a5fa', '#e879f9', '#f472b6', '#c9a84c'
   ]
 };
 
@@ -155,6 +158,7 @@ new Chart(document.getElementById('cashFlowChart'), {
         labels: {
           usePointStyle: true,
           padding: 15,
+          color: colors.legend,
           font: { size: 12 }
         }
       },
@@ -164,18 +168,16 @@ new Chart(document.getElementById('cashFlowChart'), {
       y: {
         beginAtZero: true,
         ticks: {
+          color: colors.tick,
           callback: function (value) {
             return '₹' + value.toLocaleString('en-IN');
           }
         },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
-        }
+        grid: { color: colors.grid }
       },
       x: {
-        grid: {
-          display: false
-        }
+        ticks: { color: colors.tick },
+        grid: { display: false }
       }
     }
   }
@@ -191,7 +193,7 @@ new Chart(document.getElementById('expenseCategoryChart'), {
       data: Object.values(category_wise_data),
       backgroundColor: colors.categories,
       borderWidth: 2,
-      borderColor: '#fff'
+      borderColor: '#1a1917'
     }]
   },
   options: {
@@ -204,18 +206,19 @@ new Chart(document.getElementById('expenseCategoryChart'), {
         labels: {
           boxWidth: 12,
           padding: 8,
+          color: colors.legend,
           font: {
             size: window.innerWidth < 768 ? 9 : 11
           },
           generateLabels: function (chart) {
-            const data = chart.data;
-            if (data.labels.length && data.datasets.length) {
-              return data.labels.map((label, i) => {
-                const value = data.datasets[0].data[i];
-                const formattedValue = '₹' + (value / 1000).toFixed(1) + 'k';
+            const d = chart.data;
+            if (d.labels.length && d.datasets.length) {
+              return d.labels.map((label, i) => {
+                const value = d.datasets[0].data[i];
+                const fv = '₹' + (value / 1000).toFixed(1) + 'k';
                 return {
-                  text: window.innerWidth < 768 ? label.substring(0, 10) : `${label}: ${formattedValue}`,
-                  fillStyle: data.datasets[0].backgroundColor[i],
+                  text: window.innerWidth < 768 ? label.substring(0, 10) : `${label}: ${fv}`,
+                  fillStyle: d.datasets[0].backgroundColor[i],
                   hidden: false,
                   index: i
                 };
@@ -264,22 +267,20 @@ new Chart(document.getElementById('weeklySpendingChart'), {
         beginAtZero: true,
         position: 'right',
         ticks: {
+          color: colors.tick,
           callback: function (value) {
             return '₹' + (value / 1000).toFixed(1) + 'k';
           }
         },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
-        }
+        grid: { color: colors.grid }
       },
       x: {
         ticks: {
+          color: colors.tick,
           maxTicksLimit: 10,
           font: { size: 9 }
         },
-        grid: {
-          display: false
-        }
+        grid: { display: false }
       }
     }
   }
@@ -314,7 +315,8 @@ new Chart(document.getElementById('yearWiseChart'), {
         position: 'top',
         labels: {
           usePointStyle: true,
-          padding: 15
+          padding: 15,
+          color: colors.legend
         }
       },
       tooltip: currencyFormatter
@@ -323,18 +325,16 @@ new Chart(document.getElementById('yearWiseChart'), {
       y: {
         beginAtZero: true,
         ticks: {
+          color: colors.tick,
           callback: function (value) {
             return '₹' + (value / 1000).toFixed(0) + 'k';
           }
         },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
-        }
+        grid: { color: colors.grid }
       },
       x: {
-        grid: {
-          display: false
-        }
+        ticks: { color: colors.tick },
+        grid: { display: false }
       }
     }
   }

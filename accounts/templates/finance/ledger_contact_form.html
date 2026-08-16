@@ -4,61 +4,105 @@
 {% block header %}{{ block.super }}{% endblock %}
 
 {% block body %}
-<div class="container py-4">
+<div class="container py-5" style="max-width: 520px;">
 
-  <nav aria-label="breadcrumb" class="mb-3">
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb small">
-      <li class="breadcrumb-item"><a href="{% url 'finance:ledger_contact_list' %}">Ledger</a></li>
-      <li class="breadcrumb-item active">
+      <li class="breadcrumb-item">
+        <a href="{% url 'finance:ledger_contact_list' %}" style="color: var(--text-tertiary); text-decoration: none;">Ledger</a>
+      </li>
+      <li class="breadcrumb-item active" style="color: var(--gold-dim);">
         {% if mode == 'create' %}New Contact{% else %}Edit: {{ contact.name }}{% endif %}
       </li>
     </ol>
   </nav>
 
-  <div class="row justify-content-center">
-    <div class="col-md-7 col-lg-5">
-      <div class="card shadow-sm border-0">
-        <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
-          <h2 class="h5 fw-bold mb-0">
+  <div class="premium-card animate-in" style="padding: 0; overflow: hidden;">
+
+    <!-- Card Header -->
+    <div style="
+      background: linear-gradient(135deg, #1e1a0e 0%, #1a1917 100%);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.5rem 1.75rem;
+    ">
+      <div class="d-flex align-items-center gap-3">
+        <div style="
+          width: 2.25rem; height: 2.25rem;
+          border-radius: var(--radius-md);
+          background: var(--gold-soft);
+          border: 1px solid var(--border-accent);
+          display: flex; align-items: center; justify-content: center;
+          color: var(--gold); font-size: 0.9rem; flex-shrink: 0;
+        ">
+          <i class="fa-solid fa-user-plus"></i>
+        </div>
+        <div>
+          <h2 class="mb-0" style="font-family: var(--font-serif); font-size: 1.25rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.03em;">
             {% if mode == 'create' %}Add Ledger Contact{% else %}Edit Contact{% endif %}
           </h2>
-        </div>
-        <div class="card-body p-4">
-
-          {% if messages %}
-            {% for msg in messages %}
-              <div class="alert alert-{{ msg.tags|default:'danger' }} small">{{ msg }}</div>
-            {% endfor %}
-          {% endif %}
-
-          <form method="post">
-            {% csrf_token %}
-
-            <div class="mb-3">
-              <label for="contact-name" class="form-label fw-medium">Name</label>
-              <input type="text" id="contact-name" name="name" class="form-control"
-                     placeholder="e.g. John Doe, Office Canteen"
-                     value="{{ contact.name|default:form_data.name|default:'' }}" required autofocus>
-            </div>
-
-            <div class="mb-4">
-              <label for="contact-phone" class="form-label fw-medium">Phone <span class="text-muted fw-normal">(optional)</span></label>
-              <input type="text" id="contact-phone" name="phone" class="form-control"
-                     placeholder="e.g. 9876543210"
-                     value="{{ contact.phone|default:form_data.phone|default:'' }}">
-            </div>
-
-            <div class="d-flex gap-2">
-              <button type="submit" class="btn btn-primary flex-fill">
-                {% if mode == 'create' %}Save Contact{% else %}Save Changes{% endif %}
-              </button>
-              <a href="{% if mode == 'edit' %}{% url 'finance:ledger_detail' contact.pk %}{% else %}{% url 'finance:ledger_contact_list' %}{% endif %}" 
-                 class="btn btn-outline-secondary">Cancel</a>
-            </div>
-          </form>
-
+          <p class="mb-0" style="font-size: 0.72rem; color: var(--text-tertiary); margin-top: 0.2rem;">
+            {% if mode == 'create' %}Track money owed to or from this person{% else %}Update contact details{% endif %}
+          </p>
         </div>
       </div>
+    </div>
+
+    <!-- Card Body -->
+    <div style="padding: 1.75rem;">
+
+      <form method="post">
+        {% csrf_token %}
+
+        <!-- Name -->
+        <div class="mb-4">
+          <label for="contact-name" class="form-label">
+            <i class="fa-solid fa-user me-1" style="color: var(--gold-dim);"></i> Name <span style="color: var(--color-expense);">*</span>
+          </label>
+          <input
+            type="text"
+            id="contact-name"
+            name="name"
+            class="form-control form-control-fintech"
+            placeholder="e.g. John Doe, Office Canteen"
+            value="{{ contact.name|default:form_data.name|default:'' }}"
+            required
+            autofocus
+          >
+          <div class="form-text" style="font-size: 0.72rem; color: var(--text-tertiary); margin-top: 0.35rem;">
+            Use a name you'll recognise easily
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div class="mb-5">
+          <label for="contact-phone" class="form-label">
+            <i class="fa-solid fa-phone me-1" style="color: var(--gold-dim);"></i> Phone
+            <span style="font-weight: 400; color: var(--text-tertiary); font-size: 0.8rem;">(optional)</span>
+          </label>
+          <input
+            type="text"
+            id="contact-phone"
+            name="phone"
+            class="form-control form-control-fintech"
+            placeholder="e.g. 9876543210"
+            value="{{ contact.phone|default:form_data.phone|default:'' }}"
+          >
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2">
+          <button type="submit" class="btn btn-fintech-primary flex-fill">
+            <i class="fa-solid fa-check me-1"></i>
+            {% if mode == 'create' %}Save Contact{% else %}Save Changes{% endif %}
+          </button>
+          <a href="{% if mode == 'edit' %}{% url 'finance:ledger_detail' contact.pk %}{% else %}{% url 'finance:ledger_contact_list' %}{% endif %}"
+             class="btn btn-fintech-secondary">
+            Cancel
+          </a>
+        </div>
+
+      </form>
     </div>
   </div>
 

@@ -59,7 +59,10 @@ def ledger_contact_list(request: HttpRequest) -> HttpResponse:
 def ledger_contact_create(request: HttpRequest) -> HttpResponse:
     """Create a new ledger contact."""
     if request.method == 'GET':
-        return render(request, 'finance/ledger_contact_form.html', {'mode': 'create'})
+        return render(request, 'finance/ledger_contact_form.html', {
+            'mode': 'create',
+            'form_data': {},
+        })
         
     name = request.POST.get('name', '').strip()
     phone = request.POST.get('phone', '').strip()

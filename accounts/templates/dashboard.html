@@ -1,582 +1,216 @@
+{% extends 'header.html' %}
+{% load static %}
 
-    {% extends 'header.html' %}
-    {% load static %}
+{% block body %}
+<div class="container-fluid px-4" style="max-width: 1200px; margin: 0 auto; padding-top: 2.5rem; padding-bottom: 4rem;">
 
-    {% block body %}
+  <!-- ── HERO ── -->
+  <div class="mb-5 animate-in">
+    <p class="mb-1" style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold-dim);">
+      <i class="fa-solid fa-calendar-days me-1"></i> {{ today|date:"l, d F Y" }}
+    </p>
+    <h1 style="font-family: var(--font-serif); font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 800; letter-spacing: -0.04em; color: var(--text-primary); margin-bottom: 0.25rem; line-height: 1.1;">
+      Good to see you,<br><span style="color: var(--gold);">{{ user.first_name|default:user.username }}</span>.
+    </h1>
+    <p style="color: var(--text-tertiary); font-size: 0.875rem; margin: 0;">Here's your financial snapshot for this month.</p>
+  </div>
 
-    <style>
+  <!-- ── THIS MONTH'S SUMMARY ── -->
+  <div class="row g-3 mb-4">
+    <div class="col-4 animate-in animate-in-delay-1">
+      <div class="premium-card p-4" style="border-top: 3px solid var(--color-income);">
+        <p class="mb-2" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary);">
+          <i class="fa-solid fa-arrow-trend-up me-1" style="color: var(--color-income);"></i>Income
+        </p>
+        <h2 class="tabular-nums mb-0" style="font-family: var(--font-sans); font-size: clamp(1.2rem, 3vw, 1.75rem); font-weight: 700; color: var(--color-income); letter-spacing: -0.03em;">
+          ₹{{ total_income|floatformat:0 }}
+        </h2>
+      </div>
+    </div>
+    <div class="col-4 animate-in animate-in-delay-2">
+      <div class="premium-card p-4" style="border-top: 3px solid var(--color-expense);">
+        <p class="mb-2" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary);">
+          <i class="fa-solid fa-arrow-trend-down me-1" style="color: var(--color-expense);"></i>Expense
+        </p>
+        <h2 class="tabular-nums mb-0" style="font-family: var(--font-sans); font-size: clamp(1.2rem, 3vw, 1.75rem); font-weight: 700; color: var(--color-expense); letter-spacing: -0.03em;">
+          ₹{{ total_expense|floatformat:0 }}
+        </h2>
+      </div>
+    </div>
+    <div class="col-4 animate-in animate-in-delay-3">
+      <div class="premium-card p-4" style="border-top: 3px solid {% if net_savings >= 0 %}var(--color-income){% else %}var(--color-expense){% endif %};">
+        <p class="mb-2" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary);">
+          <i class="fa-solid fa-piggy-bank me-1" style="color: var(--gold-dim);"></i>Net Saved
+        </p>
+        <h2 class="tabular-nums mb-0" style="font-family: var(--font-sans); font-size: clamp(1.2rem, 3vw, 1.75rem); font-weight: 700; color: {% if net_savings >= 0 %}var(--color-income){% else %}var(--color-expense){% endif %}; letter-spacing: -0.03em;">
+          ₹{{ net_savings|floatformat:0 }}
+        </h2>
+      </div>
+    </div>
+  </div>
 
-    /* ══════════════════════════════════════
-       PAGE BACKGROUND
-    ══════════════════════════════════════ */
-    .db-page {
-        background: linear-gradient(160deg, #faf9f5 0%, #f4f2ea 60%, #faf9f5 100%);
-        min-height: 100vh;
-    }
+  <div class="row g-4">
 
-    /* ══════════════════════════════════════
-       HERO WELCOME BANNER
-    ══════════════════════════════════════ */
-    .db-hero {
-        background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
-        color: #fff;
-        padding: 28px 24px 32px;
-        border-radius: 0 0 28px 28px;
-        margin-bottom: 24px;
-        position: relative;
-        overflow: hidden;
-    }
-    .db-hero::after {
-        content: '';
-        position: absolute;
-        right: -40px; bottom: -40px;
-        width: 200px; height: 200px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.07);
-        pointer-events: none;
-    }
-    .db-hero::before {
-        content: '';
-        position: absolute;
-        right: 60px; bottom: 20px;
-        width: 100px; height: 100px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.05);
-        pointer-events: none;
-    }
-    .db-hero-greeting {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        opacity: 0.8;
-        margin-bottom: 4px;
-    }
-    .db-hero-name {
-        font-size: 2rem;
-        font-family: 'Dancing Script', cursive;
-        font-weight: 700;
-        line-height: 1.1;
-    }
-    .db-hero-sub {
-        font-size: 0.78rem;
-        opacity: 0.65;
-        margin-top: 4px;
-    }
-    .db-hero-period {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: rgba(255,255,255,0.18);
-        border: 1px solid rgba(255,255,255,0.25);
-        border-radius: 999px;
-        padding: 5px 14px;
-        font-size: 0.78rem;
-        backdrop-filter: blur(4px);
-        color: #fff;
-    }
-    /* period selector styled to match */
-    .period-select-wrap {
-        position: relative;
-    }
-    #periodSelector {
-        background: rgba(255,255,255,0.18) !important;
-        border: 1px solid rgba(255,255,255,0.3) !important;
-        border-radius: 999px !important;
-        color: #fff !important;
-        font-size: 0.78rem !important;
-        padding: 5px 32px 5px 14px !important;
-        appearance: none;
-        cursor: pointer;
-        backdrop-filter: blur(4px);
-    }
-    #periodSelector option { color: #201b05; background: #fff; }
-    #periodSelector:focus { outline: none; box-shadow: none !important; }
+    <!-- ── LEFT COL: Quick Actions + Ledger ── -->
+    <div class="col-12 col-lg-5 d-flex flex-column gap-4">
 
-    /* ══════════════════════════════════════
-       SECTION LABEL
-    ══════════════════════════════════════ */
-    .db-section-label {
-        font-size: 0.68rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--primary);
-        font-weight: 700;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .db-section-label::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: linear-gradient(90deg, rgba(176,163,111,0.3), transparent);
-    }
+      <!-- Quick Actions -->
+      <div class="animate-in animate-in-delay-1">
+        <p class="db-section-label"><i class="fa-solid fa-bolt"></i> Quick Actions</p>
+        <div class="d-flex flex-column gap-2">
 
-    /* ══════════════════════════════════════
-       FINANCIAL OVERVIEW CARDS
-    ══════════════════════════════════════ */
-    .fin-card {
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        padding: 14px 15px;
-        border-radius: 16px;
-        border: 1px solid rgba(176,163,111,0.12);
-        background: #fff;
-        box-shadow: 0 2px 10px rgba(176,163,111,0.08);
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
-        position: relative;
-        overflow: hidden;
-        height: 100%;
-    }
-    .fin-card::before {
-        content: '';
-        position: absolute;
-        left: 0; top: 0; bottom: 0;
-        width: 4px;
-        border-radius: 16px 0 0 16px;
-    }
-    .fin-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 22px rgba(176,163,111,0.16);
-    }
-    .fin-icon-wrap {
-        flex-shrink: 0;
-        width: 40px; height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1rem;
-    }
-    .fin-body { display: flex; flex-direction: column; min-width: 0; }
-    .fin-label {
-        font-size: 0.65rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: #9ca3af;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-    .fin-value {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #1f2937;
-        font-family: 'Dancing Script', cursive;
-        line-height: 1.2;
-        white-space: nowrap;
-    }
-    .fin-income::before  { background: #10b981; }
-    .fin-income  .fin-icon-wrap { background: rgba(16,185,129,0.1); color: #10b981; }
-    .fin-expense::before { background: #ef4444; }
-    .fin-expense .fin-icon-wrap { background: rgba(239,68,68,0.1); color: #ef4444; }
-    .fin-investment::before { background: #8b5cf6; }
-    .fin-investment .fin-icon-wrap { background: rgba(139,92,246,0.1); color: #8b5cf6; }
-    .fin-saving::before  { background: #3b82f6; }
-    .fin-saving  .fin-icon-wrap { background: rgba(59,130,246,0.1); color: #3b82f6; }
-    .fin-split::before   { background: #f59e0b; }
-    .fin-split   .fin-icon-wrap { background: rgba(245,158,11,0.1); color: #f59e0b; }
-    .fin-emi::before     { background: #ec4899; }
-    .fin-emi     .fin-icon-wrap { background: rgba(236,72,153,0.1); color: #ec4899; }
-
-    @media (max-width: 576px) {
-        .fin-card { padding: 10px 12px; gap: 9px; }
-        .fin-icon-wrap { width: 34px; height: 34px; font-size: 0.85rem; border-radius: 8px; }
-        .fin-value { font-size: 0.9rem; }
-        .fin-label { font-size: 0.6rem; }
-    }
-
-    /* ══════════════════════════════════════
-       DASHBOARD CARDS (generic)
-    ══════════════════════════════════════ */
-    .db-card {
-        background: #fff;
-        border-radius: 18px;
-        border: 1px solid rgba(176,163,111,0.1);
-        box-shadow: 0 2px 12px rgba(176,163,111,0.08);
-        overflow: hidden;
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
-    }
-    .db-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(176,163,111,0.14); }
-
-    .db-card-header {
-        padding: 14px 18px 12px;
-        border-bottom: 1px solid rgba(176,163,111,0.1);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: linear-gradient(135deg, rgba(176,163,111,0.06) 0%, rgba(255,255,255,0) 100%);
-    }
-    .db-card-header-icon {
-        width: 32px; height: 32px;
-        border-radius: 8px;
-        background: rgba(176,163,111,0.12);
-        color: var(--primary);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 0.85rem;
-        flex-shrink: 0;
-    }
-    .db-card-title {
-        font-family: 'Dancing Script', cursive;
-        font-size: 1.15rem;
-        color: var(--primary);
-        font-weight: 700;
-        margin: 0;
-        line-height: 1;
-    }
-
-    /* ══════════════════════════════════════
-       REMINDER ITEMS
-    ══════════════════════════════════════ */
-    .reminder-item {
-        border-left: 3px solid;
-        padding: 10px 12px;
-        margin-bottom: 8px;
-        border-radius: 10px;
-        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(250,249,245,0.95) 100%);
-        border: 1px solid rgba(176,163,111,0.08);
-        border-left-width: 3px;
-        transition: all 0.2s ease;
-    }
-    .reminder-item:hover { transform: translateX(4px); box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
-    .reminder-item.critical { border-left-color: #ef4444; }
-    .reminder-item.high    { border-left-color: #f59e0b; }
-    .reminder-item.medium  { border-left-color: #fbbf24; }
-    .reminder-item.low     { border-left-color: #3b82f6; }
-
-    /* ══════════════════════════════════════
-       TASK ITEMS
-    ══════════════════════════════════════ */
-    .task-item {
-        padding: 10px 12px;
-        margin-bottom: 8px;
-        border-radius: 10px;
-        background: rgba(250,249,245,0.8);
-        border: 1px solid rgba(176,163,111,0.1);
-        border-left: 3px solid var(--primary);
-        transition: all 0.2s ease;
-    }
-    .task-item:hover { transform: translateX(4px); box-shadow: 0 3px 10px rgba(0,0,0,0.08); border-left-color: var(--primary-dark); }
-    .task-item.overdue { border-left-color: #ef4444; background: linear-gradient(135deg, rgba(239,68,68,0.04) 0%, rgba(250,249,245,0.8) 100%); }
-
-    /* ══════════════════════════════════════
-       LOADING SHIMMER
-    ══════════════════════════════════════ */
-    .card-body.loading { position: relative; min-height: 200px; overflow: hidden; }
-    .card-body.loading::before {
-        content: '';
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        background: linear-gradient(90deg, #f5f3eb 25%, #ede9d8 50%, #f5f3eb 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-        z-index: 1;
-    }
-    @keyframes shimmer {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
-    }
-    .card-body.loading canvas { opacity: 0; }
-
-    /* ══════════════════════════════════════
-       FOOTER NOTE
-    ══════════════════════════════════════ */
-    .db-footer-note {
-        font-size: 0.7rem;
-        color: #9ca3af;
-        text-align: right;
-        padding: 12px 4px 0;
-        border-top: 1px solid rgba(176,163,111,0.1);
-        margin-top: 24px;
-    }
-
-    </style>
-
-    <div class="db-page">
-
-    <!-- ── HERO BANNER ── -->
-    <div class="db-hero">
-        <div class="container-fluid px-3">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                <div>
-                    <div class="db-hero-name">{{ user.first_name }} {{ user.last_name }}</div>
-                    <p class="db-hero-sub mb-0">Here's your financial snapshot &mdash; {{ period_label }}</p>
-                </div>
-                <div class="d-flex align-items-center gap-2 pt-1">
-                    <i class="fa-solid fa-sliders" style="color:rgba(255,255,255,0.6); font-size:0.8rem;"></i>
-                    <div class="period-select-wrap">
-                        <select id="periodSelector">
-                            <option value="this_month" {% if current_period == 'this_month' %}selected{% endif %}>This Month</option>
-                            <option value="last_3_months" {% if current_period == 'last_3_months' %}selected{% endif %}>Last 3 Months</option>
-                            <option value="last_6_months" {% if current_period == 'last_6_months' %}selected{% endif %}>Last 6 Months</option>
-                            <option value="this_year" {% if current_period == 'this_year' %}selected{% endif %}>Year to Date</option>
-                            <option value="all" {% if current_period == 'all' %}selected{% endif %}>All Time</option>
-                        </select>
-                    </div>
-                </div>
+          <a href="javascript:void(0)" onclick="openGlobalQuickEntry()" class="d-flex align-items-center gap-3 p-3 interactive" style="
+            background: linear-gradient(135deg, #1e1a0e 0%, #1a1917 100%);
+            border: 1px solid var(--border-accent);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+          ">
+            <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:var(--gold-gradient);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:var(--shadow-gold);">
+              <i class="fa-solid fa-plus" style="color:var(--text-on-accent);font-size:0.95rem;"></i>
             </div>
+            <div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:0.9rem;">Log New Entry</div>
+              <div style="font-size:0.75rem;color:var(--text-tertiary);">Add expense or income instantly</div>
+            </div>
+            <i class="fa-solid fa-chevron-right ms-auto" style="color:var(--text-tertiary);font-size:0.7rem;"></i>
+          </a>
+
+          <a href="{% url 'finance:entry_list' %}" class="d-flex align-items-center gap-3 p-3 interactive" style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:var(--radius-md);text-decoration:none;">
+            <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:var(--bg-elevated);border:1px solid var(--border-color);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fa-solid fa-list" style="color:var(--text-secondary);font-size:0.9rem;"></i>
+            </div>
+            <div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:0.9rem;">All Entries</div>
+              <div style="font-size:0.75rem;color:var(--text-tertiary);">Browse and filter transactions</div>
+            </div>
+            <i class="fa-solid fa-chevron-right ms-auto" style="color:var(--text-tertiary);font-size:0.7rem;"></i>
+          </a>
+
+          <a href="{% url 'finance:import_upload' %}" class="d-flex align-items-center gap-3 p-3 interactive" style="background:var(--bg-surface);border:1px solid var(--border-color);border-radius:var(--radius-md);text-decoration:none;">
+            <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:var(--bg-elevated);border:1px solid var(--border-color);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fa-solid fa-file-csv" style="color:var(--text-secondary);font-size:0.9rem;"></i>
+            </div>
+            <div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:0.9rem;">Import CSV</div>
+              <div style="font-size:0.75rem;color:var(--text-tertiary);">GPay or PhonePe statement</div>
+            </div>
+            <i class="fa-solid fa-chevron-right ms-auto" style="color:var(--text-tertiary);font-size:0.7rem;"></i>
+          </a>
+
         </div>
+      </div>
+
+      <!-- Ledger Summary -->
+      <div class="animate-in animate-in-delay-2">
+        <p class="db-section-label"><i class="fa-solid fa-users"></i> Ledger Summary</p>
+        <div class="premium-card p-0 overflow-hidden">
+          <div class="p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span style="font-size:0.82rem;color:var(--text-secondary);">They Owe You</span>
+              <span class="tabular-nums fw-700" style="color:var(--color-income);font-weight:700;">₹{{ ledger_given|floatformat:0 }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <span style="font-size:0.82rem;color:var(--text-secondary);">You Owe Them</span>
+              <span class="tabular-nums" style="color:var(--color-expense);font-weight:700;">₹{{ ledger_taken|floatformat:0 }}</span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center pt-3" style="border-top:1px dashed var(--border-color);">
+              <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-tertiary);">Net Exposure</span>
+              {% if net_ledger > 0 %}
+                <span class="tabular-nums fw-700" style="color:var(--color-expense);font-weight:700;">You Owe ₹{{ net_ledger|floatformat:0 }}</span>
+              {% elif net_ledger < 0 %}
+                <span class="tabular-nums fw-700" style="color:var(--color-income);font-weight:700;">Owed ₹{{ net_ledger|stringformat:"s"|slice:"1:"|floatformat:0 }}</span>
+              {% else %}
+                <span style="color:var(--text-tertiary);font-size:0.85rem;font-weight:600;">All Settled ✓</span>
+              {% endif %}
+            </div>
+          </div>
+          <a href="{% url 'finance:ledger_contact_list' %}" class="d-flex align-items-center justify-content-center gap-2 py-3" style="background:var(--bg-elevated);border-top:1px solid var(--border-color);color:var(--text-secondary);font-size:0.82rem;font-weight:600;transition:all var(--transition-fast);" onmouseover="this.style.color='var(--gold)';this.style.background='var(--bg-input)';" onmouseout="this.style.color='var(--text-secondary)';this.style.background='var(--bg-elevated)';">
+            View Ledger Contacts <i class="fa-solid fa-arrow-right ms-1" style="font-size:0.7rem;"></i>
+          </a>
+        </div>
+      </div>
+
     </div>
 
-    <div class="container">
+    <!-- ── RIGHT COL: Active Split Plans + Loan/Investment shortcuts ── -->
+    <div class="col-12 col-lg-7 d-flex flex-column gap-4">
 
-        <!-- ── FINANCIAL OVERVIEW ── -->
-        <p class="db-section-label"><i class="fa-solid fa-wallet"></i> Financial Overview</p>
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md">
-                <div class="fin-card fin-income">
-                    <div class="fin-icon-wrap"><i class="fa-solid fa-arrow-trend-up"></i></div>
-                    <div class="fin-body">
-                        <span class="fin-label">Income</span>
-                        <span class="fin-value">{{ financial_data.Income }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md">
-                <div class="fin-card fin-expense">
-                    <div class="fin-icon-wrap"><i class="fa-solid fa-arrow-trend-down"></i></div>
-                    <div class="fin-body">
-                        <span class="fin-label">Expense</span>
-                        <span class="fin-value">{{ financial_data.Expense }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md">
-                <div class="fin-card fin-investment">
-                    <div class="fin-icon-wrap"><i class="fa-solid fa-chart-pie"></i></div>
-                    <div class="fin-body">
-                        <span class="fin-label">Investment</span>
-                        <span class="fin-value">{{ financial_data.Investment }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md">
-                <div class="fin-card fin-saving">
-                    <div class="fin-icon-wrap"><i class="fa-solid fa-piggy-bank"></i></div>
-                    <div class="fin-body">
-                        <span class="fin-label">Saving</span>
-                        <span class="fin-value">{{ financial_data.Saving }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md">
-                <div class="fin-card fin-split">
-                    <div class="fin-icon-wrap"><i class="fa-solid fa-users"></i></div>
-                    <div class="fin-body">
-                        <span class="fin-label">Split Due</span>
-                        <span class="fin-value">{{ split_due_display }}</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 col-md">
-                <div class="fin-card fin-emi">
-                    <div class="fin-icon-wrap"><i class="fa-solid fa-calendar-check"></i></div>
-                    <div class="fin-body">
-                        <span class="fin-label">EMI Due</span>
-                        <span class="fin-value">{{ emi_due_display }}</span>
-                    </div>
-                </div>
-            </div>
+      <!-- Active Split Plans -->
+      <div class="animate-in animate-in-delay-2">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <p class="db-section-label mb-0"><i class="fa-solid fa-layer-group"></i> Active Split Plans</p>
+          <a href="{% url 'finance:split_plan_list' %}" style="font-size:0.75rem;font-weight:700;color:var(--gold-dim);text-decoration:none;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--gold-dim)'">View All →</a>
         </div>
 
-        <!-- ── REMINDERS & TASKS ── -->
-        <p class="db-section-label"><i class="fa-solid fa-bell"></i> Today's Alerts</p>
-        <div class="row g-3 mb-4">
-
-            <!-- Reminders -->
-            <div class="col-md-6">
-                <div class="db-card h-100">
-                    <div class="db-card-header">
-                        <div class="db-card-header-icon"><i class="fa-solid fa-bell"></i></div>
-                        <h5 class="db-card-title">Today's Reminders</h5>
-                    </div>
-                    <div class="card-body p-3" style="max-height: 380px; overflow-y: auto;">
-                        {% if todays_reminders %}
-                            {% for reminder in todays_reminders %}
-                            <div class="reminder-item {{ reminder.priority }}">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                            <span style="font-size:1.1rem;">{{ reminder.get_priority_icon }}</span>
-                                            <strong style="font-size:0.9rem;">{{ reminder.title|truncatechars:30 }}</strong>
-                                        </div>
-                                        {% if reminder.description %}
-                                        <p class="text-muted mb-1" style="font-size:0.8rem;">{{ reminder.description|truncatechars:50 }}</p>
-                                        {% endif %}
-                                        <div class="d-flex gap-2 flex-wrap">
-                                            <span class="badge rounded-pill" style="background:rgba(176,163,111,0.12);color:var(--primary);font-size:0.7rem;">
-                                                {{ reminder.get_type_icon }} {{ reminder.get_reminder_type_display }}
-                                            </span>
-                                            {% if reminder.reminder_time %}
-                                            <span class="badge rounded-pill bg-secondary" style="font-size:0.7rem;">
-                                                <i class="fa-solid fa-clock"></i> {{ reminder.reminder_time|time:"H:i" }}
-                                            </span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <a href="/view-reminder/" class="btn btn-sm custom-btn-primary ms-2">
-                                        <i class="fa-solid fa-arrow-right"></i>
-                                    </a>
-                                </div>
-                            </div>
-                            {% endfor %}
-                            <div class="text-center mt-3">
-                                <a href="/view-today-reminder/" class="btn btn-sm custom-btn-primary">View All Reminders</a>
-                            </div>
-                        {% else %}
-                            <div class="text-center py-5">
-                                <div style="width:56px;height:56px;border-radius:50%;background:rgba(176,163,111,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-                                    <i class="fa-solid fa-bell-slash" style="color:var(--primary);font-size:1.4rem;"></i>
-                                </div>
-                                <p class="text-muted mb-3" style="font-size:0.85rem;">No reminders for today</p>
-                                <a href="/view-reminder/" class="btn btn-sm custom-btn-primary">Create Reminder</a>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
+        {% if active_splits %}
+        <div class="premium-card p-0 overflow-hidden">
+          {% for plan in active_splits %}
+          <div class="px-4 py-3 d-flex justify-content-between align-items-center" style="{% if not forloop.last %}border-bottom:1px solid var(--border-color);{% endif %}transition:background var(--transition-fast);" onmouseover="this.style.background='var(--bg-elevated)'" onmouseout="this.style.background='transparent'">
+            <div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:0.875rem;">{{ plan.title }}</div>
+              <div style="font-size:0.72rem;color:var(--text-tertiary);">From {{ plan.start_month|date:"M Y" }} · {{ plan.num_months }} months</div>
             </div>
-
-            <!-- Tasks -->
-            <div class="col-md-6">
-                <div class="db-card h-100">
-                    <div class="db-card-header">
-                        <div class="db-card-header-icon"><i class="fa-solid fa-list-check"></i></div>
-                        <h5 class="db-card-title">Pending Tasks</h5>
-                    </div>
-                    <div class="card-body p-3" style="max-height: 380px; overflow-y: auto;">
-                        {% if pending_tasks %}
-                            {% for task in pending_tasks %}
-                            <div class="task-item {% if task.complete_by_date < today %}overdue{% endif %}">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                            {% if task.complete_by_date < today %}
-                                            <i class="fa-solid fa-circle-exclamation text-danger" style="font-size:0.85rem;"></i>
-                                            {% else %}
-                                            <i class="fa-solid fa-circle-dot" style="color:var(--primary);font-size:0.85rem;"></i>
-                                            {% endif %}
-                                            <strong style="font-size:0.9rem;">{{ task.name }}</strong>
-                                        </div>
-                                        <div class="d-flex gap-2 flex-wrap align-items-center">
-                                            <span class="badge rounded-pill bg-secondary" style="font-size:0.7rem;">
-                                                <i class="fa-solid fa-calendar"></i> {{ task.complete_by_date|date:"d M Y" }}
-                                            </span>
-                                            {% if task.complete_by_date < today %}
-                                            <span class="badge rounded-pill bg-danger" style="font-size:0.7rem;">
-                                                <i class="fa-solid fa-clock"></i> Overdue
-                                            </span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    <a href="/taskReports/" class="btn btn-sm custom-btn-primary ms-2">
-                                        <i class="fa-solid fa-arrow-right"></i>
-                                    </a>
-                                </div>
-                            </div>
-                            {% endfor %}
-                            <div class="text-center mt-3">
-                                <a href="/taskReports/" class="btn btn-sm custom-btn-primary">View All Tasks</a>
-                            </div>
-                        {% else %}
-                            <div class="text-center py-5">
-                                <div style="width:56px;height:56px;border-radius:50%;background:rgba(16,185,129,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
-                                    <i class="fa-solid fa-circle-check" style="color:#10b981;font-size:1.4rem;"></i>
-                                </div>
-                                <p class="text-muted mb-3" style="font-size:0.85rem;">All caught up! No pending tasks</p>
-                                <a href="/taskReports/" class="btn btn-sm custom-btn-primary">Create Task</a>
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
+            <div class="text-end">
+              <div class="tabular-nums" style="font-weight:700;color:var(--color-expense);font-size:0.95rem;">₹{{ plan.total_amount|floatformat:0 }}</div>
+              <div style="font-size:0.7rem;color:var(--text-tertiary);">₹{{ plan.monthly_installment|floatformat:0 }}/mo</div>
             </div>
-
+          </div>
+          {% endfor %}
         </div>
-
-        <!-- ── CHARTS ── -->
-        <p class="db-section-label"><i class="fa-solid fa-chart-line"></i> Analytics</p>
-        <div class="row g-3 mb-3">
-            <div class="col-12 col-md-6">
-                <div class="db-card h-100">
-                    <div class="db-card-header">
-                        <div class="db-card-header-icon"><i class="fa-solid fa-chart-line"></i></div>
-                        <h5 class="db-card-title">Cash Flow Trend</h5>
-                        <small class="text-muted ms-auto" style="font-size:0.7rem;">Last 12 Months</small>
-                    </div>
-                    <div class="card-body p-3">
-                        <canvas id="cashFlowChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6">
-                <div class="db-card h-100">
-                    <div class="db-card-header">
-                        <div class="db-card-header-icon"><i class="fa-solid fa-chart-pie"></i></div>
-                        <h5 class="db-card-title">Category Distribution</h5>
-                    </div>
-                    <div class="card-body p-3">
-                        <canvas id="expenseCategoryChart"></canvas>
-                    </div>
-                </div>
-            </div>
+        {% else %}
+        <div class="premium-card p-4 text-center" style="border-style:dashed;">
+          <i class="fa-solid fa-layer-group mb-3" style="font-size:1.5rem;color:var(--text-tertiary);display:block;"></i>
+          <p style="color:var(--text-tertiary);font-size:0.82rem;margin-bottom:0.75rem;">No active split plans</p>
+          <a href="{% url 'finance:split_plan_create' %}" class="btn btn-fintech-secondary btn-sm">Create Split Plan</a>
         </div>
+        {% endif %}
+      </div>
 
-        <div class="row g-3 mb-2">
-            <div class="col-12 col-md-6">
-                <div class="db-card">
-                    <div class="db-card-header">
-                        <div class="db-card-header-icon"><i class="fa-solid fa-calendar-week"></i></div>
-                        <h5 class="db-card-title">Last 30 Days Spending</h5>
-                    </div>
-                    <div class="card-body p-3">
-                        <canvas id="weeklySpendingChart"></canvas>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6">
-                <div class="db-card">
-                    <div class="db-card-header">
-                        <div class="db-card-header-icon"><i class="fa-solid fa-chart-column"></i></div>
-                        <h5 class="db-card-title">Year-wise Comparison</h5>
-                    </div>
-                    <div class="card-body p-3">
-                        <canvas id="yearWiseChart"></canvas>
-                    </div>
-                </div>
-            </div>
+      <!-- Module shortcuts: Loans + Investments -->
+      <div class="animate-in animate-in-delay-3">
+        <p class="db-section-label"><i class="fa-solid fa-grid-2"></i> Modules</p>
+        <div class="row g-3">
+          <div class="col-6">
+            <a href="{% url 'finance:loan_list' %}" class="premium-card p-4 d-block text-decoration-none interactive">
+              <div style="width:44px;height:44px;border-radius:var(--radius-md);background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+                <i class="fa-solid fa-building-columns" style="color:var(--color-expense);font-size:1.1rem;"></i>
+              </div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:0.9rem;margin-bottom:0.2rem;">Loans & EMI</div>
+              <div style="font-size:0.75rem;color:var(--text-tertiary);">One-tap monthly payment log</div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a href="{% url 'finance:investment_list' %}" class="premium-card p-4 d-block text-decoration-none interactive">
+              <div style="width:44px;height:44px;border-radius:var(--radius-md);background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+                <i class="fa-solid fa-chart-line" style="color:var(--color-invest);font-size:1.1rem;"></i>
+              </div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:0.9rem;margin-bottom:0.2rem;">Investments</div>
+              <div style="font-size:0.75rem;color:var(--text-tertiary);">SIPs and recurring contributions</div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a href="{% url 'finance:ledger_contact_list' %}" class="premium-card p-4 d-block text-decoration-none interactive">
+              <div style="width:44px;height:44px;border-radius:var(--radius-md);background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+                <i class="fa-solid fa-users" style="color:var(--gold);font-size:1.1rem;"></i>
+              </div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:0.9rem;margin-bottom:0.2rem;">Ledger</div>
+              <div style="font-size:0.75rem;color:var(--text-tertiary);">Who owes whom</div>
+            </a>
+          </div>
+          <div class="col-6">
+            <a href="{% url 'finance:split_plan_list' %}" class="premium-card p-4 d-block text-decoration-none interactive">
+              <div style="width:44px;height:44px;border-radius:var(--radius-md);background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;">
+                <i class="fa-solid fa-layer-group" style="color:var(--color-split);font-size:1.1rem;"></i>
+              </div>
+              <div style="font-weight:700;color:var(--text-primary);font-size:0.9rem;margin-bottom:0.2rem;">Split Plans</div>
+              <div style="font-size:0.75rem;color:var(--text-tertiary);">No-cost EMI purchases</div>
+            </a>
+          </div>
         </div>
+      </div>
 
-        <!-- ── FOOTER NOTE ── -->
-        <p class="db-footer-note">
-            * All figures calculated from first transaction date &nbsp;<strong>{{ user_info.first_txn_date }}</strong>
-        </p>
+    </div>
+  </div>
 
-    </div><!-- /container -->
-    </div><!-- /db-page -->
-
-    <link rel="stylesheet" href="{% static 'css/floatingButton.css' %}">
-    <button class="floating-button" id="floatingHome"><a href="/utilities/"><i class="fa-solid fa-list" style="color:var(--secondary)"></i></a></button>
-
-    {% endblock body %}
-
-
-    {% block script %}
-    <script type="text/javascript">
-        const data = JSON.parse('{{ data|escapejs }}')
-        const today = new Date('{{ today|date:"Y-m-d" }}');
-
-        document.addEventListener('DOMContentLoaded', function() {
-            // Period selector
-            const periodSelector = document.getElementById('periodSelector');
-            if (periodSelector) {
-                periodSelector.addEventListener('change', function() {
-                    window.location.href = `/dashboard/?period=${this.value}`;
-                });
-            }
-        });
-    </script>
-    <script src="{% static 'js/dashboardChart.js' %}"></script>
-    {% endblock script %}
-
-    {% block style %}
-    <link rel="stylesheet" href="{% static 'css/chart.css' %}">
-    {% endblock style %}
+</div>
+{% endblock body %}

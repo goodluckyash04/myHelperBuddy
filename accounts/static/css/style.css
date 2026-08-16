@@ -1,202 +1,130 @@
-:root {
-  /* ==========================================================================
-     V3 Bespoke "Private Ledger" Design System Tokens
-     Derived from the gold/champagne signature logo.
-     ========================================================================== */
-  
-  /* Light Mode (Warm off-white base) */
-  --bg-base: #faf9f7;       /* Warm off-white canvas */
-  --bg-surface: #ffffff;    /* Pure white for cards */
-  --bg-input: #f4f3ef;      /* Warm subtle input background */
-  
-  --text-primary: #1c1b1a;  /* Warm near-black */
-  --text-secondary: #5a5753;/* Muted warm grey */
-  --text-tertiary: #928f8a; /* Low emphasis */
-  
-  --border-color: #e8e6e1;  /* Subtle warm borders */
-  
-  /* The Signature Accents */
-  --accent-gold-dark: #b08d3a;
-  --accent-gold: #d4af37;
-  --accent-champagne: #f3e5ab;
-  --gradient-signature: linear-gradient(135deg, var(--accent-gold-dark), var(--accent-gold), var(--accent-champagne));
-  
-  --accent-dark: #1c1b1a;
-  
-  /* Semantic Colors (Warm, cohesive, not neon) */
-  --color-income: #276340;  /* Deep, trustworthy forest green */
-  --color-expense: #94322d; /* Deep, muted brick red */
-  
-  /* Shadows - Extremely soft, slightly warm */
-  --shadow-sm: 0 1px 2px 0 rgba(28, 27, 26, 0.04);
-  --shadow-md: 0 4px 6px -1px rgba(28, 27, 26, 0.04), 0 2px 4px -1px rgba(28, 27, 26, 0.02);
-  --shadow-lg: 0 12px 30px -4px rgba(28, 27, 26, 0.05), 0 4px 10px -2px rgba(28, 27, 26, 0.02);
-  
-  /* Radius */
-  --radius-md: 8px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-  
-  /* Type Pairing */
-  --font-serif: 'Playfair Display', serif;
-  --font-sans: 'Montserrat', sans-serif;
-}
-
-/* Dark Mode Tokens (Warm charcoal) */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-base: #141312;     /* Deep warm charcoal */
-    --bg-surface: #1c1b1a;  /* Lighter charcoal for cards */
-    --bg-input: #2a2826;
-    
-    --text-primary: #f2efe9;
-    --text-secondary: #aba7a1;
-    --text-tertiary: #75726e;
-    
-    --border-color: #33312e;
-    
-    --color-income: #3d8a5c;
-    --color-expense: #c2534d;
-    
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 12px 30px -4px rgba(0, 0, 0, 0.5);
-  }
-}
-
 /* ==========================================================================
-   Global Reset & Base
+   myHelperBuddy — "Private Ledger" Premium Design System v4
+   Dark charcoal base · Champagne gold signature · Editorial typography
    ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Google Fonts
+   -------------------------------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&display=swap');
+
+/* --------------------------------------------------------------------------
+   2. CSS Custom Properties — Dark Mode First
+   -------------------------------------------------------------------------- */
+:root {
+  /* Backgrounds — warm charcoal stack */
+  --bg-base:      #0f0e0d;   /* deepest canvas */
+  --bg-surface:   #1a1917;   /* card surface */
+  --bg-elevated:  #222120;   /* elevated panels */
+  --bg-input:     #2a2826;   /* input fields */
+  --bg-overlay:   rgba(15, 14, 13, 0.7);
+
+  /* Text */
+  --text-primary:   #f2efe8;   /* warm near-white */
+  --text-secondary: #a89f96;   /* muted warm grey */
+  --text-tertiary:  #6b635c;   /* very low emphasis */
+  --text-on-accent: #1a1200;   /* text on gold surfaces */
+
+  /* The Signature — Champagne Gold */
+  --gold:           #c9a84c;   /* primary accent */
+  --gold-bright:    #e0c46a;   /* hover / highlight */
+  --gold-dim:       #8a6e2f;   /* dimmed gold */
+  --gold-soft:      rgba(201,168,76,0.12);  /* subtle tint */
+  --gold-glow:      rgba(201,168,76,0.25);  /* glow ring */
+  --gold-gradient:  linear-gradient(135deg, #c9a84c 0%, #8a6e2f 100%);
+  --gold-gradient-bright: linear-gradient(135deg, #e0c46a 0%, #c9a84c 100%);
+
+  /* Borders */
+  --border-color:   #2e2c2a;
+  --border-accent:  rgba(201,168,76,0.3);
+
+  /* Semantic */
+  --color-income:   #4ade80;  /* emerald green */
+  --color-expense:  #f87171;  /* soft red */
+  --color-invest:   #60a5fa;  /* sky blue */
+  --color-saving:   #c9a84c;  /* gold */
+  --color-split:    #fb923c;  /* amber */
+  --color-emi:      #e879f9;  /* pink */
+  --success:        #4ade80;
+  --danger:         #f87171;
+  --warning:        #fbbf24;
+  --info:           #60a5fa;
+
+  /* Shadows — warm, deep */
+  --shadow-xs:  0 1px 2px rgba(0,0,0,0.4);
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.5);
+  --shadow-md:  0 8px 24px rgba(0,0,0,0.6);
+  --shadow-lg:  0 20px 60px rgba(0,0,0,0.7);
+  --shadow-gold: 0 4px 20px rgba(201,168,76,0.25);
+  --shadow-gold-lg: 0 8px 40px rgba(201,168,76,0.35);
+
+  /* Border radius */
+  --radius-sm:   6px;
+  --radius-md:   12px;
+  --radius-lg:   18px;
+  --radius-xl:   24px;
+  --radius-full: 9999px;
+
+  /* Typography */
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-sans:  'Inter', 'Montserrat', system-ui, sans-serif;
+
+  /* Transitions */
+  --transition-fast:   0.15s ease;
+  --transition-base:   0.25s ease;
+  --transition-slow:   0.4s ease;
+
+  /* Focus ring */
+  --focus-ring: 0 0 0 3px var(--gold-glow);
+}
+
+/* --------------------------------------------------------------------------
+   3. Global Reset & Base
+   -------------------------------------------------------------------------- */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
-h1, h2, h3, .font-serif, .balance-figure {
+h1, h2, h3, h4, h5, h6,
+.font-serif {
   font-family: var(--font-serif);
+  letter-spacing: -0.025em;
+  color: var(--text-primary);
 }
 
-/* Numeric alignment */
+a {
+  color: var(--gold);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+a:hover { color: var(--gold-bright); }
+
+/* Tabular numbers for financial data */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
 }
 
-/* ==========================================================================
-   Fintech Components
-   ========================================================================== */
-
-/* Premium Card */
-.premium-card {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-/* Interactive Card Hover */
-a.premium-card:hover, 
-button.premium-card:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-2px);
-  text-decoration: none;
-}
-
-/* Primary Signature CTA Button */
-.btn-fintech-primary {
-  background: var(--gradient-signature);
-  color: #1a1a1a;
-  border: none;
-  border-radius: var(--radius-md);
-  font-weight: 700;
-  padding: 0.6rem 1.5rem;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-sm);
-}
-.btn-fintech-primary:hover {
-  background: linear-gradient(135deg, var(--accent-gold), var(--accent-champagne), #fff5d1);
-  color: #111;
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-.btn-fintech-primary:focus {
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.3);
-}
-
-/* Secondary Button */
-.btn-fintech-secondary {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  padding: 0.6rem 1.5rem;
-  transition: all 0.2s ease;
-}
-.btn-fintech-secondary:hover {
-  background-color: var(--bg-input);
-  color: var(--text-primary);
-}
-
-/* Inputs */
-.form-control-fintech, .form-select-fintech {
-  background-color: var(--bg-input);
-  border: 1px solid transparent;
-  color: var(--text-primary);
-  border-radius: var(--radius-md);
-  padding: 0.75rem 1rem;
-  transition: all 0.2s ease;
-}
-.form-control-fintech:focus, .form-select-fintech:focus {
-  background-color: var(--bg-surface);
-  border-color: var(--accent-gold);
-  box-shadow: 0 0 0 3px rgba(176, 163, 111, 0.2);
-  outline: none;
-}
-.form-control-fintech::placeholder {
-  color: var(--text-tertiary);
-}
-
-/* Semantic Text Colors */
-.text-income {
-  color: var(--color-income) !important;
-}
-.text-expense {
-  color: var(--color-expense) !important;
-}
-
-/* Pulse Animation for FAB */
-@keyframes fintech-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(32, 27, 5, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(32, 27, 5, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(32, 27, 5, 0); }
-}
-.fab-pulse {
-  animation: fintech-pulse 2s infinite;
-}
-
-/* Floating Navbar */
-.navbar-fintech {
-  background-color: rgba(255, 255, 255, 0.85); /* Will need a dark mode equivalent via JS or media query later, but this is a start */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
-}
-@media (prefers-color-scheme: dark) {
-  .navbar-fintech {
-    background-color: rgba(31, 41, 55, 0.85);
-  }
-}
-
-/* Slim scrollbar */
+/* --------------------------------------------------------------------------
+   4. Scrollbar
+   -------------------------------------------------------------------------- */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: var(--bg-base);
@@ -206,5 +134,1245 @@ button.premium-card:hover {
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-tertiary);
+  background: var(--gold-dim);
+}
+
+/* --------------------------------------------------------------------------
+   5. Keyframe Animations
+   -------------------------------------------------------------------------- */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes goldShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes goldPulse {
+  0%   { box-shadow: 0 0 0 0 var(--gold-glow); }
+  70%  { box-shadow: 0 0 0 12px rgba(201,168,76,0); }
+  100% { box-shadow: 0 0 0 0 rgba(201,168,76,0); }
+}
+
+@keyframes shimmerSkeleton {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes bounceIn {
+  0%   { transform: scale(0.85); opacity: 0; }
+  60%  { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* Entrance animation utility */
+.animate-in {
+  animation: fadeSlideUp 0.45s var(--transition-slow) both;
+}
+.animate-in-delay-1 { animation-delay: 0.08s; }
+.animate-in-delay-2 { animation-delay: 0.16s; }
+.animate-in-delay-3 { animation-delay: 0.24s; }
+.animate-in-delay-4 { animation-delay: 0.32s; }
+.animate-in-delay-5 { animation-delay: 0.40s; }
+
+/* --------------------------------------------------------------------------
+   6. Navigation — Glassmorphism Dark
+   -------------------------------------------------------------------------- */
+.navbar-fintech {
+  background: rgba(15, 14, 13, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: 0 1px 0 rgba(201,168,76,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  transition: background var(--transition-base);
+}
+
+.navbar-fintech .navbar-brand {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--text-primary) !important;
+  letter-spacing: -0.03em;
+  transition: color var(--transition-fast);
+}
+.navbar-fintech .navbar-brand:hover {
+  color: var(--gold-bright) !important;
+}
+
+/* Nav links */
+.navbar-fintech .nav-link {
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 0.875rem !important;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background var(--transition-fast);
+  position: relative;
+}
+.navbar-fintech .nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 50%; right: 50%;
+  height: 2px;
+  background: var(--gold);
+  border-radius: 2px;
+  transition: left var(--transition-base), right var(--transition-base);
+}
+.navbar-fintech .nav-link:hover {
+  color: var(--text-primary) !important;
+  background: var(--gold-soft);
+}
+.navbar-fintech .nav-link:hover::after,
+.navbar-fintech .nav-link.active::after {
+  left: 12px; right: 12px;
+}
+.navbar-fintech .nav-link.active {
+  color: var(--gold-bright) !important;
+}
+
+/* Profile dropdown trigger */
+.navbar-fintech .dropdown > a.btn {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-full) !important;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  padding: 0.4rem 1rem !important;
+}
+.navbar-fintech .dropdown > a.btn:hover {
+  border-color: var(--border-accent) !important;
+  background: var(--bg-input) !important;
+  box-shadow: var(--shadow-gold);
+}
+
+/* Dropdown menu */
+.navbar-fintech .dropdown-menu {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-md);
+  padding: 0.5rem;
+  min-width: 210px;
+  animation: fadeSlideUp 0.2s ease both;
+}
+.navbar-fintech .dropdown-item {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.875rem;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.navbar-fintech .dropdown-item:hover {
+  background: var(--gold-soft);
+  color: var(--text-primary);
+}
+.navbar-fintech .dropdown-item.text-expense {
+  color: var(--color-expense) !important;
+}
+.navbar-fintech .dropdown-item.text-expense:hover {
+  background: rgba(248, 113, 113, 0.1);
+  color: var(--color-expense) !important;
+}
+.navbar-fintech .dropdown-divider {
+  border-color: var(--border-color);
+  margin: 0.35rem 0.5rem;
+}
+
+/* Hamburger icon */
+.navbar-fintech .navbar-toggler {
+  border: none;
+  box-shadow: none;
+  padding: 0.4rem;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+.navbar-fintech .navbar-toggler:hover {
+  background: var(--bg-elevated);
+}
+
+/* --------------------------------------------------------------------------
+   7. Cards — Premium
+   -------------------------------------------------------------------------- */
+.premium-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
+  overflow: hidden;
+}
+
+.premium-card-header {
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
+}
+
+.premium-card-body {
+  padding: 1.5rem;
+}
+
+.premium-card-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-elevated);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.premium-card-header-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-sm);
+  background: var(--gold-soft);
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  border: 1px solid var(--border-accent);
+}
+
+.premium-card-title {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  color: var(--text-primary);
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+/* Hover lift for interactive cards */
+a.premium-card:hover,
+.premium-card.interactive:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-accent);
+  transform: translateY(-3px);
+  text-decoration: none;
+}
+
+/* Action card (horizontal slide) */
+.action-card {
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+.action-card:hover {
+  transform: translateX(5px);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-sm);
+}
+.action-card:hover .action-card-chevron {
+  color: var(--gold) !important;
+}
+
+/* --------------------------------------------------------------------------
+   8. Buttons
+   -------------------------------------------------------------------------- */
+.btn-fintech-primary {
+  background: var(--gold-gradient);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: 0.7rem 1.5rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 rgba(255,255,255,0.15);
+  position: relative;
+  overflow: hidden;
+}
+.btn-fintech-primary::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.5s ease;
+}
+.btn-fintech-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-gold), var(--shadow-sm);
+  color: var(--text-on-accent);
+}
+.btn-fintech-primary:hover::before {
+  left: 150%;
+}
+.btn-fintech-primary:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-xs);
+}
+.btn-fintech-primary:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.btn-fintech-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.7rem 1.5rem;
+  transition: all var(--transition-fast);
+}
+.btn-fintech-secondary:hover {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border-color: var(--border-accent);
+}
+.btn-fintech-secondary:focus {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.btn-fintech-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  transition: all var(--transition-fast);
+}
+.btn-fintech-ghost:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.btn-fintech-destructive {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid rgba(248,113,113,0.35);
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  padding: 0.6rem 1.25rem;
+  transition: all var(--transition-fast);
+}
+.btn-fintech-destructive:hover {
+  background: rgba(248,113,113,0.1);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+/* --------------------------------------------------------------------------
+   9. Form Controls
+   -------------------------------------------------------------------------- */
+.form-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-bottom: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.form-control-fintech,
+.form-select-fintech,
+select.form-control-fintech,
+select.form-select.form-control-fintech {
+  background-color: var(--bg-input) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 0.7rem 1rem !important;
+  font-size: 0.9rem !important;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.form-control-fintech:focus,
+.form-select-fintech:focus,
+select.form-control-fintech:focus {
+  background-color: var(--bg-elevated) !important;
+  border-color: var(--gold) !important;
+  box-shadow: var(--focus-ring) !important;
+  outline: none !important;
+  color: var(--text-primary) !important;
+}
+.form-control-fintech::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+/* General form-control override for dark mode */
+.form-control,
+.form-select {
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+}
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--bg-elevated);
+  border-color: var(--gold);
+  box-shadow: var(--focus-ring);
+  color: var(--text-primary);
+}
+.form-control::placeholder {
+  color: var(--text-tertiary);
+}
+.form-control option,
+.form-select option {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+/* Checkbox */
+.form-check-input {
+  background-color: var(--bg-input);
+  border-color: var(--border-color);
+  border-radius: var(--radius-sm);
+  width: 18px;
+  height: 18px;
+  transition: all var(--transition-fast);
+}
+.form-check-input:checked {
+  background-color: var(--gold);
+  border-color: var(--gold-dim);
+}
+.form-check-input:focus {
+  box-shadow: var(--focus-ring);
+}
+
+/* --------------------------------------------------------------------------
+   10. Modals
+   -------------------------------------------------------------------------- */
+.modal-content-fintech,
+.modal-content.premium-card {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-xl) !important;
+  box-shadow: var(--shadow-lg) !important;
+  overflow: hidden;
+}
+.modal-header-fintech,
+.modal-content.premium-card .modal-header {
+  background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
+  border-bottom: 1px solid var(--border-color) !important;
+  padding: 1.5rem 1.75rem;
+}
+.modal-title-fintech,
+.modal-content.premium-card .modal-title {
+  font-family: var(--font-serif);
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 1.3rem;
+}
+.modal-body-fintech,
+.modal-content.premium-card .modal-body {
+  background: var(--bg-surface);
+  padding: 1.75rem;
+  color: var(--text-primary);
+}
+.modal-footer-fintech,
+.modal-content.premium-card .modal-footer {
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-elevated);
+  padding: 1rem 1.75rem;
+}
+
+/* Bootstrap modal backdrop */
+.modal-backdrop {
+  background-color: rgba(0,0,0,0.75);
+}
+
+/* Button close in modals */
+.btn-close {
+  filter: invert(1) brightness(0.7);
+  transition: filter var(--transition-fast), opacity var(--transition-fast);
+}
+.btn-close:hover {
+  filter: invert(1) brightness(1);
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   11. Tables
+   -------------------------------------------------------------------------- */
+.table-fintech {
+  width: 100%;
+  border-collapse: collapse;
+}
+.table-fintech th {
+  text-align: left;
+  padding: 0.875rem 1.25rem;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  font-weight: 700;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-elevated);
+}
+.table-fintech td {
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-primary);
+  vertical-align: middle;
+  font-size: 0.9rem;
+}
+.table-fintech tbody tr {
+  transition: background var(--transition-fast);
+}
+.table-fintech tbody tr:hover {
+  background: var(--bg-elevated);
+}
+
+/* Bootstrap table override */
+table {
+  font-family: var(--font-sans);
+}
+th {
+  background-color: var(--bg-elevated);
+  color: var(--text-tertiary);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+td {
+  color: var(--text-primary);
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--border-color) !important;
+  vertical-align: middle;
+}
+tr:hover {
+  background-color: var(--bg-elevated) !important;
+}
+
+/* --------------------------------------------------------------------------
+   12. Badges
+   -------------------------------------------------------------------------- */
+.badge-fintech {
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.badge-income {
+  background: rgba(74, 222, 128, 0.12);
+  color: var(--color-income);
+  border: 1px solid rgba(74,222,128,0.2);
+}
+.badge-expense {
+  background: rgba(248, 113, 113, 0.12);
+  color: var(--color-expense);
+  border: 1px solid rgba(248,113,113,0.2);
+}
+.badge-gold {
+  background: var(--gold-soft);
+  color: var(--gold);
+  border: 1px solid var(--border-accent);
+}
+
+/* Semantic text colors */
+.text-income    { color: var(--color-income)   !important; }
+.text-expense   { color: var(--color-expense)  !important; }
+.text-gold      { color: var(--gold)           !important; }
+.text-muted     { color: var(--text-tertiary)  !important; }
+
+/* --------------------------------------------------------------------------
+   13. FAB — Floating Action Button
+   -------------------------------------------------------------------------- */
+.fab-pulse {
+  animation: goldPulse 2.5s infinite;
+}
+
+/* --------------------------------------------------------------------------
+   14. Dashboard — Hero Banner
+   -------------------------------------------------------------------------- */
+.db-page {
+  animation: fadeSlideUp 0.5s ease both;
+}
+
+.db-hero {
+  background: linear-gradient(135deg, #1a1510 0%, #2a2010 40%, #1a1510 100%);
+  border-bottom: 1px solid var(--border-color);
+  padding: 2.5rem 2rem;
+  margin-bottom: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.db-hero::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 320px; height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.db-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; right: 120px;
+  width: 180px; height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.db-hero-name {
+  font-family: var(--font-serif);
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+.db-hero-name span {
+  background: var(--gold-gradient-bright);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.db-hero-sub {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-top: 0.35rem;
+}
+
+/* Period selector */
+.period-select-wrap { position: relative; }
+#periodSelector {
+  background: rgba(201,168,76,0.1) !important;
+  border: 1px solid var(--border-accent) !important;
+  border-radius: var(--radius-full) !important;
+  color: var(--gold-bright) !important;
+  font-size: 0.8rem !important;
+  padding: 0.5rem 2.5rem 0.5rem 1.1rem !important;
+  appearance: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+#periodSelector:focus {
+  outline: none !important;
+  box-shadow: var(--focus-ring) !important;
+  border-color: var(--gold) !important;
+}
+#periodSelector option {
+  color: var(--text-primary);
+  background: var(--bg-surface);
+}
+
+/* Section label divider */
+.db-section-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-tertiary);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.db-section-label i {
+  color: var(--gold-dim);
+}
+.db-section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--border-color), transparent);
+}
+
+/* --------------------------------------------------------------------------
+   15. Financial Overview Cards
+   -------------------------------------------------------------------------- */
+.fin-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-xs);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  cursor: default;
+}
+.fin-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+.fin-card::after {
+  content: '';
+  position: absolute;
+  top: -30%; right: -20px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+.fin-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-accent);
+}
+.fin-card:hover::after { opacity: 1; }
+
+.fin-icon-wrap {
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  border: 1px solid transparent;
+  transition: transform var(--transition-base);
+}
+.fin-card:hover .fin-icon-wrap {
+  transform: scale(1.08) rotate(-4deg);
+}
+
+.fin-body { display: flex; flex-direction: column; min-width: 0; }
+.fin-label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-tertiary);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.fin-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  white-space: nowrap;
+  font-family: var(--font-sans);
+}
+
+/* Themed fin cards */
+.fin-income::before      { background: var(--color-income); }
+.fin-income .fin-icon-wrap { background: rgba(74,222,128,0.1); color: var(--color-income); border-color: rgba(74,222,128,0.15); }
+.fin-income::after         { background: radial-gradient(circle, rgba(74,222,128,0.07), transparent); }
+
+.fin-expense::before     { background: var(--color-expense); }
+.fin-expense .fin-icon-wrap{ background: rgba(248,113,113,0.1); color: var(--color-expense); border-color: rgba(248,113,113,0.15); }
+.fin-expense::after        { background: radial-gradient(circle, rgba(248,113,113,0.07), transparent); }
+
+.fin-investment::before  { background: var(--color-invest); }
+.fin-investment .fin-icon-wrap{ background: rgba(96,165,250,0.1); color: var(--color-invest); border-color: rgba(96,165,250,0.15); }
+.fin-investment::after     { background: radial-gradient(circle, rgba(96,165,250,0.07), transparent); }
+
+.fin-saving::before      { background: var(--gold); }
+.fin-saving .fin-icon-wrap { background: var(--gold-soft); color: var(--gold); border-color: var(--border-accent); }
+.fin-saving::after         { background: radial-gradient(circle, rgba(201,168,76,0.07), transparent); }
+
+.fin-split::before       { background: var(--color-split); }
+.fin-split .fin-icon-wrap  { background: rgba(251,146,60,0.1); color: var(--color-split); border-color: rgba(251,146,60,0.15); }
+.fin-split::after          { background: radial-gradient(circle, rgba(251,146,60,0.07), transparent); }
+
+.fin-emi::before         { background: var(--color-emi); }
+.fin-emi .fin-icon-wrap    { background: rgba(232,121,249,0.1); color: var(--color-emi); border-color: rgba(232,121,249,0.15); }
+.fin-emi::after            { background: radial-gradient(circle, rgba(232,121,249,0.07), transparent); }
+
+/* --------------------------------------------------------------------------
+   16. Reminder & Task Items
+   -------------------------------------------------------------------------- */
+.reminder-item,
+.task-item {
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.6rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--border-color);
+  transition: all var(--transition-base);
+}
+.reminder-item:hover,
+.task-item:hover {
+  transform: translateX(5px);
+  box-shadow: var(--shadow-sm);
+  background: var(--bg-input);
+}
+.reminder-item.critical,
+.task-item.overdue    { border-left-color: var(--color-expense); }
+.reminder-item.high   { border-left-color: var(--warning); }
+.reminder-item.medium { border-left-color: var(--gold); }
+.reminder-item.low    { border-left-color: var(--color-income); }
+.task-item:not(.overdue) { border-left-color: var(--color-income); }
+
+/* --------------------------------------------------------------------------
+   17. Loading Shimmer
+   -------------------------------------------------------------------------- */
+.card-body.loading {
+  position: relative;
+  min-height: 200px;
+  overflow: hidden;
+}
+.card-body.loading::before {
+  content: '';
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(90deg,
+    var(--bg-surface) 25%,
+    var(--bg-elevated) 50%,
+    var(--bg-surface) 75%
+  );
+  background-size: 400px 100%;
+  animation: shimmerSkeleton 1.6s infinite;
+  z-index: 1;
+}
+.card-body.loading canvas { opacity: 0; }
+
+/* --------------------------------------------------------------------------
+   18. Dashboard Footer Note
+   -------------------------------------------------------------------------- */
+.db-footer-note {
+  font-size: 0.72rem;
+  color: var(--text-tertiary);
+  text-align: right;
+  padding: 1rem 0.5rem 0;
+  border-top: 1px solid var(--border-color);
+  margin-top: 1.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   19. Utility Page
+   -------------------------------------------------------------------------- */
+.util-card-link { text-decoration: none; display: block; height: 100%; }
+
+.util-card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-xs);
+  padding: 1.5rem 1.25rem;
+  height: 100%;
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+.util-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--gold-gradient);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--transition-base);
+}
+.util-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-accent);
+}
+.util-card:hover::after { transform: scaleX(1); }
+
+.util-icon-circle {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: var(--text-secondary);
+  transition: all var(--transition-base);
+  flex-shrink: 0;
+}
+.util-card:hover .util-icon-circle {
+  background: var(--gold-gradient);
+  color: var(--text-on-accent);
+  border-color: transparent;
+  transform: rotate(-6deg) scale(1.08);
+}
+
+.util-card-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.util-badge {
+  font-size: 0.62rem;
+  padding: 0.12rem 0.55rem;
+  background: var(--gold-soft);
+  color: var(--gold);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+}
+.util-card-desc {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+  line-height: 1.55;
+  margin: 0;
+  flex: 1;
+}
+.util-card-arrow {
+  font-size: 0.72rem;
+  color: var(--gold-dim);
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: all var(--transition-base);
+  align-self: flex-end;
+  font-weight: 700;
+}
+.util-card:hover .util-card-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* --------------------------------------------------------------------------
+   20. Profile Components
+   -------------------------------------------------------------------------- */
+.profile-header {
+  text-align: center;
+  position: relative;
+  padding: 2rem 1.5rem 1.5rem;
+}
+
+.profile-avatar {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  border: 3px solid var(--gold);
+  box-shadow: 0 0 0 6px var(--gold-soft), var(--shadow-md);
+  margin-bottom: 1rem;
+  object-fit: cover;
+}
+
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.9rem;
+  background: var(--gold-soft);
+  color: var(--gold);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-top: 0.5rem;
+}
+
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  letter-spacing: -0.02em;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.section-title i {
+  color: var(--gold-dim);
+  font-size: 0.9rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.stat-card {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-base);
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-accent);
+  box-shadow: var(--shadow-sm);
+}
+.stat-card i {
+  font-size: 1.6rem;
+  color: var(--gold-dim);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+.stat-card h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0.35rem 0 0.25rem;
+}
+.stat-card p {
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.875rem;
+}
+.module-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 0.75rem;
+  text-align: center;
+  transition: all var(--transition-base);
+}
+.module-card:hover {
+  background: var(--gold-soft);
+  border-color: var(--border-accent);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-sm);
+}
+.module-card i {
+  font-size: 1.6rem;
+  color: var(--text-tertiary);
+  margin-bottom: 0.5rem;
+  display: block;
+  transition: color var(--transition-fast);
+}
+.module-card:hover i { color: var(--gold); }
+.module-card h6 {
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+.module-card .badge {
+  font-size: 0.65rem;
+  padding: 0.2rem 0.55rem;
+  background: rgba(74,222,128,0.15);
+  color: var(--color-income);
+  border: 1px solid rgba(74,222,128,0.2);
+  border-radius: var(--radius-full);
+}
+
+/* --------------------------------------------------------------------------
+   21. Alert / Toast Messages
+   -------------------------------------------------------------------------- */
+.alert-container {
+  position: fixed;
+  top: 80px;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+.alert-toast {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--radius-md);
+  padding: 0.875rem 1.25rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-md);
+  pointer-events: all;
+  min-width: 280px;
+  max-width: 420px;
+  animation: fadeSlideIn 0.3s ease both;
+}
+.alert-toast.alert-success { border-left-color: var(--color-income); }
+.alert-toast.alert-danger  { border-left-color: var(--color-expense); }
+.alert-toast.alert-warning { border-left-color: var(--warning); }
+.alert-toast.alert-info    { border-left-color: var(--info); }
+
+/* --------------------------------------------------------------------------
+   22. Bootstrap Alert Override
+   -------------------------------------------------------------------------- */
+.alert {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-md) !important;
+}
+.alert-success { border-left: 4px solid var(--color-income) !important; }
+.alert-danger  { border-left: 4px solid var(--color-expense) !important; }
+.alert-warning { border-left: 4px solid var(--warning) !important; }
+.alert-info    { border-left: 4px solid var(--info) !important; }
+
+/* --------------------------------------------------------------------------
+   23. Footer
+   -------------------------------------------------------------------------- */
+.footer {
+  background: var(--bg-surface);
+  border-top: 1px solid var(--border-color);
+  color: var(--text-tertiary) !important;
+  font-size: 0.8rem;
+  padding: 1.5rem 0;
+  margin-top: 3rem;
+}
+.footer p { margin: 0; color: var(--text-tertiary); }
+.footer hr { border-color: var(--border-color); margin: 0; }
+
+/* --------------------------------------------------------------------------
+   24. Legacy Overrides (backward compat)
+   -------------------------------------------------------------------------- */
+:root {
+  --primary:                  var(--gold);
+  --primary-dark:             var(--gold-dim);
+  --primary-dark-secondary:   var(--gold);
+  --secondary:                var(--text-primary);
+  --gradient-signature:       var(--gold-gradient);
+  --accent-gold:              var(--gold);
+  --accent-gold-dark:         var(--gold-dim);
+  --bg-base:                  #0f0e0d;
+  --text-on-accent:           #1a1200;
+  --focus-ring:               var(--focus-ring);
+  --radius-full:              9999px;
+  --radius-lg:                18px;
+  --radius-md:                12px;
+  --font-serif:               'Playfair Display', Georgia, serif;
+  --font-sans:                'Inter', 'Montserrat', system-ui, sans-serif;
+  --shadow-sm:                0 2px 8px rgba(0,0,0,0.5);
+  --shadow-md:                0 8px 24px rgba(0,0,0,0.6);
+  --shadow-lg:                0 20px 60px rgba(0,0,0,0.7);
+}
+
+.custom-btn-primary {
+  background: var(--gold-gradient);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  transition: all var(--transition-base);
+}
+.custom-btn-primary:hover {
+  box-shadow: var(--shadow-gold);
+  transform: translateY(-2px);
+}
+
+.custom-btn-danger {
+  color: var(--color-expense);
+  background: transparent;
+  border: 1px solid rgba(248,113,113,0.3);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+.custom-btn-danger:hover {
+  background: rgba(248,113,113,0.1);
+  color: var(--color-expense);
+}
+
+.card-design {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+}
+
+/* --------------------------------------------------------------------------
+   26. Missing Utility Classes — used across finance templates
+   -------------------------------------------------------------------------- */
+
+/* Semantic color text helpers */
+.text-income  { color: var(--color-income)  !important; }
+.text-expense { color: var(--color-expense) !important; }
+.text-invest  { color: var(--color-invest)  !important; }
+
+/* Font weight 700 shorthand */
+.fw-700 { font-weight: 700; }
+
+/* Interactive card — subtle lift on hover */
+.interactive {
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+.interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-accent);
+}
+
+/* Navbar Tools dropdown chevron rotation */
+.dropdown.show .tools-chevron { transform: rotate(180deg); }
+
+/* Dropdown dark theme overrides (ensure consistency everywhere) */
+.dropdown-menu {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+.dropdown-item {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.6rem 0.875rem;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+.dropdown-divider {
+  border-color: var(--border-color);
+  opacity: 1;
+}
+
+/* Badge utility overrides */
+.badge-fintech.badge-expense {
+  background: rgba(248,113,113,0.12);
+  color: var(--color-expense);
+  border: 1px solid rgba(248,113,113,0.25);
 }

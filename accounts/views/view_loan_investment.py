@@ -51,6 +51,7 @@ def loan_create(request: HttpRequest) -> HttpResponse:
             'accounts': accounts,
             'mode': 'create',
             'today': date.today().isoformat(),
+            'form_data': {'name': '', 'principal': '', 'monthly_emi': '', 'account_id': '', 'start_date': ''},
         })
 
     name = request.POST.get('name', '').strip()
@@ -195,6 +196,7 @@ def investment_create(request: HttpRequest) -> HttpResponse:
             'accounts': accounts,
             'mode': 'create',
             'today': date.today().isoformat(),
+            'form_data': {'name': '', 'monthly_amount': '', 'account_id': '', 'start_date': ''},
         })
 
     name = request.POST.get('name', '').strip()

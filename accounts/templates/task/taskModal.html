@@ -1,221 +1,274 @@
 {% load static %}
 
-<!-- Enhanced Add/Edit Task Modal -->
-<div class="modal fade" id="taskmodal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h1 class="modal-title fs-4" id="exampleModalLabel">Add Task</h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<!-- ── Premium Add/Edit Task Modal ── -->
+<div class="modal fade" id="taskmodal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+    <div class="modal-content" style="
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    ">
+
+      <!-- ── Modal Header ── -->
+      <div class="modal-header" style="
+        background: linear-gradient(135deg, #1a1510 0%, #221c10 60%, #1a1917 100%);
+        border-bottom: 1px solid var(--border-color);
+        padding: 1.5rem 1.75rem;
+        position: relative;
+        overflow: hidden;
+      ">
+        <!-- Decorative glow -->
+        <div style="
+          position: absolute; top: -40px; right: -40px;
+          width: 160px; height: 160px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%);
+          pointer-events: none;
+        "></div>
+
+        <div class="d-flex align-items-center gap-3">
+          <div style="
+            width: 2.5rem; height: 2.5rem; border-radius: var(--radius-md);
+            background: var(--gold-soft);
+            border: 1px solid var(--border-accent);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--gold); font-size: 1rem;
+            flex-shrink: 0;
+          ">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+          <div>
+            <h5 class="modal-title mb-0" id="taskModalLabel" style="
+              font-family: var(--font-serif);
+              color: var(--text-primary);
+              font-weight: 700;
+              letter-spacing: -0.025em;
+              font-size: 1.3rem;
+              line-height: 1.1;
+            ">Add Task</h5>
+            <p class="mb-0 mt-1" style="font-size: 0.72rem; color: var(--text-tertiary);">Fill in the details below to create a new task</p>
+          </div>
         </div>
-        <div class="modal-body">
-          <form action="/addTask/" method="post" id="myTaskForm">
-            {% csrf_token %}
-            
-            <div class="row">
-              <!-- Left Column -->
-              <div class="col-md-6">
-                <!-- Task Title -->
-                <div class="mb-3">
-                  <label for="title" class="form-label">
-                    <i class="fa-solid fa-heading text-primary"></i> Task Title <span class="text-danger">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    class="form-control shadow-sm"
-                    name="name"
-                    id="title"
-                    placeholder="Enter task title"
-                    required
-                  />
-                </div>
-
-                <!-- Priority Selection -->
-                <div class="mb-3">
-                  <label for="priority" class="form-label">
-                    <i class="fa-solid fa-flag text-warning"></i> Priority
-                  </label>
-                  <select class="form-select shadow-sm" name="priority" id="priority" aria-label="Select task priority">
-                    <option value="Medium" selected>Medium</option>
-                    <option value="High">🔴 High</option>
-                    <option value="Low">🟢 Low</option>
-                  </select>
-                </div>
-
-                <!-- Category Selection -->
-                <div class="mb-3">
-                  <label for="category" class="form-label">
-                    <i class="fa-solid fa-folder text-info"></i> Category
-                  </label>
-                  <select class="form-select shadow-sm" name="category" id="category" aria-label="Select category">
-                    <option value="">-- No Category --</option>
-                    {% for cat in categories %}
-                      <option value="{{ cat.id }}" data-color="{{ cat.color }}">
-                        {{ cat.icon|default:"📁" }} {{ cat.name }}
-                      </option>
-                    {% endfor %}
-                  </select>
-                  <small class="text-muted">Organize tasks by project or area</small>
-                </div>
-
-                <!-- Tags Selection -->
-                <div class="mb-3">
-                  <label for="tags" class="form-label">
-                    <i class="fa-solid fa-tags text-success"></i> Tags
-                  </label>
-                  <select class="form-select shadow-sm" name="tags" id="tags" multiple aria-label="Select tags">
-                    {% for tag in tags %}
-                      <option value="{{ tag.id }}" data-color="{{ tag.color }}">{{ tag.name }}</option>
-                    {% endfor %}
-                  </select>
-                  <small class="text-muted">Hold Ctrl to select multiple tags</small>
-                </div>
-              </div>
-
-              <!-- Right Column -->
-              <div class="col-md-6">
-                <!-- Start Date -->
-                <div class="mb-3">
-                  <label for="start_date" class="form-label">
-                    <i class="fa-solid fa-calendar-plus text-secondary"></i> Start Date
-                  </label>
-                  <input
-                    type="date"
-                    class="form-control shadow-sm"
-                    name="start_date"
-                    id="start_date"
-                    aria-describedby="start_date"
-                  />
-                </div>
-
-                <!-- Due Date -->
-                <div class="mb-3">
-                  <label for="complete_by" class="form-label">
-                    <i class="fa-solid fa-calendar-check text-danger"></i> Due Date
-                  </label>
-                  <input
-                    type="date"
-                    class="form-control shadow-sm"
-                    name="complete_by_date"
-                    id="complete_by"
-                    onchange="dateCheck()"
-                    aria-describedby="complete_by"
-                  />
-                </div>
-
-                <!-- Estimated Hours -->
-                <div class="mb-3">
-                  <label for="estimated_hours" class="form-label">
-                    <i class="fa-solid fa-clock text-warning"></i> Estimated Hours
-                  </label>
-                  <input
-                    type="number"
-                    class="form-control shadow-sm"
-                    name="estimated_hours"
-                    id="estimated_hours"
-                    placeholder="e.g., 2.5"
-                    step="0.5"
-                    min="0"
-                    max="999"
-                  />
-                  <small class="text-muted">How long will this take?</small>
-                </div>
-
-                <!-- Status (for edit mode) -->
-                <div class="mb-3" id="statusField" style="display: none;">
-                  <label for="status" class="form-label">
-                    <i class="fa-solid fa-circle-check text-success"></i> Status
-                  </label>
-                  <select class="form-select shadow-sm" name="status" id="status">
-                    <option value="Pending">⏳ Pending</option>
-                    <option value="In Progress">🔄 In Progress</option>
-                    <option value="Completed">✅ Completed</option>
-                    <option value="Cancelled">❌ Cancelled</option>
-                  </select>
-                </div>
-
-                <!-- Recurring Pattern -->
-                <div class="mb-3">
-                  <label for="recurring_frequency" class="form-label">
-                    <i class="fa-solid fa-rotate text-info"></i> Recurring
-                  </label>
-                  <div class="row g-2">
-                    <div class="col-8">
-                      <select class="form-select form-select-sm" name="recurring_frequency" id="recurring_frequency">
-                        <option value="">-- Not Recurring --</option>
-                        <option value="daily">📅 Daily</option>
-                        <option value="weekly">📆 Weekly</option>
-                        <option value="monthly">🗓️ Monthly</option>
-                        <option value="yearly">🎂 Yearly</option>
-                      </select>
-                    </div>
-                    <div class="col-4">
-                      <input type="number" class="form-control form-control-sm" name="recurring_interval" id="recurring_interval" 
-                             placeholder="Every" min="1" max="30" value="1">
-                    </div>
-                  </div>
-                  <small class="text-muted">E.g., "Weekly" + "2" = Every 2 weeks</small>
-                </div>
-
-                <!-- Parent Task (for subtasks) -->
-                <div class="mb-3">
-                  <label for="parent_task" class="form-label">
-                    <i class="fa-solid fa-diagram-project text-secondary"></i> Parent Task
-                  </label>
-                  <select class="form-select shadow-sm" name="parent_task" id="parent_task">
-                    <option value="">-- No Parent (Main Task) --</option>
-                    {% for task in all_tasks %}
-                      <option value="{{ task.id }}">
-                        {% if task.category %}{{ task.category.icon|default:"📋" }}{% else %}📋{% endif %} {{ task.name|truncatewords:8 }}
-                      </option>
-                    {% endfor %}
-                  </select>
-                  <small class="text-muted">Make this a subtask of another task</small>
-                </div>
-              </div>
-            </div>
-
-            <!-- Task Description (Full Width) -->
-            <div class="mb-3">
-              <label for="descirption" class="form-label">
-                <i class="fa-solid fa-align-left text-primary"></i> Description
-              </label>
-              <textarea
-                class="form-control shadow-sm"
-                name="description"
-                id="descirption"
-                placeholder="Enter task details and notes..."
-                rows="4"
-              ></textarea>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="d-flex justify-content-end gap-2">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                <i class="fa-solid fa-times"></i> Cancel
-              </button>
-              <button
-                type="submit"
-                id="submitbutton"
-                class="btn custom-btn-primary shadow-sm"
-              >
-                <i class="fa-solid fa-plus-circle"></i> Add Task
-              </button>
-            </div>
-          </form>
-        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
+
+      <!-- ── Modal Body ── -->
+      <div class="modal-body" style="padding: 1.75rem; background: var(--bg-surface);">
+        <form action="/addTask/" method="post" id="myTaskForm">
+          {% csrf_token %}
+
+          <div class="row g-4">
+
+            <!-- ── LEFT COLUMN ── -->
+            <div class="col-md-6">
+
+              <!-- Task Title -->
+              <div class="mb-3">
+                <label for="title" class="form-label">
+                  <i class="fa-solid fa-heading me-1" style="color: var(--gold-dim);"></i> Task Title <span style="color: var(--color-expense);">*</span>
+                </label>
+                <input
+                  type="text"
+                  class="form-control form-control-fintech"
+                  name="name"
+                  id="title"
+                  placeholder="e.g., Prepare quarterly report"
+                  required
+                />
+              </div>
+
+              <!-- Priority -->
+              <div class="mb-3">
+                <label for="priority" class="form-label">
+                  <i class="fa-solid fa-flag me-1" style="color: var(--gold-dim);"></i> Priority
+                </label>
+                <select class="form-select form-control-fintech" name="priority" id="priority" aria-label="Select task priority">
+                  <option value="Medium" selected>🟡 Medium</option>
+                  <option value="High">🔴 High</option>
+                  <option value="Low">🟢 Low</option>
+                </select>
+              </div>
+
+              <!-- Category -->
+              <div class="mb-3">
+                <label for="category" class="form-label">
+                  <i class="fa-solid fa-folder me-1" style="color: var(--gold-dim);"></i> Category
+                </label>
+                <select class="form-select form-control-fintech" name="category" id="category" aria-label="Select category">
+                  <option value="">— No Category —</option>
+                  {% for cat in categories %}
+                  <option value="{{ cat.id }}" data-color="{{ cat.color }}">
+                    {{ cat.icon|default:"📁" }} {{ cat.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+                <div class="form-text" style="font-size: 0.72rem; color: var(--text-tertiary); margin-top: 0.35rem;">Organize tasks by project or area</div>
+              </div>
+
+              <!-- Tags -->
+              <div class="mb-3">
+                <label for="tags" class="form-label">
+                  <i class="fa-solid fa-tags me-1" style="color: var(--gold-dim);"></i> Tags
+                </label>
+                <select class="form-select form-control-fintech" name="tags" id="tags" multiple aria-label="Select tags">
+                  {% for tag in tags %}
+                  <option value="{{ tag.id }}" data-color="{{ tag.color }}">{{ tag.name }}</option>
+                  {% endfor %}
+                </select>
+                <div class="form-text" style="font-size: 0.72rem; color: var(--text-tertiary); margin-top: 0.35rem;">Hold Ctrl / ⌘ to select multiple</div>
+              </div>
+
+            </div>
+
+            <!-- ── RIGHT COLUMN ── -->
+            <div class="col-md-6">
+
+              <!-- Start Date -->
+              <div class="mb-3">
+                <label for="start_date" class="form-label">
+                  <i class="fa-solid fa-calendar-plus me-1" style="color: var(--gold-dim);"></i> Start Date
+                </label>
+                <input
+                  type="date"
+                  class="form-control form-control-fintech"
+                  name="start_date"
+                  id="start_date"
+                />
+              </div>
+
+              <!-- Due Date -->
+              <div class="mb-3">
+                <label for="complete_by" class="form-label">
+                  <i class="fa-solid fa-calendar-check me-1" style="color: var(--color-expense);"></i> Due Date
+                </label>
+                <input
+                  type="date"
+                  class="form-control form-control-fintech"
+                  name="complete_by_date"
+                  id="complete_by"
+                  onchange="dateCheck()"
+                />
+              </div>
+
+              <!-- Estimated Hours -->
+              <div class="mb-3">
+                <label for="estimated_hours" class="form-label">
+                  <i class="fa-solid fa-clock me-1" style="color: var(--gold-dim);"></i> Estimated Hours
+                </label>
+                <input
+                  type="number"
+                  class="form-control form-control-fintech"
+                  name="estimated_hours"
+                  id="estimated_hours"
+                  placeholder="e.g., 2.5"
+                  step="0.5"
+                  min="0"
+                  max="999"
+                />
+                <div class="form-text" style="font-size: 0.72rem; color: var(--text-tertiary); margin-top: 0.35rem;">How long will this take?</div>
+              </div>
+
+              <!-- Status (edit mode only) -->
+              <div class="mb-3" id="statusField" style="display: none;">
+                <label for="status" class="form-label">
+                  <i class="fa-solid fa-circle-half-stroke me-1" style="color: var(--gold-dim);"></i> Status
+                </label>
+                <select class="form-select form-control-fintech" name="status" id="status">
+                  <option value="Pending">⏳ Pending</option>
+                  <option value="In Progress">🔄 In Progress</option>
+                  <option value="Completed">✅ Completed</option>
+                  <option value="Cancelled">❌ Cancelled</option>
+                </select>
+              </div>
+
+              <!-- Recurring -->
+              <div class="mb-3">
+                <label class="form-label">
+                  <i class="fa-solid fa-rotate me-1" style="color: var(--gold-dim);"></i> Recurring Pattern
+                </label>
+                <div class="row g-2">
+                  <div class="col-7">
+                    <select class="form-select form-control-fintech" name="recurring_frequency" id="recurring_frequency">
+                      <option value="">— Not Recurring —</option>
+                      <option value="daily">📅 Daily</option>
+                      <option value="weekly">📆 Weekly</option>
+                      <option value="monthly">🗓️ Monthly</option>
+                      <option value="yearly">🎂 Yearly</option>
+                    </select>
+                  </div>
+                  <div class="col-5">
+                    <input
+                      type="number"
+                      class="form-control form-control-fintech"
+                      name="recurring_interval"
+                      id="recurring_interval"
+                      placeholder="Every N"
+                      min="1" max="30" value="1"
+                    />
+                  </div>
+                </div>
+                <div class="form-text" style="font-size: 0.72rem; color: var(--text-tertiary); margin-top: 0.35rem;">e.g., "Weekly" + 2 = every 2 weeks</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ── Parent Task (full width) ── -->
+          <div class="mb-3">
+            <label for="parent_task" class="form-label">
+              <i class="fa-solid fa-diagram-project me-1" style="color: var(--gold-dim);"></i> Parent Task
+            </label>
+            <select class="form-select form-control-fintech" name="parent_task" id="parent_task">
+              <option value="">— No Parent (Main Task) —</option>
+              {% for task in all_tasks %}
+              <option value="{{ task.id }}">
+                {% if task.category %}{{ task.category.icon|default:"📋" }}{% else %}📋{% endif %}
+                {{ task.name|truncatewords:8 }}
+              </option>
+              {% endfor %}
+            </select>
+            <div class="form-text" style="font-size: 0.72rem; color: var(--text-tertiary); margin-top: 0.35rem;">Make this a sub-task of another task</div>
+          </div>
+
+          <!-- ── Description (full width) ── -->
+          <div class="mb-4">
+            <label for="descirption" class="form-label">
+              <i class="fa-solid fa-align-left me-1" style="color: var(--gold-dim);"></i> Description
+            </label>
+            <textarea
+              class="form-control form-control-fintech"
+              name="description"
+              id="descirption"
+              placeholder="Add context, notes, or acceptance criteria…"
+              rows="3"
+            ></textarea>
+          </div>
+
+          <!-- ── Divider ── -->
+          <div style="height: 1px; background: var(--border-color); margin-bottom: 1.25rem;"></div>
+
+          <!-- ── Actions ── -->
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-fintech-secondary" data-bs-dismiss="modal">
+              <i class="fa-solid fa-times me-1"></i> Cancel
+            </button>
+            <button type="submit" id="submitbutton" class="btn btn-fintech-primary">
+              <i class="fa-solid fa-plus-circle me-1"></i> Add Task
+            </button>
+          </div>
+
+        </form>
+      </div>
+
     </div>
   </div>
-  
-  <script>
-    // Set today's date as the default value for the start date field
-    document.getElementById('start_date').value = new Date().toISOString().split('T')[0];
-    
-    // Set tomorrow as default due date
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    document.getElementById('complete_by').value = tomorrow.toISOString().split('T')[0];
-  </script>
-  <script src="{% static 'js/task.js' %}"></script>
-  
+</div>
+
+<script>
+  document.getElementById('start_date').value = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  document.getElementById('complete_by').value = tomorrow.toISOString().split('T')[0];
+</script>
+<script src="{% static 'js/task.js' %}"></script>

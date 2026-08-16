@@ -75,7 +75,7 @@
     <div class="col-md-6">
       <div class="d-flex justify-content-between align-items-center mb-4">
         <h5 class="fw-bold mb-0" style="color: var(--text-primary); letter-spacing: -0.5px;">Active Split Plans</h5>
-        <a href="{% url 'finance:split_plan_list' %}" class="small fw-medium text-decoration-none" style="color: var(--accent-gold-dark);">View All</a>
+        <a href="{% url 'finance:split_plan_list' %}" class="small fw-medium text-decoration-none" style="color: var(--gold-dim);">View All</a>
       </div>
       
       {% if active_splits %}
@@ -106,9 +106,9 @@
       <h5 class="fw-bold mb-4" style="color: var(--text-primary); letter-spacing: -0.5px;">Quick Actions</h5>
       <div class="d-flex flex-column gap-3">
         
-        <a href="javascript:void(0)" onclick="openGlobalQuickEntry()" class="premium-card p-3 d-flex align-items-center text-decoration-none action-card">
-          <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; background: var(--gradient-signature); box-shadow: var(--shadow-sm);">
-            <i class="fa-solid fa-plus" style="color: #1a1a1a;"></i>
+        <a href="javascript:void(0)" onclick="openGlobalQuickEntry()" class="premium-card p-3 d-flex align-items-center text-decoration-none interactive">
+          <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; background: var(--gold-gradient); box-shadow: var(--shadow-gold);">
+            <i class="fa-solid fa-plus" style="color: var(--text-on-accent);"></i>
           </div>
           <div>
             <div class="fw-bold" style="color: var(--text-primary); letter-spacing: -0.5px;">Log New Entry</div>
@@ -145,16 +145,4 @@
 
 </div>
 
-<style>
-.action-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-.action-card:hover {
-  transform: translateX(4px);
-  border-color: var(--accent-gold);
-}
-.action-card:hover i.fa-chevron-right {
-  color: var(--accent-gold) !important;
-}
-</style>
 {% endblock %}
