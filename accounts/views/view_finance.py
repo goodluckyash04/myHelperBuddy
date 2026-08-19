@@ -38,6 +38,7 @@ def account_create(request: HttpRequest) -> HttpResponse:
         return render(request, 'finance/account_form.html', {
             'account_types': Account.ACCOUNT_TYPE_CHOICES,
             'mode': 'create',
+            'form_data': {},
         })
 
     name = request.POST.get('name', '').strip()
@@ -71,6 +72,7 @@ def account_edit(request: HttpRequest, pk: int) -> HttpResponse:
             'account': account,
             'account_types': Account.ACCOUNT_TYPE_CHOICES,
             'mode': 'edit',
+            'form_data': {},
         })
 
     name = request.POST.get('name', '').strip()
@@ -112,6 +114,7 @@ def category_create(request: HttpRequest) -> HttpResponse:
         return render(request, 'finance/category_form.html', {
             'category_types': Category.CATEGORY_TYPE_CHOICES,
             'mode': 'create',
+            'form_data': {},
         })
 
     name = request.POST.get('name', '').strip()
@@ -144,6 +147,7 @@ def category_edit(request: HttpRequest, pk: int) -> HttpResponse:
             'category': category,
             'category_types': Category.CATEGORY_TYPE_CHOICES,
             'mode': 'edit',
+            'form_data': {},
         })
 
     name = request.POST.get('name', '').strip()
@@ -400,6 +404,7 @@ def entry_edit(request: HttpRequest, pk: int) -> HttpResponse:
             'expense_categories': expense_categories,
             'income_categories': income_categories,
             'today': today_str(),
+            'form_data': {},
         })
 
     # POST: update

@@ -112,6 +112,7 @@ def loan_edit(request: HttpRequest, pk: int) -> HttpResponse:
             'loan': loan,
             'accounts': accounts,
             'mode': 'edit',
+            'form_data': {},
         })
 
     loan.name = request.POST.get('name', loan.name).strip()
@@ -250,6 +251,7 @@ def investment_edit(request: HttpRequest, pk: int) -> HttpResponse:
             'investment': investment,
             'accounts': accounts,
             'mode': 'edit',
+            'form_data': {},
         })
 
     investment.name = request.POST.get('name', investment.name).strip()

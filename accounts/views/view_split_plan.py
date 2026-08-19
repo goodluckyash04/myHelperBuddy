@@ -63,6 +63,7 @@ def split_plan_create(request: HttpRequest) -> HttpResponse:
         return render(request, 'finance/split_plan_form.html', {
             'accounts': accounts,
             'today': date.today().isoformat(),
+            'form_data': {},
         })
 
     title = request.POST.get('title', '').strip()

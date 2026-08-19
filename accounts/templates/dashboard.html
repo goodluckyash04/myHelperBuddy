@@ -17,7 +17,7 @@
 
   <!-- ── THIS MONTH'S SUMMARY ── -->
   <div class="row g-3 mb-4">
-    <div class="col-4 animate-in animate-in-delay-1">
+    <div class="col-12 col-md-4 animate-in animate-in-delay-1">
       <div class="premium-card p-4" style="border-top: 3px solid var(--color-income);">
         <p class="mb-2" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary);">
           <i class="fa-solid fa-arrow-trend-up me-1" style="color: var(--color-income);"></i>Income
@@ -27,7 +27,7 @@
         </h2>
       </div>
     </div>
-    <div class="col-4 animate-in animate-in-delay-2">
+    <div class="col-12 col-md-4 animate-in animate-in-delay-2">
       <div class="premium-card p-4" style="border-top: 3px solid var(--color-expense);">
         <p class="mb-2" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary);">
           <i class="fa-solid fa-arrow-trend-down me-1" style="color: var(--color-expense);"></i>Expense
@@ -37,7 +37,7 @@
         </h2>
       </div>
     </div>
-    <div class="col-4 animate-in animate-in-delay-3">
+    <div class="col-12 col-md-4 animate-in animate-in-delay-3">
       <div class="premium-card p-4" style="border-top: 3px solid {% if net_savings >= 0 %}var(--color-income){% else %}var(--color-expense){% endif %};">
         <p class="mb-2" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-tertiary);">
           <i class="fa-solid fa-piggy-bank me-1" style="color: var(--gold-dim);"></i>Net Saved
@@ -59,7 +59,7 @@
         <p class="db-section-label"><i class="fa-solid fa-bolt"></i> Quick Actions</p>
         <div class="d-flex flex-column gap-2">
 
-          <a href="javascript:void(0)" onclick="openGlobalQuickEntry()" class="d-flex align-items-center gap-3 p-3 interactive" style="
+          <a href="javascript:void(0)" onclick="openGlobalQuickEntry()" role="button" tabindex="0" class="d-flex align-items-center gap-3 p-3 interactive" style="
             background: var(--gold-soft);
             border: 1px solid var(--border-accent);
             border-radius: var(--radius-md);
