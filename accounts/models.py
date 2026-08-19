@@ -27,11 +27,6 @@ class UserProfile(models.Model):
         verbose_name_plural = _("User Profiles")
 
 
-
-
-
-
-
 class FinancialProduct(models.Model):
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=100)
@@ -76,11 +71,6 @@ class Transaction(models.Model):
         ("Completed", _("Completed")),
         ("Pending", _("Pending")),
     ]
-    MODE_CHOICES = [
-        ("CreditCard", _("CreditCard")),
-        ("Online", _("Online")),
-        ("Cash", _("Cash")),
-    ]
     type = models.CharField(
         max_length=50
     )  # type is a reserved keyword, consider renaming this field
@@ -100,8 +90,6 @@ class Transaction(models.Model):
         default=None,
     )
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="Pending")
-    mode = models.CharField(max_length=10, choices=MODE_CHOICES, null=True)
-    mode_detail = models.CharField(max_length=10, null=True)
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateField(blank=True, null=True)
     created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
@@ -126,9 +114,6 @@ class Transaction(models.Model):
             models.Index(fields=['created_by', 'is_deleted', 'date']),
             models.Index(fields=['created_by', 'is_deleted', 'status']),
         ]
-
-
-
 
 
 class LedgerTransaction(models.Model):

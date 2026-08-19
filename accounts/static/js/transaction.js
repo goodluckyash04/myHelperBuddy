@@ -11,7 +11,6 @@ var CATEGORIES = [
   "EMI",
   "Other",
 ];
-MODE = ["CreditCard", "Online", "Cash"];
 STATUS = ["Pendiing", "Completed"];
 
 // Get the current date and time in ISO format (YYYY-MM-DD)
@@ -41,25 +40,19 @@ function payType() {
   var categorySelect = document.getElementById("category");
   var beneficiary = document.getElementById("beneficiary");
   var other = document.getElementById("beneficiary_text");
-  var mode = document.getElementById("mode");
-  var mode_detail = document.getElementById("mode_detail");
   var status = document.getElementById("status");
 
-  // Default values
+  // Default values (Income)
   submit_button.textContent = "Add Income";
   var categories = ["Salary", "Other"];
   beneficiary.style.display = "none";
   other.style.display = "none";
-  mode.style.display = "none";
-  mode_detail.style.display = "none";
   status.style.display = "none";
 
   if (Expense.checked) {
     submit_button.textContent = "Add Expense";
     categories = CATEGORIES.filter((item) => item != "EMI");
     beneficiary.style.display = "";
-    mode.style.display = "";
-    mode_detail.style.display = "";
     status.style.display = "";
   }
 
@@ -106,24 +99,6 @@ function openModalAndGetExpense(Id) {
 
       // description
       document.getElementById("description_u").value = data.description;
-
-      if (data.type == "Expense") {
-        document.getElementById("mode_detail_u").removeAttribute("style");
-        document.getElementById("mode_u").removeAttribute("style");
-
-        // mode_detail
-        document.getElementById("mode_detail_u").value = data.mode_detail;
-
-        // mode
-        var modeSelect = document.getElementById("mode_u");
-        modeSelect.innerHTML = MODE.map(function (mode) {
-          return `<option value="${mode}" ${mode === data.mode ? "selected" : ""}>${mode}</option>`;
-        }).join("");
-      } else {
-        
-        document.getElementById("mode_detail_u").style.display = "none";
-        document.getElementById("mode_u").style.display = "none";
-      }
     });
 }
 

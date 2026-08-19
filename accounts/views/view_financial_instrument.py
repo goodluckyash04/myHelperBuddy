@@ -252,8 +252,6 @@ def create_finance(request: HttpRequest) -> HttpResponse:
                 beneficiary='Self',
                 description=f'{name} {sub_label} {i + 1}',
                 status="Pending",
-                mode="Online",
-                mode_detail=product_type,
                 created_by=user,
                 source=new_product
             )
@@ -475,7 +473,6 @@ def update_finance_detail(request: HttpRequest, id: int) -> HttpResponse:
             
             for index, trn in enumerate(transactions, 1):
                 trn.category = category
-                trn.mode_detail = i_type
                 trn.description = f'{name} {sub_label} {index}'
                 trn.save()
         
@@ -568,8 +565,6 @@ def update_finance_detail(request: HttpRequest, id: int) -> HttpResponse:
                             beneficiary='Self',
                             description=f'{name} {sub_label} {i + 1}',
                             status="Pending",
-                            mode="Online",
-                            mode_detail=details.type,
                             created_by=user,
                             source=details
                         )
@@ -615,8 +610,6 @@ def update_finance_detail(request: HttpRequest, id: int) -> HttpResponse:
                             beneficiary='Self',
                             description=f'{name} {sub_label} {i + 1}',
                             status="Pending",
-                            mode="Online",
-                            mode_detail=details.type,
                             created_by=user,
                             source=details
                         )

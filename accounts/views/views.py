@@ -89,26 +89,19 @@ def calculate_financial_overview(transactions) -> Dict[str, str]:
             filter=Q(category__iexact="emi", status__iexact="pending"),
             output_field=DecimalField(),
         ),
-        split_due=Sum(
-            "amount",
-            filter=Q(status__iexact="pending", mode_detail__iexact="split"),
-            output_field=DecimalField(),
-        )
     )
 
     income = aggregations["income"] or 0
     expense = aggregations["expense"] or 0
     investment = aggregations["investment"] or 0
     overdue = aggregations["overdue"] or 0
-    split_due = aggregations["split_due"] or 0
 
     return {
         "Income": format_amount(income),
         "Expense": format_amount(expense),
         "Investment": format_amount(investment),
         "EMI Due": format_amount(overdue),
-        "Saving": format_amount(income - expense - investment - split_due),
-        "Split Due": format_amount(split_due),
+        "Saving": format_amount(income - expense - investment),
     }
 
 def calculate_category_wise_expenses(transactions) -> Dict[str, Any]:
@@ -742,7 +735,6 @@ def dashboard(request):
     context = {
         "data": json.dumps(analytics, default=convert_decimal),
         "financial_data": financial_data,
-        "split_due_display": financial_data.get("Split Due", "₹0"),
         "emi_due_display": financial_data.get("EMI Due", "₹0"),
         "user_info": user_info,
         "user": user,

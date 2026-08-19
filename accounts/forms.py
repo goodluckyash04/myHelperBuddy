@@ -15,7 +15,7 @@ class TransactionForm(forms.ModelForm):
     class Meta:
         model = Transaction
         fields = ['type', 'category', 'date', 'amount', 'beneficiary', 
-                  'description', 'source', 'status', 'mode', 'mode_detail']
+                  'description', 'source', 'status']
     
     def clean_amount(self):
         """Validate that amount is positive."""
@@ -33,8 +33,6 @@ class TransactionForm(forms.ModelForm):
         if transaction_type == 'Income':
             cleaned_data['beneficiary'] = 'Self'
             cleaned_data['status'] = 'Completed'
-            cleaned_data['mode'] = None
-            cleaned_data['mode_detail'] = None
         
         return cleaned_data
 

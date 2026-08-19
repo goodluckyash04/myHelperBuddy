@@ -54,18 +54,7 @@
                 {% endfor %}
               </select>
             </div>
-            <div class="col-md-4">
-              <label class="txn-modal-label" for="fm-mode">
-                <i class="fa-solid fa-credit-card me-1" style="color:var(--primary);"></i> Mode
-              </label>
-              <select class="form-select txn-modal-input" name="mode" id="fm-mode">
-                <option {% if data.mode == "" %} selected {% endif %} value="">— All —</option>
-                <option {% if data.mode == "CreditCard" %} selected {% endif %} value="CreditCard">Credit Card</option>
-                <option {% if data.mode == "Online" %} selected {% endif %} value="Online">Online</option>
-                <option {% if data.mode == "Cash" %} selected {% endif %} value="Cash">Cash</option>
-              </select>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
               <label class="txn-modal-label" for="fm-status">
                 <i class="fa-solid fa-circle-half-stroke me-1" style="color:var(--primary);"></i> Status
               </label>
