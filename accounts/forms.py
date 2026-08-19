@@ -6,7 +6,7 @@ These forms provide server-side validation without affecting the existing UI/UX.
 from django import forms
 from django.core.exceptions import ValidationError
 from datetime import datetime
-from .models import Transaction, Task, Reminder, LedgerTransaction, FinancialProduct
+from .models import Transaction, LedgerTransaction, FinancialProduct
 
 
 class TransactionForm(forms.ModelForm):
@@ -38,57 +38,6 @@ class TransactionForm(forms.ModelForm):
         
         return cleaned_data
 
-
-class TaskForm(forms.ModelForm):
-    """Form for validating task data."""
-    
-    class Meta:
-        model = Task
-        fields = ['priority', 'name', 'complete_by_date', 'description', 'status']
-    
-    def clean_complete_by_date(self):
-        """Validate that complete_by_date is not in the past for new tasks."""
-        complete_by_date = self.cleaned_data.get('complete_by_date')
-        if complete_by_date and not self.instance.pk:  # Only for new tasks
-            if complete_by_date < datetime.now().date():
-                raise ValidationError("Completion date cannot be in the past.")
-        return complete_by_date
-    
-    def clean_name(self):
-        """Validate task name."""
-        name = self.cleaned_data.get('name')
-        if name and len(name.strip()) < 3:
-            raise ValidationError("Task name must be at least 3 characters long.")
-        return name.strip()
-
-
-class ReminderForm(forms.ModelForm):
-    """Form for validating reminder data."""
-    
-    class Meta:
-        model = Reminder
-        fields = ['title', 'description', 'reminder_date', 'frequency', 'custom_repeat_days']
-    
-    def clean(self):
-        """Validate frequency and custom_repeat_days."""
-        cleaned_data = super().clean()
-        frequency = cleaned_data.get('frequency')
-        custom_repeat_days = cleaned_data.get('custom_repeat_days')
-        
-        if frequency == 'custom' and not custom_repeat_days:
-            raise ValidationError("Custom repeat days is required for custom frequency.")
-        
-        if frequency != 'custom' and custom_repeat_days:
-            cleaned_data['custom_repeat_days'] = None
-        
-        return cleaned_data
-    
-    def clean_title(self):
-        """Validate title."""
-        title = self.cleaned_data.get('title')
-        if title and len(title.strip()) < 3:
-            raise ValidationError("Title must be at least 3 characters long.")
-        return title.strip()
 
 
 class LedgerTransactionForm(forms.ModelForm):

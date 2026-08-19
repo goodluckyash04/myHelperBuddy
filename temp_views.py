@@ -1,4 +1,4 @@
-"""
+﻿"""
 Core views for the MyHelperBuddy accounts application.
 
 This module contains main views for dashboard, profile, utilities,
@@ -7,7 +7,7 @@ and various analytics/statistics calculations.
 
 import json
 import re
-from datetime import datetime, date, timedelta
+from datetime import datetime
 from typing import Dict, Any, Optional
 
 from dateutil.relativedelta import relativedelta
@@ -23,12 +23,13 @@ from accounts.models import (
     UtilityModule,
     LedgerTransaction,
     RefreshToken,
+    Task,
     Transaction,
 )
-from accounts.services.security_services import security_service
 from accounts.services.module_registry import module_registry
+from accounts.services.security_services import security_service
 from accounts.utilitie_functions import convert_decimal, format_amount
-
+from accounts.views.view_reminder import calculate_reminder
 
 
 # ============================================================================
@@ -590,37 +591,8 @@ def get_service_status(user) -> Dict[str, bool]:
     return {module.title: module.has_access(user) for module in all_modules}
 
 
-@login_required
-def utilities(request):
-    """
-    Utilities home page view.
-
-    Displays all available utility modules for the user.
-
-    Args:
-        request: Django HTTP request object.
-
-    Returns:
-        HttpResponse: Rendered utilities page.
-    """
-    user = request.user
-
-    items = module_registry.get_modules_for_user(user)
-    counterparties = get_counter_parties(user)
-
-    return render(
-        request,
-        "utiltities.html",
-        {
-            "user": user,
-            "items": items,
-            "counterparties": counterparties,
-        },
-    )
-
-
 # ============================================================================
-# Authentication & Registration Views
+# Public Views
 # ============================================================================
 
 
@@ -670,8 +642,6 @@ def about(request):
     """
     return render(request, "about.html", {"user": request.user})
 
-
-@login_required
 
 @login_required
 def dashboard(request):
@@ -738,15 +708,32 @@ def dashboard(request):
         "income_sources": calculate_income_sources(transactions, user),
     }
 
+    # Get today's reminders
+    from accounts.views.view_reminder import calculate_reminder
+    todays_reminders = calculate_reminder(user)
+
+    # Get pending tasks till today
+    from datetime import date
+    today = date.today()
+    pending_tasks = Task.objects.filter(
+        created_by=user,
+        is_deleted=False,
+        status='Pending',
+        complete_by_date__lte=today
+    ).order_by('complete_by_date')[:10]  # Latest 10 pending tasks
+    
+
 
     context = {
         "data": json.dumps(analytics, default=convert_decimal),
         "financial_data": financial_data,
-        "split_due_display": financial_data.get("Split Due", "₹0"),
-        "emi_due_display": financial_data.get("EMI Due", "₹0"),
+        "split_due_display": financial_data.get("Split Due", "Γé╣0"),
+        "emi_due_display": financial_data.get("EMI Due", "Γé╣0"),
         "user_info": user_info,
         "user": user,
-        "today": date.today(),
+        "todays_reminders": todays_reminders[:5],  # Show top 5 reminders
+        "pending_tasks": pending_tasks,
+        "today": today,
         "current_period": period,
         "period_label": date_range['label'],
     }
@@ -755,11 +742,43 @@ def dashboard(request):
 
 
 @login_required
+def utilities(request):
+    """
+    Utilities home page view.
+
+    Displays all available utility modules for the user along with
+    reminder count and counterparties.
+
+    Args:
+        request: Django HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered utilities page.
+    """
+    user = request.user
+
+    items = module_registry.get_modules_for_user(user)
+    reminder_count = len(calculate_reminder(user))
+    counterparties = get_counter_parties(user)
+
+    return render(
+        request,
+        "utiltities.html",
+        {
+            "user": user,
+            "items": items,
+            "counterparties": counterparties,
+            "badge": reminder_count,
+        },
+    )
+
+
+@login_required
 def profile(request):
     """
     User profile view.
 
-    Displays user profile information
+    Displays user profile information, accessible modules,
     and account statistics.
 
     Args:
@@ -770,8 +789,16 @@ def profile(request):
     """
     user = request.user
 
-    # Accessible modules have been moved to static config or removed
-    accessible_modules = []
+    # Get accessible modules with full details
+    accessible_modules = [
+        {
+            "title": module.title,
+            "icon": module.icon or "fa-puzzle-piece",
+            "access_type": module.get_access_type_display(),
+        }
+        for module in UtilityModule.objects.filter(is_active=True)
+        if module.has_access(user)
+    ]
 
     # Calculate account statistics
     account_age = (timezone.now() - user.date_joined).days
@@ -781,6 +808,7 @@ def profile(request):
 
     context = {
         "user": user,
+        "service_status": get_service_status(user),
         "accessible_modules": accessible_modules,
         "account_age": account_age,
         "total_transactions": total_transactions,
@@ -852,6 +880,25 @@ def update_profile(request):
 
 
 @login_required
+def redirect_to_streamlit(request):
+    """
+    Redirect to Streamlit app with encrypted authentication token.
+
+    Creates an encrypted token containing user ID and username,
+    then redirects to the Streamlit URL with the token as a query parameter.
+
+    Args:
+        request: Django HTTP request object.
+
+    Returns:
+        HttpResponseRedirect: Redirect to Streamlit with auth token.
+    """
+    token = security_service.encrypt_text(
+        {"user_id": request.user.id, "username": request.user.username}
+    )
+    return redirect(f"{settings.STREAMLIT_URL}?_id={token}")
+
+
 @login_required
 def manual_backup(request):
     """
@@ -912,6 +959,4 @@ def manual_backup(request):
             }, status=500)
         
         return redirect('profile')
-
-
 

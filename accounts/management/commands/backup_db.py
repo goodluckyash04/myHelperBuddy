@@ -27,14 +27,12 @@ from django.db.models import Q
 from accounts.models import (
     FinancialProduct,
     LedgerTransaction,
-    Reminder,
-    Task,
     Transaction,
     UserProfile,
 )
 from accounts.services.email_services import EmailService
 from accounts.services.google_services import GoogleDriveService
-from accounts.views.view_reminder import calculate_reminder
+
 
 User = get_user_model()
 
@@ -57,13 +55,7 @@ class Command(BaseCommand):
     # Backup retention settings
     RETENTION_DAYS = 7
     
-    def add_arguments(self, parser):
-        """Add custom command arguments."""
-        parser.add_argument(
-            '--skip-reminders',
-            action='store_true',
-            help='Skip sending task reminder emails (only backup database)',
-        )
+
     
     def __init__(self):
         """Initialize command with services and timezone."""
@@ -83,11 +75,10 @@ class Command(BaseCommand):
         Main entry point for the management command.
         
         Executes:
-            1. Task and reminder notifications (unless --skip-reminders)
-            2. Database backup (if needed)
+            1. Database backup (if needed)
         
         Args:
-            options: Command options including skip_reminders flag
+            options: Command options
         """
         
         try:
@@ -137,8 +128,6 @@ class Command(BaseCommand):
             Transaction,
             LedgerTransaction,
             FinancialProduct,
-            Task,
-            Reminder,
         ]
 
         return any(

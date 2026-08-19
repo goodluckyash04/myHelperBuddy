@@ -230,24 +230,6 @@ class ModuleRegistryService:
                 'access_type': 'PUBLIC',
             },
             {
-                'key': 'TASK',
-                'title': 'TASK',
-                'description': "Give Your Brain a Break, We've Got Your To-Dos Covered!",
-                'url_pattern': '/currentMonthTaskReport/',
-                'icon': 'fa-check-circle',
-                'display_order': 4,
-                'access_type': 'PUBLIC',
-            },
-            {
-                'key': 'REMINDER',
-                'title': 'REMINDER',
-                'description': 'Never Miss a Moment, Let the Reminders Handle it All!',
-                'url_pattern': '/view-today-reminder/',
-                'icon': 'fa-bell',
-                'display_order': 5,
-                'access_type': 'PUBLIC',
-            },
-            {
                 'key': 'DOCUMENT_MANAGER',
                 'title': 'DOCUMENT MANAGER',
                 'description': 'The Right File, Right Now. Never Search Again.',
@@ -255,15 +237,6 @@ class ModuleRegistryService:
                 'icon': 'fa-file',
                 'display_order': 6,
                 'access_type': 'PUBLIC',
-            },
-            {
-                'key': 'OTHER_UTILITIES',
-                'title': 'ADVANCE UTILITIES',
-                'description': 'Access and manage advanced utility tools integrated with your account.',
-                'url_pattern': '/advance-utils/',
-                'icon': 'fa-tools',
-                'display_order': 7,
-                'access_type': 'ADMIN',  # Admin only
             },
         ]
         

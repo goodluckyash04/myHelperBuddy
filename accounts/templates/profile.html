@@ -78,49 +78,6 @@
         margin: 0;
     }
 
-    .module-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .module-card {
-        background: white;
-        border: 1px solid #e0e0e0;
-        border-radius: 12px;
-        padding: 1rem;
-        text-align: center;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-    .module-card:hover {
-        background: rgba(176, 163, 111, 0.05);
-        border-color: var(--primary);
-        transform: translateY(-4px);
-        box-shadow: 0 6px 16px rgba(176, 163, 111, 0.2);
-    }
-
-    .module-card i {
-        font-size: 2rem;
-        color: var(--primary);
-        margin-bottom: 0.5rem;
-    }
-
-    .module-card h6 {
-        font-size: 0.875rem;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-        color: var(--primary-dark);
-    }
-
-    .module-card .badge {
-        font-size: 0.7rem;
-        padding: 0.2rem 0.5rem;
-        background-color: var(--primary);
-        border: none;
-    }
 
     .section-title {
         font-size: 1.25rem;
@@ -170,10 +127,6 @@
 
         .stats-grid {
             grid-template-columns: 1fr;
-        }
-
-        .module-grid {
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         }
     }
 </style>
@@ -255,21 +208,6 @@
                 </div>
             </div>
 
-            <!-- Module Access -->
-            <div class="glass-card">
-                <h5 class="section-title">
-                    <i class="fa-solid fa-grid-2"></i> Module Access
-                </h5>
-                <div class="module-grid">
-                    {% for module in accessible_modules %}
-                    <div class="module-card">
-                        <i class="fa-solid {{ module.icon }}"></i>
-                        <h6>{{ module.title }}</h6>
-                        <span class="badge">Active</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
 
             <!-- Settings -->
             <div class="glass-card">
