@@ -762,8 +762,8 @@ def profile(request):
     """
     user = request.user
 
-    # Accessible modules have been moved to static config or removed
-    accessible_modules = []
+    # Fetch accessible modules for the user
+    accessible_modules = module_registry.get_modules_for_user(user)
 
     # Calculate account statistics
     account_age = (timezone.now() - user.date_joined).days
