@@ -1,55 +1,43 @@
 {% extends 'body.html' %}
 {% load static %}
-{% block header %}
 
-<nav class="navbar navbar-expand-lg navbar-light shadow p-2 mb-2 fixed-top" style="background: var(--primary); z-index: 999; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px">
-  <div class="container-fluid nav-text">
-    <!-- Logo -->
-    <a class="navbar-brand " href="/dashboard/">
-      <img src="{% static 'image/myHelperBuddyLogo.png' %}" alt="Logo" style="height:35px; width: auto;">
-      &nbsp;myHelperBuddy
-    </a>
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <i class="fa-solid fa-bars" style="color: var(--secondary)"></i>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <a class="nav-link " href="/dashboard/">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link " href="/utilities/">Utils</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link " href="/about/">About</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link " href="/profile/"> {{ user.first_name }} {{ user.last_name }}</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link " href="/logout/"> <i class="fa-solid fa-right-from-bracket"></i></a></a>
-        </li>
-      </ul>
-      <!-- <ul class="navbar-nav">
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle " href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            {{ user.name }}
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end profile" aria-labelledby="userDropdown">
-            <li><a class="dropdown-item"  href="#"><i class="fa-solid fa-user" style="color:var(--primary-dark)"></i> {{user.username}}</a></li>
-            <li><a class="dropdown-item" href="#"><i class="fa-solid fa-envelope" style="color:var(--primary-dark)"></i> {{user.email}}</a></li>
-            <li><a class="dropdown-item" href="/changePassword/"><i class="fa-solid fa-key" style="color:var(--primary-dark)"></i> Change Password</a></li>
-            <li><a class="dropdown-item" href="/logout/"><i class="fa-solid fa-right-from-bracket" style="color:var(--primary-dark)"></i> Logout</a></li>
-          </ul>
-        </li>
-      </ul> -->
-    </div>
-  </div>
-</nav>
-
-
+{% block header_actions %}
   {% include "messages.html" %}
-  {% endblock header %}
-  {% block script %}
+  <button class="btn-premium-outline d-none d-md-flex" onclick="toggleTheme()">
+    <i class="bi bi-moon-stars" id="themeIcon"></i>
+  </button>
+  <a href="{% url 'logout' %}" class="btn-premium-outline border-0 text-danger" title="Sign Out">
+    <i class="bi bi-box-arrow-right"></i>
+  </a>
+{% endblock header_actions %}
 
-  {% endblock script %}
+{% block script %}
+<script>
+  function toggleTheme() {
+    const root = document.documentElement;
+    const currentTheme = root.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    root.setAttribute('data-theme', newTheme);
+    localStorage.setItem('mhb_theme', newTheme);
+    
+    const icon = document.getElementById('themeIcon');
+    if (newTheme === 'dark') {
+      icon.classList.replace('bi-moon-stars', 'bi-sun');
+    } else {
+      icon.classList.replace('bi-sun', 'bi-moon-stars');
+    }
+  }
+
+  // Init icon on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const icon = document.getElementById('themeIcon');
+    if (icon) {
+      if (currentTheme === 'dark') {
+        icon.classList.replace('bi-moon-stars', 'bi-sun');
+      }
+    }
+  });
+</script>
+{% endblock script %}

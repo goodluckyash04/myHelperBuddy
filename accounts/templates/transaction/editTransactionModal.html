@@ -2,122 +2,54 @@
 
 <div class="modal fade" id="editExpenseModal" tabindex="-1" aria-labelledby="editExpenseModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg" style="border-radius: 14px; overflow: hidden;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
 
-      <!-- Branded Modal Header -->
-      <div class="modal-header" style="background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%); border-bottom: none; padding: 16px 20px;">
-        <div class="d-flex align-items-center gap-2">
-            <div style="width:34px; height:34px; background:rgba(176,163,111,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center;">
-                <i class="fa-solid fa-pen-to-square" style="color:#fff; font-size: 0.9rem;"></i>
-            </div>
-            <h5 class="modal-title mb-0" id="title_u" style="color:#fff; font-weight:700; font-size:1rem;">Edit Transaction</h5>
-        </div>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+        <h5 class="modal-title fw-bold" id="title_u" style="color: var(--primary-dark);">
+          <i class="bi bi-pencil-square me-2 text-muted"></i>Edit Transaction
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div class="modal-body p-4">
         <form action="" id="updateExpenseForm" method="post">
           {% csrf_token %}
-
           <div id="transactionUpdateBody">
 
-            <!-- Transaction Category -->
             <div class="mb-3">
-              <label class="txn-modal-label" for="category_u">
-                <i class="fa-solid fa-tag me-1" style="color: var(--primary);"></i> Category
-              </label>
-              <select class="form-select txn-modal-input" id="category_u" name="category">
+              <label class="form-label text-muted-sm fw-semibold text-uppercase" for="category_u">Category</label>
+              <select class="form-select border-light-subtle rounded-3" id="category_u" name="category">
                 <option value="" disabled selected>— Select Category —</option>
               </select>
             </div>
 
-            <!-- Beneficiary -->
             <div class="mb-3">
-              <label class="txn-modal-label" for="beneficiary_data">
-                <i class="fa-solid fa-user me-1" style="color: var(--primary);"></i> Beneficiary
-              </label>
-              <input type="text" class="form-control txn-modal-input" name="beneficiary" id="beneficiary_data" placeholder="Self / Home / Other" />
+              <label class="form-label text-muted-sm fw-semibold text-uppercase" for="beneficiary_data">Beneficiary</label>
+              <input type="text" class="form-control border-light-subtle rounded-3" name="beneficiary" id="beneficiary_data" placeholder="Self / Home / Other" />
             </div>
 
-            <!-- Date / Amount row -->
             <div class="row g-3 mb-3">
               <div class="col-6">
-                <label class="txn-modal-label" for="date_u">
-                  <i class="fa-solid fa-calendar me-1" style="color: var(--primary);"></i> Date
-                </label>
-                <input type="date" class="form-control txn-modal-input" name="date" id="date_u" required />
+                <label class="form-label text-muted-sm fw-semibold text-uppercase" for="date_u">Date</label>
+                <input type="date" class="form-control border-light-subtle rounded-3" name="date" id="date_u" required />
               </div>
               <div class="col-6">
-                <label class="txn-modal-label" for="amount_u">
-                  <i class="fa-solid fa-indian-rupee-sign me-1" style="color: var(--primary);"></i> Amount
-                </label>
-                <input type="number" class="form-control txn-modal-input" step="0.01" name="amount" id="amount_u" placeholder="0.00" required />
+                <label class="form-label text-muted-sm fw-semibold text-uppercase" for="amount_u">Amount</label>
+                <input type="number" class="form-control border-light-subtle rounded-3" step="0.01" name="amount" id="amount_u" placeholder="0.00" required />
               </div>
             </div>
 
-            <!-- Description -->
-            <div class="mb-3">
-              <label class="txn-modal-label" for="description_u">
-                <i class="fa-solid fa-align-left me-1" style="color: var(--primary);"></i> Description
-              </label>
-              <input type="text" class="form-control txn-modal-input" name="description" id="description_u" placeholder="Brief note…" required />
+            <div class="mb-4">
+              <label class="form-label text-muted-sm fw-semibold text-uppercase" for="description_u">Description</label>
+              <input type="text" class="form-control border-light-subtle rounded-3" name="description" id="description_u" placeholder="Brief note…" required />
             </div>
 
-
-            <!-- Submit Button -->
-            <button id="submitButton" type="submit" class="txn-modal-submit w-100">
-                <i class="fa-solid fa-floppy-disk me-2"></i>
-                <span id="submitBtnText">Save Changes</span>
+            <button id="submitButton" type="submit" class="btn-premium w-100 justify-content-center">
+              <span id="submitBtnText">Save Changes</span>
             </button>
-
           </div>
         </form>
       </div>
-
     </div>
   </div>
 </div>
-
-<style>
-.txn-modal-label {
-    display: block;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    font-weight: 700;
-    color: #6b7280;
-    margin-bottom: 5px;
-}
-.txn-modal-input {
-    border: 1.5px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    padding: 9px 12px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-.txn-modal-input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(176, 163, 111, 0.18);
-    outline: none;
-}
-.txn-modal-submit {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
-    color: #e9d891;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 24px;
-    font-size: 0.88rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
-}
-.txn-modal-submit:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(32, 27, 5, 0.28);
-}
-</style>

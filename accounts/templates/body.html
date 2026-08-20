@@ -2,21 +2,86 @@
 {% load static %}
 
 {% block mainbody %}
-
-<header>
-    {% block header %}
+<div class="app-shell">
+  
+  <!-- Sidebar -->
+  <aside class="app-sidebar" id="appSidebar">
+    <div class="app-sidebar-header">
+      <h2 style="color: var(--primary);"><i class="bi bi-wallet2 me-2"></i> myHelperBuddy</h2>
+    </div>
     
-    {% endblock header %}
-</header>
-<body>
-    <div  style="margin-top: 90px;min-height: 79vh;">
-    {% block body %}
+    <nav class="app-nav">
+      <div class="nav-section-title">Overview</div>
+      <a href="{% url 'dashboard' %}" class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        <i class="bi bi-grid-1x2"></i> Dashboard
+      </a>
+      
+      <div class="nav-section-title">Money</div>
+      <a href="/transaction-detail/" class="nav-item {% if 'transaction' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-arrow-left-right"></i> Transactions
+      </a>
+      <a href="/ledger-transaction-details/" class="nav-item {% if 'ledger' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-journal-text"></i> Ledger
+      </a>
+      
+      <div class="nav-section-title">Assets</div>
+      <a href="/finance-details/" class="nav-item {% if 'finance' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-briefcase"></i> Financial Products
+      </a>
+      
+      <div class="nav-section-title">Files</div>
+      <a href="/fetch-documents/" class="nav-item {% if 'document' in request.resolver_match.url_name or 'file' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="bi bi-folder2-open"></i> Documents
+      </a>
+    </nav>
     
-    {% endblock body  %}
+    <div class="app-sidebar-footer">
+      <a href="{% url 'profile' %}" class="user-profile-sm text-decoration-none">
+        <div class="user-avatar">
+          {{ user.username|make_list|first|upper }}
+        </div>
+        <div class="user-info">
+          <span class="user-name">{{ user.first_name|default:user.username }}</span>
+          <span class="user-role">View Profile</span>
+        </div>
+      </a>
+    </div>
+  </aside>
 
-    </div> 
-</body>
+  <!-- Main Content Area -->
+  <main class="app-main">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="d-flex align-items-center">
+        <button class="mobile-nav-toggle me-3" id="mobileNavToggle">
+          <i class="bi bi-list"></i>
+        </button>
+        <h1 class="page-title">
+          {% block page_title %}Dashboard{% endblock page_title %}
+        </h1>
+      </div>
+      
+      <div class="d-flex align-items-center gap-3">
+        {% block header_actions %}
+          <!-- Contextual actions will go here -->
+        {% endblock header_actions %}
+      </div>
+    </header>
 
+    <!-- Content -->
+    <div class="app-content">
+      {% block body %}
+      {% endblock body %}
+    </div>
+    
+  </main>
+</div>
 
+<script>
+  document.getElementById('mobileNavToggle')?.addEventListener('click', function() {
+    document.getElementById('appSidebar').classList.toggle('open');
+  });
+</script>
 {% endblock mainbody %}
 
