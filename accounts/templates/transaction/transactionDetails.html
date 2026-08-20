@@ -4,10 +4,10 @@
 {% block page_title %}Transactions{% endblock page_title %}
 
 {% block header_actions %}
-  <button class="btn-premium d-none d-md-inline-flex" data-bs-toggle="modal" data-bs-target="#filterModal">
+  <button class="btn-premium" data-bs-toggle="modal" data-bs-target="#filterModal">
     <i class="bi bi-funnel"></i> Filters
   </button>
-  <button class="btn-premium d-none d-md-inline-flex" data-bs-toggle="modal" data-bs-target="#editExpenseModal">
+  <button class="btn-premium d-none d-md-inline-flex" data-bs-toggle="modal" data-bs-target="#expensemodal">
     <i class="bi bi-plus-lg"></i> Add Transaction
   </button>
 {% endblock header_actions %}
@@ -54,8 +54,11 @@
 <!-- Edit Transaction Modal -->
 {% include 'transaction/editTransactionModal.html' %}
 
+<!-- Add Transaction Modal -->
+{% include 'transaction/transactionModal.html' %}
+
 <!-- Mobile FAB -->
-<button class="btn-premium d-md-none position-fixed rounded-circle shadow" data-bs-toggle="modal" data-bs-target="#editExpenseModal" style="bottom: 24px; right: 24px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 1000;">
+<button class="btn-premium d-md-none position-fixed rounded-circle shadow" data-bs-toggle="modal" data-bs-target="#expensemodal" style="bottom: 24px; right: 24px; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; font-size: 24px; z-index: 1000;">
   <i class="bi bi-plus"></i>
 </button>
 

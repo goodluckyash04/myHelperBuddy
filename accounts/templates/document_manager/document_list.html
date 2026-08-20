@@ -4,93 +4,43 @@
 {% block page_title %}My Documents{% endblock page_title %}
 
 {% block header_actions %}
-<div class="d-flex justify-content-md-end align-items-center gap-2">
-  <!-- search form -->
-  <form class="d-flex align-items-center w-100 w-md-auto" method="get" role="search" aria-label="Search files">
-    <div class="input-group">
-      <input name="q" id="fileSearchInput" value="{{ q }}" class="form-control border-light-subtle"
-        placeholder="Search files..." aria-label="Search files" style="border-radius: 8px 0 0 8px; min-width: 200px;" />
-      {% if tag %}
-      <input type="hidden" name="tag" value="{{ tag }}" />
-      {% endif %}
-      <button class="btn-premium" type="submit" aria-label="Submit search" style="border-radius: 0 8px 8px 0; padding: 0.5rem 1rem;">
-        <i class="bi bi-search"></i>
-      </button>
-    </div>
-  </form>
-
-  <!-- active tag badge -->
-  {% if tag %}
-  <div class="d-none d-md-block ms-2">
-    <span class="badge-premium badge-info" title="Active tag">
-      <i class="bi bi-tag-fill me-1"></i> {{ tag }}
-      <a href="?{% if q %}q={{ q }}&{% endif %}" class="ms-1 text-dark text-decoration-none" aria-label="Clear tag"><i class="bi bi-x-circle-fill"></i></a>
-    </span>
-  </div>
-  {% endif %}
-
-  <!-- upload button -->
-  <div class="ms-2">
-    <button class="btn-premium d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#fileUploadModal" type="button">
-      <i class="bi bi-cloud-arrow-up-fill"></i>
-      <span class="d-none d-md-inline">Upload</span>
-    </button>
-  </div>
-</div>
 {% endblock header_actions %}
 
 {% block body %}
 
-<!-- show active tag under search on small screens -->
-{% if tag %}
-<div class="d-block d-md-none mb-3">
-  <span class="badge-premium badge-info">
-    <i class="bi bi-tag-fill me-1"></i> {{ tag }}
-    <a href="?{% if q %}q={{ q }}&{% endif %}" class="ms-1 text-dark text-decoration-none" aria-label="Clear tag"><i class="bi bi-x-circle-fill"></i></a>
-  </span>
-</div>
-{% endif %}
-
-<!-- pagination -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-  <div class="text-muted-sm fw-medium">
-    Showing {{ files.start_index }}–{{ files.end_index }} of {{ files.paginator.count }} files
+<!-- Actions Bar -->
+<div class="d-flex flex-row flex-nowrap align-items-center gap-2 mb-4">
+  <div class="flex-grow-1" style="max-width: 500px;">
+    <!-- search form -->
+    <form class="d-flex align-items-center w-100" method="get" role="search" aria-label="Search files">
+      <div class="input-group w-100">
+        <input name="q" id="fileSearchInput" value="{{ q }}" class="form-control border-light-subtle"
+          placeholder="Search files..." aria-label="Search files" style="border-radius: 8px 0 0 8px;" />
+        {% if tag %}
+        <input type="hidden" name="tag" value="{{ tag }}" />
+        {% endif %}
+        <button class="btn-premium" type="submit" aria-label="Submit search" style="border-radius: 0 8px 8px 0; padding: 0.5rem 1rem;">
+          <i class="bi bi-search"></i>
+        </button>
+      </div>
+    </form>
   </div>
-  <nav aria-label="Pagination">
-    <ul class="pagination pagination-sm m-0 gap-1">
-      {% if files.has_previous %}
-      <li class="page-item">
-        <a class="page-link rounded-2 border-light-subtle text-dark" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ files.previous_page_number }}">
-          <i class="bi bi-chevron-left"></i>
-        </a>
-      </li>
-      {% else %}
-      <li class="page-item disabled"><span class="page-link rounded-2 border-light-subtle text-muted bg-light"><i class="bi bi-chevron-left"></i></span></li>
-      {% endif %} 
-      {% for p in page_range %} 
-        {% if p == '…' or p == '...' %}
-        <li class="page-item disabled"><span class="page-link rounded-2 border-light-subtle text-muted bg-light">…</span></li>
-        {% else %} 
-          {% if p == files.number %}
-          <li class="page-item active"><span class="page-link rounded-2 bg-primary border-primary text-white fw-bold">{{ p }}</span></li>
-          {% else %}
-          <li class="page-item">
-            <a class="page-link rounded-2 border-light-subtle text-dark" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ p }}">{{ p }}</a>
-          </li>
-          {% endif %} 
-        {% endif %} 
-      {% endfor %} 
-      {% if files.has_next %}
-      <li class="page-item">
-        <a class="page-link rounded-2 border-light-subtle text-dark" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ files.next_page_number }}">
-          <i class="bi bi-chevron-right"></i>
-        </a>
-      </li>
-      {% else %}
-      <li class="page-item disabled"><span class="page-link rounded-2 border-light-subtle text-muted bg-light"><i class="bi bi-chevron-right"></i></span></li>
-      {% endif %}
-    </ul>
-  </nav>
+
+  <div class="d-flex flex-nowrap align-items-center gap-2">
+    <!-- active tag badge -->
+    {% if tag %}
+    <span class="badge-premium badge-info text-nowrap" title="Active tag">
+      <i class="bi bi-tag-fill me-1"></i> {{ tag }}
+      <a href="?{% if q %}q={{ q }}&{% endif %}" class="ms-1 text-dark text-decoration-none" aria-label="Clear tag"><i class="bi bi-x-circle-fill"></i></a>
+    </span>
+    {% endif %}
+
+    <!-- upload button -->
+    <button class="btn-premium d-flex align-items-center justify-content-center gap-2 text-nowrap flex-shrink-0" data-bs-toggle="modal" data-bs-target="#fileUploadModal" type="button" style="padding: 0.5rem 1rem;">
+      <i class="bi bi-cloud-arrow-up-fill"></i>
+      <span class="d-none d-sm-inline">Upload</span>
+    </button>
+  </div>
 </div>
 
 <!-- files grid -->
@@ -99,7 +49,7 @@
   <div class="col-12 col-md-6 col-lg-4 file-card" data-filename="{{ f.filename|lower }}"
     data-mimetype="{{ f.content_type|default:''|lower }}" data-uploaded="{{ f.uploaded_at.isoformat }}"
     data-size="{{ f.size }}">
-    <div class="card-premium h-100 d-flex flex-column p-0 overflow-hidden">
+    <div class="card-premium h-100 d-flex flex-column p-0">
       <div class="p-3 d-flex flex-column h-100">
         <div class="d-flex align-items-start gap-3 mb-3">
           <!-- icon or thumbnail -->
@@ -185,6 +135,50 @@
   </div>
   {% endfor %}
 </div>
+
+<!-- pagination (bottom) -->
+{% if files.paginator.num_pages > 1 %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3 mt-2 mb-4">
+  <div class="text-muted-sm fw-medium">
+    Showing {{ files.start_index }}–{{ files.end_index }} of {{ files.paginator.count }} files
+  </div>
+  <nav aria-label="Pagination">
+    <ul class="pagination pagination-sm m-0 gap-1">
+      {% if files.has_previous %}
+      <li class="page-item">
+        <a class="page-link rounded-2 border-light-subtle text-dark" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ files.previous_page_number }}">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link rounded-2 border-light-subtle text-muted bg-light"><i class="bi bi-chevron-left"></i></span></li>
+      {% endif %} 
+      {% for p in page_range %} 
+        {% if p == '…' or p == '...' %}
+        <li class="page-item disabled"><span class="page-link rounded-2 border-light-subtle text-muted bg-light">…</span></li>
+        {% else %} 
+          {% if p == files.number %}
+          <li class="page-item active"><span class="page-link rounded-2 bg-primary border-primary text-white fw-bold">{{ p }}</span></li>
+          {% else %}
+          <li class="page-item">
+            <a class="page-link rounded-2 border-light-subtle text-dark" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ p }}">{{ p }}</a>
+          </li>
+          {% endif %} 
+        {% endif %} 
+      {% endfor %} 
+      {% if files.has_next %}
+      <li class="page-item">
+        <a class="page-link rounded-2 border-light-subtle text-dark" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ files.next_page_number }}">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+      </li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link rounded-2 border-light-subtle text-muted bg-light"><i class="bi bi-chevron-right"></i></span></li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+{% endif %}
 
 {% include 'document_manager/document_upload_modal.html' %}
 {% include 'document_manager/document_update_modal.html' %}

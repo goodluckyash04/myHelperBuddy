@@ -17,7 +17,7 @@
       </a>
       
       <div class="nav-section-title">Money</div>
-      <a href="/transaction-detail/" class="nav-item {% if 'transaction' in request.resolver_match.url_name %}active{% endif %}">
+      <a href="/transaction-detail/" class="nav-item {% if request.resolver_match.url_name == 'transaction-detail' or request.resolver_match.url_name == 'deleted-transaction-detail' %}active{% endif %}">
         <i class="bi bi-arrow-left-right"></i> Transactions
       </a>
       <a href="/ledger-transaction-details/" class="nav-item {% if 'ledger' in request.resolver_match.url_name %}active{% endif %}">
