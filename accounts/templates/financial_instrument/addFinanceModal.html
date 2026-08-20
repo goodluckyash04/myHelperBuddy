@@ -1,72 +1,151 @@
 <!-- Add Finance Modal -->
-<div class="modal fade" id="financeModal" tabindex="-1" aria-labelledby="financeModalLabel" aria-hidden="true">
+<div
+  class="modal fade"
+  id="financeModal"
+  tabindex="-1"
+  aria-labelledby="financeModalLabel"
+  aria-hidden="true"
+>
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-      <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
-        <h5 class="modal-title fw-bold" id="financeModalLabel" style="color: var(--primary-dark);">
-          <i class="bi bi-plus-circle me-2 text-muted"></i>Add Finance
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fs-5" id="financeModalLabel">Finance</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
       </div>
-      
-      <div class="modal-body p-4">
+      <div class="modal-body">
         <!-- Finance Form -->
         <form action="/create-finance/" id="myFinanceForm" method="post">
           {% csrf_token %}
 
           <!-- Finance Type Selection -->
-          <div class="mb-4 d-flex gap-3">
-            <div class="form-check">
-              <input class="form-check-input border-secondary" type="radio" name="type" id="loan" value="Loan" onchange="splitCategory()" required />
-              <label class="form-check-label text-muted-sm fw-medium" for="loan">Loan</label>
+          <div class="row mb-4">
+            <label class="col-form-label col-12">Select Type</label>
+            <div class="col-4">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="type"
+                  id="loan"
+                  value="Loan"
+                  onchange="splitCategory()"
+                  required
+                />
+                <label class="form-check-label" for="loan">Loan</label>
+              </div>
             </div>
-            <div class="form-check">
-              <input class="form-check-input border-secondary" type="radio" name="type" id="split" value="Split" onchange="splitCategory()" required />
-              <label class="form-check-label text-muted-sm fw-medium" for="split">Split</label>
+            <div class="col-4">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="type"
+                  id="split"
+                  value="Split"
+                  onchange="splitCategory()"
+                  required
+                />
+                <label class="form-check-label" for="split">Split</label>
+              </div>
             </div>
-            <div class="form-check">
-              <input class="form-check-input border-secondary" type="radio" name="type" id="sip" onchange="splitCategory()" value="SIP" />
-              <label class="form-check-label text-muted-sm fw-medium" for="sip">SIP</label>
+            <div class="col-4">
+              <div class="form-check">
+                <input
+                  class="form-check-input"
+                  type="radio"
+                  name="type"
+                  id="sip"
+                  onchange="splitCategory()"
+                  value="SIP"
+                />
+                <label class="form-check-label" for="sip">SIP</label>
+              </div>
             </div>
           </div>
 
           <div class="mb-3">
-            <select class="form-select border-light-subtle rounded-3" id="sp_category" name="category" aria-label="Select Category" style="display: none;">
-              <option value="" disabled selected>-- Select Category --</option>
+            <select
+              class="form-select shadow-sm"
+              id="sp_category"
+              name="category"
+              aria-label="Select Category"
+              style="display: none;"
+            >
+              <option value="" disabled selected>
+                -- Select Category --
+              </option>
               <!-- Categories will be populated dynamically -->
             </select>
           </div>
 
           <!-- Instrument Name -->
           <div class="mb-3">
-            <label for="name" class="form-label text-muted-sm fw-semibold text-uppercase">Instrument Name</label>
-            <input type="text" class="form-control border-light-subtle rounded-3" id="name" name="name" placeholder="Enter Instrument Name" required />
+            <label for="name" class="form-label">Instrument Name</label>
+            <input
+              type="text"
+              class="form-control shadow-sm"
+              id="name"
+              name="name"
+              placeholder="Enter Instrument Name"
+              required
+            />
           </div>
 
           <!-- Start Date -->
           <div class="mb-3">
-            <label for="started_on" class="form-label text-muted-sm fw-semibold text-uppercase">Start Date</label>
-            <input type="date" class="form-control border-light-subtle rounded-3" name="started_on" id="started_on" required />
+            <label for="started_on" class="form-label">Start Date</label>
+            <input
+              type="date"
+              class="form-control shadow-sm"
+              name="started_on"
+              id="started_on"
+              required
+            />
           </div>
 
-          <div class="row g-3 mb-4">
-            <!-- Total Amount -->
-            <div class="col-6">
-              <label for="amount" class="form-label text-muted-sm fw-semibold text-uppercase">Total Amount (₹)</label>
-              <input type="number" class="form-control border-light-subtle rounded-3" name="amount" id="amount" placeholder="0" required />
-            </div>
+          <!-- Total Amount -->
+          <div class="mb-3">
+            <label for="amount" class="form-label">Total Amount (₹)</label>
+            <input
+              type="number"
+              class="form-control shadow-sm"
+              name="amount"
+              id="amount"
+              placeholder="Enter Total Amount"
+              required
+            />
+          </div>
 
-            <!-- No of Installments -->
-            <div class="col-6">
-              <label for="installments" class="form-label text-muted-sm fw-semibold text-uppercase">Installments</label>
-              <input type="number" class="form-control border-light-subtle rounded-3" name="no_of_installments" id="installments" placeholder="0" required />
-            </div>
+          <!-- No of Installments -->
+          <div class="mb-3">
+            <label for="installments" class="form-label"
+              >No of Installments</label
+            >
+            <input
+              type="number"
+              class="form-control shadow-sm"
+              name="no_of_installments"
+              id="installments"
+              placeholder="Enter Number of Installments"
+              required
+            />
           </div>
 
           <!-- Submit Button -->
-          <button id="submitButton" type="submit" class="btn-premium w-100 justify-content-center">
-            Add Finance
-          </button>
+          <div class="d-flex justify-content-center">
+            <button
+              id="submitButton"
+              type="submit"
+              class="btn custom-btn-primary w-100 shadow-sm"
+            >
+              <i class="fa-solid fa-plus-circle"></i> Add Finance
+            </button>
+          </div>
         </form>
       </div>
     </div>

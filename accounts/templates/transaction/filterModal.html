@@ -124,7 +124,6 @@
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
   if ($("#daterange").val()) {
     datee = $("#daterange").val().split("-");
     var start = datee[0];
@@ -168,5 +167,4 @@ document.addEventListener('DOMContentLoaded', function() {
   if ($("#daterange").val() == "") {
     cb(start, end);
   }
-});
 </script>

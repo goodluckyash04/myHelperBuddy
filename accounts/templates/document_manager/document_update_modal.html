@@ -1,50 +1,67 @@
 <!-- Edit File Modal -->
 <div class="modal fade" id="editDetailsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+  <div class="modal-dialog">
     <form method="post" id="editDetailsForm">
       {% csrf_token %}
-      <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-        <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
-          <h5 class="modal-title fw-bold" style="color: var(--primary-dark);">
-            <i class="bi bi-pencil-square me-2 text-muted"></i>Edit file details
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit file details</h5>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+          ></button>
         </div>
 
-        <div class="modal-body p-4">
+        <div class="modal-body">
           <!-- FILENAME -->
           <div class="mb-3">
-            <label class="form-label text-muted-sm fw-semibold text-uppercase">Filename</label>
-            <input type="text" name="filename" class="form-control border-light-subtle rounded-3" id="editFilename" required />
+            <label class="form-label">Filename</label>
+            <input
+              type="text"
+              name="filename"
+              class="form-control"
+              id="editFilename"
+              required
+            />
           </div>
 
           <!-- KEYWORDS -->
           <div class="mb-3">
-            <label class="form-label text-muted-sm fw-semibold text-uppercase">Keywords</label>
-            <input type="text" name="keywords" class="form-control border-light-subtle rounded-3" id="editKeywords" />
-            <div class="form-text small">Comma separated tags</div>
+            <label class="form-label">Keywords</label>
+            <input
+              type="text"
+              name="keywords"
+              class="form-control"
+              id="editKeywords"
+            />
+            <div class="form-text">Comma separated tags</div>
           </div>
 
-          <!-- PASSWORD SECTION -->
-          <div id="oldPasswordWrap" class="mb-3 d-none">
-            <label class="form-label text-muted-sm fw-semibold text-uppercase">Current Password</label>
-            <input type="password" name="old_password" id="editOldPassword" class="form-control border-light-subtle rounded-3" placeholder="Enter current password">
-          </div>
+          <!-- PASSWORD -->
+         <!-- PASSWORD SECTION -->
+            <div id="oldPasswordWrap" class="mb-3 d-none">
+            <label class="form-label">Current Password</label>
+            <input type="password" name="old_password" id="editOldPassword" class="form-control" placeholder="Enter current password">
+            </div>
 
-          <div class="mb-3">
-            <label class="form-label text-muted-sm fw-semibold text-uppercase">New Password (optional)</label>
-            <input type="password" name="password" id="editPassword" class="form-control border-light-subtle rounded-3" placeholder="Enter new password">
-          </div>
+            <div class="mb-3">
+            <label class="form-label">New Password (optional)</label>
+            <input type="password" name="password" id="editPassword" class="form-control" placeholder="Enter new password">
+            </div>
 
-          <div class="form-check mb-2">
-            <input class="form-check-input border-secondary" type="checkbox" name="clear_password" value="1" id="clearEditPwd">
-            <label class="form-check-label text-muted-sm fw-medium" for="clearEditPwd">Remove existing password</label>
-          </div>
+            <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="clear_password" value="1" id="clearEditPwd">
+            <label class="form-check-label" for="clearEditPwd">Remove existing password</label>
+            </div>
+
         </div>
 
-        <div class="modal-footer border-top-0 pt-0 px-4 pb-4">
-          <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn-premium">Save Changes</button>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-theme">Save</button>
         </div>
       </div>
     </form>

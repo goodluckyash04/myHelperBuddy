@@ -1,98 +1,283 @@
-{% extends 'body.html' %}
+{% extends 'header.html' %}
 {% load static %}
-
-{% block page_title %}Ledger{% endblock page_title %}
-
 {% block body %}
+
+<style>
+/* Modern Ledger Theme styling */
+:root {
+  --primary: #b0a36f;
+  --primary-dark: #201b05;
+  --primary-bg: #fdfaf6;
+  --card-bg: #ffffff;
+  --border-color: #f0ebd8;
+  --text-main: #333333;
+  --text-muted: #888888;
+  --success-color: #2e7d32;
+  --success-bg: #e8f5e9;
+  --danger-color: #c62828;
+  --danger-bg: #ffebee;
+  --neutral-color: #757575;
+  --neutral-bg: #f5f5f5;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+}
+
+body {
+  background-color: var(--primary-bg);
+}
+
+.ledger-header {
+  text-align: center;
+  margin: 2rem 0;
+  color: var(--primary-dark);
+  font-family: 'Dancing Script', cursive;
+  font-weight: bold;
+  font-size: 2.5rem;
+}
+
+.cp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 0 1rem;
+  max-width: 1200px;
+  margin: 0 auto 3rem;
+}
+
+.cp-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(176, 163, 111, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(176, 163, 111, 0.15);
+  border-color: var(--primary);
+}
+
+.cp-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.cp-avatar {
+  width: 48px;
+  height: 48px;
+  background-color: rgba(176, 163, 111, 0.15);
+  color: var(--primary-dark);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.cp-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.cp-name:hover {
+  color: var(--primary);
+}
+
+.cp-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-grow: 1;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.stat-label {
+  color: var(--text-muted);
+}
+
+.stat-val {
+  font-family: monospace;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.val-positive { color: #16a34a; }
+.val-negative { color: #dc2626; }
+
+.net-balance-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 1rem;
+  font-family: monospace;
+  margin-top: 0.5rem;
+  align-self: flex-start;
+}
+
+.pill-positive {
+  background: var(--success-bg);
+  color: var(--success-color);
+}
+
+.pill-negative {
+  background: var(--danger-bg);
+  color: var(--danger-color);
+}
+
+.pill-zero {
+  background: var(--neutral-bg);
+  color: var(--neutral-color);
+}
+
+.cp-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.btn-open-tab {
+  flex-grow: 1;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  transition: opacity 0.2s;
+}
+
+.btn-open-tab:hover {
+  opacity: 0.9;
+  color: white;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--text-muted);
+}
+.empty-state i {
+  font-size: 3rem;
+  color: var(--border-color);
+  margin-bottom: 1rem;
+}
+</style>
+
+<h3 class="ledger-header">Ledger Summary</h3>
+
 {% if receivables_payables %}
-<div class="row g-4 mb-4">
+<div class="cp-grid">
   {% for i in receivables_payables %}
-  <div class="col-12 col-md-6 col-lg-4">
-    <div class="card-premium h-100 d-flex flex-column">
-      
-      <div class="d-flex align-items-center mb-4 gap-3">
-        <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle text-primary" style="width: 48px; height: 48px; font-size: 1.25rem;">
-          <i class="bi bi-person-fill"></i>
-        </div>
-        <div class="overflow-hidden">
-          <h5 id="counterparty-{{ forloop.counter }}" 
-              class="fw-bold mb-1 text-dark text-truncate" 
-              style="cursor: pointer;"
-              data-counterparty="{{ i.counterparty }}"
-              ondblclick="openModal({{ forloop.counter }})"
-              title="Double click to edit name">
-            {{ i.counterparty }}
-          </h5>
-          <div class="badge-premium {% if i.total > 0 %}badge-success{% elif i.total < 0 %}badge-danger{% else %}badge-neutral{% endif %} mt-1">
-            {% if i.total > 0 %}
-              <i class="bi bi-arrow-up-right me-1"></i> ₹{{ i.total|floatformat:2 }}
-            {% elif i.total < 0 %}
-              <i class="bi bi-arrow-down-right me-1"></i> ₹{{ i.total|floatformat:2|slice:"1:" }}
-            {% else %}
-              <i class="bi bi-check-circle-fill me-1"></i> Settled
-            {% endif %}
-          </div>
+  <div class="cp-card">
+    
+    <div class="cp-header">
+      <div class="cp-avatar">
+        <i class="fa-solid fa-user"></i>
+      </div>
+      <div style="overflow: hidden;">
+        <h4 id="counterparty-{{ forloop.counter }}" 
+            class="cp-name" 
+            data-counterparty="{{ i.counterparty }}"
+            ondblclick="openModal({{ forloop.counter }})"
+            title="Double click to edit name">
+          {{ i.counterparty }}
+        </h4>
+        <div class="net-balance-pill {% if i.total > 0 %}pill-positive{% elif i.total < 0 %}pill-negative{% else %}pill-zero{% endif %}">
+          {% if i.total > 0 %}
+            <i class="fa-solid fa-arrow-up"></i> ₹{{ i.total|floatformat:2 }}
+          {% elif i.total < 0 %}
+            <i class="fa-solid fa-arrow-down"></i> ₹{{ i.total|floatformat:2|slice:"1:" }}
+          {% else %}
+            <i class="fa-solid fa-check"></i> Settled
+          {% endif %}
         </div>
       </div>
-
-      <div class="d-flex flex-column gap-2 mb-4 flex-grow-1">
-        {% for tab in i.tabs|slice:":2" %}
-        <div class="d-flex justify-content-between align-items-center" style="font-size: 0.9rem;">
-          <span class="text-muted-sm fw-medium">
-            <i class="bi bi-folder2 me-2 text-muted"></i>{{ tab.name }}
-          </span>
-          <span class="fw-semibold {% if tab.balance > 0 %}text-success{% elif tab.balance < 0 %}text-danger{% endif %} font-monospace">
-            {% if tab.balance > 0 %}
-              +₹{{ tab.balance|floatformat:2 }}
-            {% elif tab.balance < 0 %}
-              −₹{{ tab.balance|floatformat:2|slice:"1:" }}
-            {% else %}
-              ₹0.00
-            {% endif %}
-          </span>
-        </div>
-        {% endfor %}
-        {% if i.tabs|length > 2 %}
-        <div class="mt-2">
-          <span class="text-muted-sm fst-italic">
-            + {{ i.tabs|length|add:"-2" }} more tab{{ i.tabs|length|add:"-2"|pluralize }}...
-          </span>
-        </div>
-        {% endif %}
-      </div>
-
-      <div class="mt-auto">
-        <a href="/ledger-transaction/{{ i.counterparty }}" class="btn-premium w-100 justify-content-center">
-          <i class="bi bi-book me-2"></i> Open Passbook
-        </a>
-      </div>
-
     </div>
+
+    <div class="cp-stats">
+      {% for tab in i.tabs|slice:":2" %}
+      <div class="stat-row">
+        <span class="stat-label">
+          <i class="fa-solid fa-folder-open me-2 opacity-50"></i>{{ tab.name }}
+        </span>
+        <span class="stat-val {% if tab.balance > 0 %}val-positive{% elif tab.balance < 0 %}val-negative{% endif %}">
+          {% if tab.balance > 0 %}
+            +₹{{ tab.balance|floatformat:2 }}
+          {% elif tab.balance < 0 %}
+            −₹{{ tab.balance|floatformat:2|slice:"1:" }}
+          {% else %}
+            ₹0.00
+          {% endif %}
+        </span>
+      </div>
+      {% endfor %}
+      {% if i.tabs|length > 2 %}
+      <div class="stat-row mt-1">
+        <span class="stat-label fst-italic opacity-75" style="font-size: 0.8rem;">
+          + {{ i.tabs|length|add:"-2" }} more tab{{ i.tabs|length|add:"-2"|pluralize }}...
+        </span>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="cp-actions">
+      <a href="/ledger-transaction/{{ i.counterparty }}" class="btn-open-tab">
+        <i class="fa-solid fa-book-open me-2"></i> Open Passbook
+      </a>
+    </div>
+
   </div>
   {% endfor %}
 </div>
 {% else %}
-<div class="empty-state mt-5">
-  <i class="bi bi-folder2-open text-muted" style="font-size: 40px;"></i>
-  <h4 class="mt-3 fs-6">No ledger records found</h4>
-  <p class="text-muted-sm m-0">Add a new transaction to get started.</p>
+<div class="empty-state">
+  <i class="fa-solid fa-folder-open"></i>
+  <h5>No ledger records found</h5>
+  <p>Add a new transaction to get started.</p>
 </div>
 {% endif %}
 
 <!-- Edit Modal -->
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
-      <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
-        <h6 class="modal-title fw-bold text-dark" id="editModalLabel">Edit Counterparty</h6>
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h6 class="modal-title fw-bold" id="editModalLabel">Edit Counterparty</h6>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body p-4">
-        <p class="text-muted-sm mb-3">Update the name for all transactions associated with this person.</p>
-        <input type="text" id="newCounterparty" class="form-control border-light-subtle rounded-3" placeholder="Enter new name" autofocus>
+      <div class="modal-body pt-2">
+        <p class="text-muted small mb-3">Update the name for all transactions associated with this person.</p>
+        <input type="text" id="newCounterparty" class="form-control" placeholder="Enter new name" autofocus>
       </div>
-      <div class="modal-footer border-0 p-4 pt-0">
-        <button type="button" class="btn-premium w-100 justify-content-center" onclick="updateCounterpartyInModal('{{ csrf_token }}')">Save Changes</button>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary border-0" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn custom-btn-primary" onclick="updateCounterpartyInModal('{{ csrf_token }}')">Save</button>
       </div>
     </div>
   </div>
@@ -100,7 +285,7 @@
 
 {% include 'floating_button_individual.html' with m_type='ledger' %}
 
-{% endblock body %}
+{% endblock %}
 
 {% block script %}
 <script src="{% static 'js/ledger.js' %}"></script>

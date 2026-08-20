@@ -1,56 +1,159 @@
+
 <!-- Summary Cards -->
-<div class="fin-overview-grid mb-4">
-    <!-- Overview Card -->
-    <div class="stat-card">
-        <div class="stat-icon icon-expense">
-            <i class="bi bi-arrow-up-right"></i>
-        </div>
-        <div class="stat-info w-100">
-            <div class="stat-label">Overview</div>
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="text-muted-sm">Expense</span>
-                <span class="fw-bold text-danger">₹ {{ transaction_calculation.expense }}</span>
-            </div>
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-muted-sm">Balance</span>
-                <span class="fw-bold text-success">₹ {{ transaction_calculation.total }}</span>
-            </div>
-        </div>
-    </div>
+<div class="container-fluid mt-3 px-2">
+    <div class="row g-3">
 
-    <!-- Investments & EMI Card -->
-    <div class="stat-card">
-        <div class="stat-icon icon-invest">
-            <i class="bi bi-graph-up-arrow"></i>
-        </div>
-        <div class="stat-info w-100">
-            <div class="stat-label">Investments & EMI</div>
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="text-muted-sm">EMI</span>
-                <span class="fw-bold" style="color: #0284c7;">₹ {{ transaction_calculation.emi }}</span>
+        <!-- Overview Card -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="txn-stat-card txn-stat-card--danger">
+                <div class="txn-stat-accent"></div>
+                <div class="txn-stat-body">
+                    <div class="txn-stat-icon-wrap txn-stat-icon--danger">
+                        <i class="fa-solid fa-arrow-trend-down"></i>
+                    </div>
+                    <div class="txn-stat-info">
+                        <span class="txn-stat-title">Overview</span>
+                        <div class="txn-stat-rows">
+                            <div class="txn-stat-row">
+                                <span class="txn-stat-label">Expense</span>
+                                <span class="txn-stat-value txn-val--red">₹ {{ transaction_calculation.expense }}</span>
+                            </div>
+                            <div class="txn-stat-row">
+                                <span class="txn-stat-label">Balance</span>
+                                <span class="txn-stat-value txn-val--green">₹ {{ transaction_calculation.total }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-muted-sm">Investment</span>
-                <span class="fw-bold" style="color: #7e22ce;">₹ {{ transaction_calculation.investment }}</span>
-            </div>
         </div>
-    </div>
 
-    <!-- Pending Card -->
-    <div class="stat-card">
-        <div class="stat-icon icon-emi">
-            <i class="bi bi-clock-history"></i>
-        </div>
-        <div class="stat-info w-100">
-            <div class="stat-label">Pending</div>
-            <div class="d-flex justify-content-between align-items-center mb-1">
-                <span class="text-muted-sm">Previous</span>
-                <span class="fw-bold text-warning">₹ {{ transaction_calculation.previous_pending }}</span>
+        <!-- Investments & EMI Card -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="txn-stat-card txn-stat-card--blue">
+                <div class="txn-stat-accent"></div>
+                <div class="txn-stat-body">
+                    <div class="txn-stat-icon-wrap txn-stat-icon--blue">
+                        <i class="fa-solid fa-piggy-bank"></i>
+                    </div>
+                    <div class="txn-stat-info">
+                        <span class="txn-stat-title">Investments & EMI</span>
+                        <div class="txn-stat-rows">
+                            <div class="txn-stat-row">
+                                <span class="txn-stat-label">EMI</span>
+                                <span class="txn-stat-value txn-val--blue">₹ {{ transaction_calculation.emi }}</span>
+                            </div>
+                            <div class="txn-stat-row">
+                                <span class="txn-stat-label">Investment</span>
+                                <span class="txn-stat-value txn-val--purple">₹ {{ transaction_calculation.investment }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="d-flex justify-content-between align-items-center">
-                <span class="text-muted-sm">Current</span>
-                <span class="fw-bold text-warning">₹ {{ transaction_calculation.pending_amount }}</span>
+        </div>
+
+        <!-- Pending Card -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="txn-stat-card txn-stat-card--amber">
+                <div class="txn-stat-accent"></div>
+                <div class="txn-stat-body">
+                    <div class="txn-stat-icon-wrap txn-stat-icon--amber">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div class="txn-stat-info">
+                        <span class="txn-stat-title">Pending</span>
+                        <div class="txn-stat-rows">
+                            <div class="txn-stat-row">
+                                <span class="txn-stat-label">Previous</span>
+                                <span class="txn-stat-value txn-val--amber">₹ {{ transaction_calculation.previous_pending }}</span>
+                            </div>
+                            <div class="txn-stat-row">
+                                <span class="txn-stat-label">Current</span>
+                                <span class="txn-stat-value txn-val--amber">₹ {{ transaction_calculation.pending_amount }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
     </div>
 </div>
+
+<style>
+/* ── Stat Card ─────────────────────────────────────────────── */
+.txn-stat-card {
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(32, 27, 5, 0.07);
+    overflow: hidden;
+    display: flex;
+    position: relative;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+.txn-stat-card:hover {
+    transform: translateY(-4px);
+}
+.txn-stat-card--danger:hover { box-shadow: 0 8px 24px rgba(239, 68, 68, 0.18); }
+.txn-stat-card--blue:hover   { box-shadow: 0 8px 24px rgba(59, 130, 246, 0.18); }
+.txn-stat-card--amber:hover  { box-shadow: 0 8px 24px rgba(245, 158, 11, 0.18); }
+
+/* Left accent bar */
+.txn-stat-accent {
+    width: 5px;
+    flex-shrink: 0;
+}
+.txn-stat-card--danger .txn-stat-accent { background: linear-gradient(180deg, #ef4444, #f87171); }
+.txn-stat-card--blue   .txn-stat-accent { background: linear-gradient(180deg, #3b82f6, #818cf8); }
+.txn-stat-card--amber  .txn-stat-accent { background: linear-gradient(180deg, #f59e0b, #fcd34d); }
+
+.txn-stat-body {
+    display: flex;
+    align-items: flex-start;
+    padding: 16px;
+    flex: 1;
+    gap: 14px;
+}
+.txn-stat-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.txn-stat-icon--danger { background: rgba(239,68,68,0.1);  color: #ef4444; }
+.txn-stat-icon--blue   { background: rgba(59,130,246,0.1); color: #3b82f6; }
+.txn-stat-icon--amber  { background: rgba(245,158,11,0.1); color: #f59e0b; }
+
+.txn-stat-info { flex: 1; }
+.txn-stat-title {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    color: #9ca3af;
+    margin-bottom: 10px;
+}
+.txn-stat-rows { display: flex; flex-direction: column; gap: 6px; }
+.txn-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 6px;
+    border-bottom: 1px dashed #f3f4f6;
+}
+.txn-stat-row:last-child { border-bottom: none; padding-bottom: 0; }
+.txn-stat-label { font-size: 0.82rem; color: #6b7280; }
+.txn-stat-value { font-size: 0.9rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.txn-val--red    { color: #ef4444; }
+.txn-val--green  { color: #10b981; }
+.txn-val--blue   { color: #3b82f6; }
+.txn-val--purple { color: #8b5cf6; }
+.txn-val--amber  { color: #f59e0b; }
+</style>
