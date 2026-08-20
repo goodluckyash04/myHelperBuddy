@@ -299,7 +299,7 @@ def finance_details(request: HttpRequest) -> HttpResponse:
         # Get filter parameters
         search_query = request.GET.get('search', '').strip()
         type_filter = request.GET.get('type', '').strip()
-        status_filter = request.GET.get('status', '').strip()
+        status_filter = request.GET.get('status', 'Open').strip()
         sort_option = request.GET.get('sort', 'started_on').strip()
         
         # Base query

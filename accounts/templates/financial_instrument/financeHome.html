@@ -103,22 +103,209 @@
     .card:hover { transform: none; }
     .btn:hover { transform: none; }
 }
+
+/* ── Fin Grid Cards ──────────────────────────────────────── */
+.fin-grid-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(255, 255, 255, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    position: relative;
+}
+.fin-grid-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+.fin-grid-card--closed {
+    opacity: 0.85;
+    background: rgba(249, 250, 251, 0.85);
+    filter: grayscale(40%);
+}
+.fin-grid-card--closed:hover {
+    opacity: 1;
+    filter: grayscale(0%);
+}
+.fin-card-header {
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+.fin-progress-wrap {
+    background-color: rgba(0, 0, 0, 0.04);
+    border-radius: 50px;
+    overflow: hidden;
+    height: 8px;
+}
+.fin-progress-bar {
+    height: 100%;
+    border-radius: 50px;
+    transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+.fin-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+    animation: shimmer 2s infinite;
+}
+.fin-action-btn {
+    width: 32px; height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    transition: all 0.2s;
+    background: rgba(0,0,0,0.03);
+    color: #6b7280;
+    text-decoration: none;
+}
+.fin-action-btn:hover {
+    background: var(--primary);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(176,163,111,0.2);
+}
+.fin-action-btn--danger:hover {
+    background: #ef4444;
+    box-shadow: 0 4px 10px rgba(239,68,68,0.2);
+}
+.fin-action-btn--success:hover {
+    background: #10b981;
+    box-shadow: 0 4px 10px rgba(16,185,129,0.2);
+}
+/* Page Banner CSS */
+.txn-page-banner {
+    background: linear-gradient(-45deg, var(--primary-dark), #9a8855, var(--primary), #a69550);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    padding: 32px 32px 24px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 0 0 24px 24px;
+    box-shadow: 0 10px 30px rgba(32, 27, 5, 0.15);
+}
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.txn-page-banner::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 250px; height: 250px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+}
+.txn-page-banner::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: 20%;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+}
+.txn-banner-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+}
+.fin-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+.txn-banner-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+.txn-banner-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.85);
+    margin: 0;
+    font-weight: 500;
+}
+/* Banner Search Bar */
+.fin-search-wrap {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50px;
+    padding: 4px 16px;
+    transition: all 0.3s ease;
+}
+.fin-search-wrap:focus-within {
+    background: rgba(255, 255, 255, 0.3);
+    border-color: #fff;
+    box-shadow: 0 0 15px rgba(255,255,255,0.2);
+}
+.fin-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #fff;
+    padding: 8px 4px;
+    outline: none;
+    font-size: 0.9rem;
+}
+.fin-search-input::placeholder { color: rgba(255,255,255,0.7); }
+.fin-search-icon { color: rgba(255,255,255,0.9); margin-right: 8px; }
+
+/* ── Responsive Adjustments ──────────────────────────────── */
+@media (max-width: 576px) {
+    .txn-banner-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+    .txn-page-banner {
+        padding: 24px 24px 20px;
+    }
+    .txn-banner-title {
+        font-size: 1.5rem;
+    }
+    .txn-banner-badge {
+        width: 100% !important;
+    }
+}
 </style>
-<!-- Page Header with Search -->
-<div class="container-fluid px-4 py-3">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 style="color: var(--primary); font-family: 'Dancing Script';">
-      <i class="fa-solid fa-landmark"></i> Financial Instruments
-    </h2>
-    <form action="/finance-details" method="get" class="d-flex" role="search" style="width: 350px;">
-      <div class="input-group">
-        <input class="form-control rounded-pill" name="search" type="search" value="{{search_query}}" placeholder="Search instruments..." aria-label="Search">
-        <button class="btn custom-btn-primary rounded-pill ms-1" type="submit">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-      </div>
-    </form>
-  </div>
+<!-- Page Banner with Search -->
+<div class="txn-page-banner">
+    <div class="txn-banner-content">
+        <div class="txn-banner-text">
+            <h1 class="txn-banner-title">
+                <i class="fa-solid fa-landmark me-2"></i>Finance
+            </h1>
+            <p class="txn-banner-subtitle">Manage your Loans, SIPs, and Splits</p>
+        </div>
+        <div class="txn-banner-badge" style="width: 320px;">
+            <form action="/finance-details" method="get" class="d-flex" role="search">
+                <div class="fin-search-wrap w-100">
+                    <i class="fa-solid fa-magnifying-glass fin-search-icon"></i>
+                    <input class="fin-search-input" name="search" type="search" value="{{search_query}}" placeholder="Search instruments..." aria-label="Search">
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <!-- Include Dashboard Stats -->
@@ -136,85 +323,89 @@
         {% for i in details %}
         {% if i.status == "Open" %}
         <div class="col-12 col-md-4 col-lg-3 mb-3">
-            <div class="card shadow-sm rounded-3 h-100" style="border-left: 4px solid {% if i.type == 'Loan' %}#8B5CF6{% elif i.type == 'SIP' %}#10B981{% else %}#F59E0B{% endif %};">
-                <div class="card-body p-3">
+            <div class="fin-grid-card h-100" style="border-top: 4px solid {% if i.type == 'Loan' %}#8B5CF6{% elif i.type == 'SIP' %}#10B981{% else %}#F59E0B{% endif %};">
+                <div class="card-body p-4">
                     <!-- Header -->
-                    <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="d-flex justify-content-between align-items-start fin-card-header">
                         <div class="flex-grow-1">
-                            <h6 class="mb-1" style="font-weight: 700; font-size: 1rem;">
+                            <h6 class="mb-1" style="font-weight: 800; font-size: 1.05rem; color: #1f2937;">
                                 {% if i.type == "Loan" %}
-                                <i class="fa-solid fa-landmark" style="color: #8B5CF6;"></i>
+                                <i class="fa-solid fa-landmark me-1" style="color: #8B5CF6;"></i>
                                 {% elif i.type == "SIP" %}
-                                <i class="fa-solid fa-chart-line" style="color: #10B981;"></i>
+                                <i class="fa-solid fa-chart-line me-1" style="color: #10B981;"></i>
                                 {% else %}
-                                <i class="fa-solid fa-bolt" style="color: #F59E0B;"></i>
+                                <i class="fa-solid fa-bolt me-1" style="color: #F59E0B;"></i>
                                 {% endif %}
-                                {{ i.name | title | truncatechars:22 }}
+                                {{ i.name | title | truncatechars:20 }}
                             </h6>
-                            <small class="text-muted">{{ i.type }}</small>
+                            <small class="text-muted" style="font-weight: 600;">{{ i.type }}</small>
                         </div>
-                        <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#financeModal" onclick="openModalAndGetInstrument({{ i.id }})" aria-label="Edit">
+                        <button class="btn btn-link p-0 text-primary" data-bs-toggle="modal" data-bs-target="#financeModal" onclick="openModalAndGetInstrument({{ i.id }})" aria-label="Edit" style="opacity: 0.6; transition: opacity 0.2s;">
                             <i class="fa-solid fa-edit"></i>
                         </button>
                     </div>
 
                     <!-- Status Badge -->
-                    <div class="mb-2">
-                        <span class="badge {{ i.badge_class }} px-2 py-1" style="font-size: 0.75rem;">
-                            {% if i.badge_status == "Overdue" %}⚠️{% elif i.badge_status == "Due Soon" %}📅{% elif i.badge_status == "Paid" %}✅{% else %}✓{% endif %}
-                            {{ i.badge_status }}
+                    <div class="mb-3">
+                        <span class="fin-badge" style="background: rgba(0,0,0,0.05); color: #4b5563;">
+                            {% if i.badge_status == "Overdue" %}
+                                <span style="color: #ef4444;"><i class="fa-solid fa-triangle-exclamation me-1"></i>Overdue</span>
+                            {% elif i.badge_status == "Due Soon" %}
+                                <span style="color: #f59e0b;"><i class="fa-solid fa-clock me-1"></i>Due Soon</span>
+                            {% elif i.badge_status == "Paid" %}
+                                <span style="color: #10b981;"><i class="fa-solid fa-check me-1"></i>Paid</span>
+                            {% else %}
+                                <span style="color: #3b82f6;"><i class="fa-solid fa-circle-info me-1"></i>{{ i.badge_status }}</span>
+                            {% endif %}
                         </span>
                     </div>
 
                     <!-- Progress Bar -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <small class="text-muted">Progress</small>
-                            <small style="font-weight: 600;">{{ i.completion_percentage }}%</small>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted" style="font-weight: 600; font-size: 0.75rem; text-transform: uppercase;">Progress</small>
+                            <small style="font-weight: 800; color: #374151;">{{ i.completion_percentage }}%</small>
                         </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar" role="progressbar" 
-                                 style="width: {{ i.completion_percentage }}%; background: linear-gradient(90deg, {% if i.type == 'Loan' %}#8B5CF6{% elif i.type == 'SIP' %}#10B981{% else %}#F59E0B{% endif %} 0%, {% if i.type == 'Loan' %}#A78BFA{% elif i.type == 'SIP' %}#34D399{% else %}#FBBF24{% endif %} 100%);"
-                                 aria-valuenow="{{ i.completion_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                        <div class="fin-progress-wrap">
+                            <div class="fin-progress-bar" role="progressbar" 
+                                 style="width: {{ i.completion_percentage }}%; background: linear-gradient(90deg, {% if i.type == 'Loan' %}#8B5CF6{% elif i.type == 'SIP' %}#10B981{% else %}#F59E0B{% endif %} 0%, {% if i.type == 'Loan' %}#A78BFA{% elif i.type == 'SIP' %}#34D399{% else %}#FBBF24{% endif %} 100%);">
                             </div>
                         </div>
                     </div>
 
                     <!-- Amount Info -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <small class="text-muted d-block">Outstanding</small>
-                                <strong style="font-size: 1.1rem;">₹ {{ i.remaining_amount|floatformat:0 }}</strong>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted d-block">Installments</small>
-                                <strong>{{ i.remaining_installments }}</strong>
-                            </div>
+                    <div class="mb-4 d-flex justify-content-between align-items-end">
+                        <div>
+                            <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Outstanding</small>
+                            <strong style="font-size: 1.25rem; color: #111827; letter-spacing: -0.02em;">₹ {{ i.remaining_amount|floatformat:0 }}</strong>
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted d-block mb-1" style="font-size: 0.75rem; text-transform: uppercase; font-weight: 600;">Rem. Inst.</small>
+                            <strong style="font-size: 1.1rem; color: #374151;">{{ i.remaining_installments }}</strong>
                         </div>
                     </div>
 
                     <!-- Next Payment -->
                     {% if i.next_payment_date %}
-                    <div class="mb-3 p-2 rounded" style="background-color: rgba(0,0,0,0.03);">
-                        <small class="text-muted d-block">Next Payment</small>
+                    <div class="mb-4 p-3 rounded-4" style="background: linear-gradient(135deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.04) 100%); border: 1px solid rgba(0,0,0,0.03);">
+                        <small class="text-muted d-block mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Next Payment</small>
                         <div class="d-flex justify-content-between align-items-center">
-                            <span style="font-size: 0.85rem; font-weight: 600;">{{ i.next_payment_date|date:"d M Y" }}</span>
-                            <span style="font-weight: 700; color: {% if i.type == 'Loan' %}#8B5CF6{% elif i.type == 'SIP' %}#10B981{% else %}#F59E0B{% endif %};">₹ {{ i.next_payment_amount|floatformat:0 }}</span>
+                            <span style="font-size: 0.9rem; font-weight: 700; color: #374151;"><i class="fa-regular fa-calendar me-1"></i>{{ i.next_payment_date|date:"d M Y" }}</span>
+                            <span style="font-size: 0.95rem; font-weight: 800; color: {% if i.type == 'Loan' %}#8B5CF6{% elif i.type == 'SIP' %}#10B981{% else %}#F59E0B{% endif %};">₹ {{ i.next_payment_amount|floatformat:0 }}</span>
                         </div>
                     </div>
                     {% endif %}
 
                     <!-- Actions -->
-                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                        <a href="/fetch-financial-transaction/{{ i.id }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fa-solid fa-eye"></i> Details
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: rgba(0,0,0,0.04) !important;">
+                        <a href="/fetch-financial-transaction/{{ i.id }}" style="color: var(--primary-dark); text-decoration: none; font-weight: 700; font-size: 0.8rem; transition: color 0.2s;">
+                            <i class="fa-solid fa-eye me-1"></i> Details
                         </a>
-                        <div>
-                            <a href="/update-instrument-status/{{ i.id }}" class="btn btn-sm btn-outline-secondary" title="Close">
+                        <div class="d-flex gap-2">
+                            <a href="/update-instrument-status/{{ i.id }}" class="fin-action-btn" title="Close">
                                 <i class="fa-solid fa-lock"></i>
                             </a>
-                            <a href="/remove-instrument/{{ i.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete {{ i.name }}?')" title="Delete">
+                            <a href="/remove-instrument/{{ i.id }}" class="fin-action-btn fin-action-btn--danger" onclick="return confirm('Delete {{ i.name }}?')" title="Delete">
                                 <i class="fa-solid fa-trash"></i>
                             </a>
                         </div>
@@ -226,56 +417,53 @@
         
         {% elif i.status == "Closed" %}
         <div class="col-12 col-md-4 col-lg-3 mb-3">
-            <div class="card shadow-sm rounded-3 h-100" style="border-left: 4px solid #6B7280; opacity: 0.85;">
-                <div class="card-body p-3" style="background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);">
+            <div class="fin-grid-card fin-grid-card--closed h-100" style="border-top: 4px solid #9ca3af;">
+                <div class="card-body p-4">
                     <!-- Header -->
-                    <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="d-flex justify-content-between align-items-start fin-card-header">
                         <div class="flex-grow-1">
-                            <h6 class="mb-1 text-muted" style="font-weight: 700; font-size: 1rem;">
-                                <i class="fa-solid fa-check-circle" style="color: #6B7280;"></i>
-                                {{ i.name | title | truncatechars:22 }}
+                            <h6 class="mb-1" style="font-weight: 800; font-size: 1.05rem; color: #4b5563;">
+                                <i class="fa-solid fa-check-circle me-1" style="color: #9ca3af;"></i>
+                                {{ i.name | title | truncatechars:20 }}
                             </h6>
-                            <small class="text-muted">{{ i.type }} - Closed</small>
+                            <small class="text-muted" style="font-weight: 600;">{{ i.type }} - Closed</small>
                         </div>
-                        <a href="/fetch-financial-transaction/{{ i.id }}" class="btn btn-link p-0 text-muted" aria-label="View">
-                            <i class="fa-solid fa-eye"></i>
-                        </a>
                     </div>
 
                     <!-- Completed Badge -->
-                    <div class="mb-2">
-                        <span class="badge bg-secondary px-2 py-1" style="font-size: 0.75rem;">
-                            ✅ Completed
+                    <div class="mb-3">
+                        <span class="fin-badge" style="background: rgba(16,185,129,0.1); color: #059669;">
+                            <i class="fa-solid fa-check-double me-1"></i>Completed
                         </span>
                     </div>
 
                     <!-- Progress Bar (100%) -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <small class="text-muted">Progress</small>
-                            <small style="font-weight: 600; color: #10B981;">100%</small>
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted" style="font-weight: 600; font-size: 0.75rem; text-transform: uppercase;">Progress</small>
+                            <small style="font-weight: 800; color: #059669;">100%</small>
                         </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="fin-progress-wrap">
+                            <div class="fin-progress-bar" style="width: 100%; background: linear-gradient(90deg, #10b981 0%, #34d399 100%);"></div>
                         </div>
                     </div>
 
                     <!-- Start Date Info -->
-                    <div class="mb-3">
-                        <small class="text-muted d-block">Started On</small>
-                        <span style="font-size: 0.95rem;">{{ i.started_on|date:"d M Y" }}</span>
+                    <div class="mb-4 p-3 rounded-4" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.03);">
+                        <small class="text-muted d-block mb-1" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Started On</small>
+                        <span style="font-size: 0.95rem; font-weight: 700; color: #374151;"><i class="fa-regular fa-calendar me-1"></i>{{ i.started_on|date:"d M Y" }}</span>
                     </div>
 
                     <!-- Actions -->
-                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                        <a href="/fetch-financial-transaction/{{ i.id }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="fa-solid fa-eye"></i> View History
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: rgba(0,0,0,0.04) !important;">
+                        <a href="/fetch-financial-transaction/{{ i.id }}" style="color: #4b5563; text-decoration: none; font-weight: 700; font-size: 0.8rem; transition: color 0.2s;">
+                            <i class="fa-solid fa-eye me-1"></i> History
                         </a>
-                        <div>
-                            <a href="/update-instrument-status/{{ i.id }}" class="btn btn-sm btn-outline-success" title="Reopen">
+                        <div class="d-flex gap-2">
+                            <a href="/update-instrument-status/{{ i.id }}" class="fin-action-btn fin-action-btn--success" title="Reopen">
                                 <i class="fa-solid fa-lock-open"></i>
                             </a>
-                            <a href="/remove-instrument/{{ i.id }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete {{ i.name }}?')" title="Delete">
+                            <a href="/remove-instrument/{{ i.id }}" class="fin-action-btn fin-action-btn--danger" onclick="return confirm('Delete {{ i.name }}?')" title="Delete">
                                 <i class="fa-solid fa-trash"></i>
                             </a>
                         </div>
