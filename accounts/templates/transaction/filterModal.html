@@ -3,12 +3,12 @@
     <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
 
       <!-- Header -->
-      <div class="modal-header" style="background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%); border-bottom: none; padding: 16px 20px;">
+      <div class="modal-header txn-modal-header">
         <div class="d-flex align-items-center gap-2">
-          <div style="width:34px;height:34px;background:rgba(176,163,111,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;">
+          <div class="txn-modal-icon">
             <i class="fa-solid fa-sliders" style="color:#fff;font-size:0.95rem;"></i>
           </div>
-          <h5 class="modal-title mb-0" id="filterModalLabel" style="color:#fff;font-weight:700;font-size:1rem;">Filter Transactions</h5>
+          <h5 class="modal-title txn-modal-title" id="filterModalLabel">Filter Transactions</h5>
         </div>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -27,7 +27,7 @@
                        {% if "Expense" in data.type %} checked {% endif %}
                        class="fm-pill-input" id="typeExpense">
                 <span class="fm-pill fm-pill--expense">
-                  <i class="fa-solid fa-arrow-up-long me-1"></i>Expense
+                  <i class="fa-solid fa-arrow-trend-down me-1"></i>Expense
                 </span>
               </label>
               <label class="fm-pill-label">
@@ -35,35 +35,50 @@
                        {% if "Income" in data.type %} checked {% endif %}
                        class="fm-pill-input" id="typeIncome">
                 <span class="fm-pill fm-pill--income">
-                  <i class="fa-solid fa-arrow-down-long me-1"></i>Income
+                  <i class="fa-solid fa-arrow-trend-up me-1"></i>Income
                 </span>
               </label>
             </div>
           </div>
 
-          <!-- Row: Category / Mode / Status -->
-          <div class="row g-3 mb-3">
-            <div class="col-md-4">
-              <label class="txn-modal-label" for="fm-category">
-                <i class="fa-solid fa-tag me-1" style="color:var(--primary);"></i> Category
-              </label>
-              <select class="form-select txn-modal-input" name="category" id="fm-category">
-                <option {% if data.category == "" %} selected {% endif %} value="">— All —</option>
-                {% for category in categories %}
-                  <option {% if data.category == category %} selected {% endif %} value="{{ category }}">{{ category }}</option>
-                {% endfor %}
-              </select>
+          <!-- Category -->
+          <div class="mb-4">
+            <label class="txn-modal-label">
+              <i class="fa-solid fa-tag me-1" style="color:var(--primary);"></i> Category
+            </label>
+            <div class="txn-pill-group">
+                <div class="txn-pill-option">
+                  <input type="radio" name="category" id="fm_cat_all" value="" {% if data.category == "" %} checked {% endif %}>
+                  <label class="txn-pill-label" for="fm_cat_all">All</label>
+                </div>
+              {% for category in categories %}
+                <div class="txn-pill-option">
+                  <input type="radio" name="category" id="fm_cat_{{ category }}" value="{{ category }}" {% if data.category == category %} checked {% endif %}>
+                  <label class="txn-pill-label" for="fm_cat_{{ category }}">{{ category }}</label>
+                </div>
+              {% endfor %}
             </div>
-            <div class="col-md-6">
-              <label class="txn-modal-label" for="fm-status">
+          </div>
+
+          <!-- Status -->
+          <div class="mb-4">
+              <label class="txn-modal-label">
                 <i class="fa-solid fa-circle-half-stroke me-1" style="color:var(--primary);"></i> Status
               </label>
-              <select class="form-select txn-modal-input" name="status" id="fm-status">
-                <option {% if data.status == "" %} selected {% endif %} value="">— All —</option>
-                <option {% if data.status == "Completed" %} selected {% endif %} value="Completed">Completed</option>
-                <option {% if data.status == "Pending" %} selected {% endif %} value="Pending">Pending</option>
-              </select>
-            </div>
+              <div class="txn-radio-group" style="margin-bottom:0; margin-top:5px;">
+                <div class="txn-radio-option">
+                  <input type="radio" name="status" id="fm_status_all" value="" {% if data.status == "" %} checked {% endif %}>
+                  <label class="txn-radio-label" for="fm_status_all" style="padding: 8px;">All</label>
+                </div>
+                <div class="txn-radio-option">
+                  <input type="radio" name="status" id="fm_status_completed" value="Completed" {% if data.status == "Completed" %} checked {% endif %}>
+                  <label class="txn-radio-label" for="fm_status_completed" style="padding: 8px;">Completed</label>
+                </div>
+                <div class="txn-radio-option">
+                  <input type="radio" name="status" id="fm_status_pending" value="Pending" {% if data.status == "Pending" %} checked {% endif %}>
+                  <label class="txn-radio-label" for="fm_status_pending" style="padding: 8px;">Pending</label>
+                </div>
+              </div>
           </div>
 
           <!-- Row: Beneficiary / Date Range -->
@@ -115,12 +130,6 @@
 /* Income */
 .fm-pill--income { border-color: #10b981; color: #10b981; background: #fff; }
 .fm-pill-input:checked + .fm-pill--income { background: #10b981; color: #fff; }
-/* Investment */
-.fm-pill--invest { border-color: #8b5cf6; color: #8b5cf6; background: #fff; }
-.fm-pill-input:checked + .fm-pill--invest { background: #8b5cf6; color: #fff; }
-/* EMI */
-.fm-pill--emi { border-color: #3b82f6; color: #3b82f6; background: #fff; }
-.fm-pill-input:checked + .fm-pill--emi { background: #3b82f6; color: #fff; }
 </style>
 
 <script>

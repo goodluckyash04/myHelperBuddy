@@ -84,21 +84,34 @@
 <style>
 /* ── Stat Card ─────────────────────────────────────────────── */
 .txn-stat-card {
-    background: #fff;
-    border-radius: 14px;
-    box-shadow: 0 2px 12px rgba(32, 27, 5, 0.07);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 18px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     display: flex;
     position: relative;
-    transition: transform 0.22s ease, box-shadow 0.22s ease;
-    border: 1px solid rgba(0,0,0,0.05);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 1);
+}
+.txn-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 18px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.2));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
 }
 .txn-stat-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-6px) scale(1.01);
 }
-.txn-stat-card--danger:hover { box-shadow: 0 8px 24px rgba(239, 68, 68, 0.18); }
-.txn-stat-card--blue:hover   { box-shadow: 0 8px 24px rgba(59, 130, 246, 0.18); }
-.txn-stat-card--amber:hover  { box-shadow: 0 8px 24px rgba(245, 158, 11, 0.18); }
+.txn-stat-card--danger:hover { box-shadow: 0 15px 35px rgba(239, 68, 68, 0.2); }
+.txn-stat-card--blue:hover   { box-shadow: 0 15px 35px rgba(59, 130, 246, 0.2); }
+.txn-stat-card--amber:hover  { box-shadow: 0 15px 35px rgba(245, 158, 11, 0.2); }
 
 /* Left accent bar */
 .txn-stat-accent {
