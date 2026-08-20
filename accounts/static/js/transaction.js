@@ -45,21 +45,30 @@ function payType() {
   // Default values (Income)
   submit_button.textContent = "Add Income";
   var categories = ["Salary", "Other"];
-  beneficiary.style.display = "none";
+  var beneficiary_container = document.getElementById("beneficiary_container");
+  var status_container = document.getElementById("status_container");
+  if (beneficiary_container) beneficiary_container.style.display = "none";
+  if (status_container) status_container.style.display = "none";
   other.style.display = "none";
-  status.style.display = "none";
 
   if (Expense.checked) {
     submit_button.textContent = "Add Expense";
     categories = CATEGORIES.filter((item) => item != "EMI");
-    beneficiary.style.display = "";
-    status.style.display = "";
+    document.getElementById("beneficiary_container").style.display = "block";
+    document.getElementById("status_container").style.display = "block";
+  } else {
+    document.getElementById("beneficiary_container").style.display = "none";
+    document.getElementById("status_container").style.display = "none";
   }
 
   // Update category options
   categorySelect.innerHTML = categories
-    .map(function (category) {
-      return `<option value="${category}">${category}</option>`;
+    .map(function (category, index) {
+      return `
+        <div class="txn-pill-option">
+          <input type="radio" name="category" id="cat_${category}_${index}" value="${category}" required>
+          <label class="txn-pill-label" for="cat_${category}_${index}">${category}</label>
+        </div>`;
     })
     .join("");
 }
@@ -84,8 +93,12 @@ function openModalAndGetExpense(Id) {
       if (data.type == "Income") {
         CATEGORIES = ["Salary", "Other"];
       }
-      categorySelect.innerHTML = CATEGORIES.map(function (category) {
-        return `<option value="${category}" ${category === data.category ? "selected" : ""}>${category}</option>`;
+      categorySelect.innerHTML = CATEGORIES.map(function (category, index) {
+        return `
+        <div class="txn-pill-option">
+          <input type="radio" name="category" id="cat_u_${category}_${index}" value="${category}" ${category === data.category ? "checked" : ""} required>
+          <label class="txn-pill-label" for="cat_u_${category}_${index}">${category}</label>
+        </div>`;
       }).join("");
 
       // beneficiary

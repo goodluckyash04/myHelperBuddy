@@ -5,12 +5,12 @@
     <div class="modal-content border-0 shadow-lg" style="border-radius: 14px; overflow: hidden;">
 
       <!-- Branded Modal Header -->
-      <div class="modal-header" style="background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%); border-bottom: none; padding: 16px 20px;">
+      <div class="modal-header txn-modal-header">
         <div class="d-flex align-items-center gap-2">
-            <div style="width:34px; height:34px; background:rgba(176,163,111,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center;">
+            <div class="txn-modal-icon">
                 <i class="fa-solid fa-pen-to-square" style="color:#fff; font-size: 0.9rem;"></i>
             </div>
-            <h5 class="modal-title mb-0" id="title_u" style="color:#fff; font-weight:700; font-size:1rem;">Edit Transaction</h5>
+            <h5 class="modal-title txn-modal-title" id="title_u">Edit Transaction</h5>
         </div>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
@@ -23,12 +23,12 @@
 
             <!-- Transaction Category -->
             <div class="mb-3">
-              <label class="txn-modal-label" for="category_u">
+              <label class="txn-modal-label">
                 <i class="fa-solid fa-tag me-1" style="color: var(--primary);"></i> Category
               </label>
-              <select class="form-select txn-modal-input" id="category_u" name="category">
-                <option value="" disabled selected>— Select Category —</option>
-              </select>
+              <div class="txn-pill-group" id="category_u">
+                <!-- Categories will be populated dynamically -->
+              </div>
             </div>
 
             <!-- Beneficiary -->
@@ -56,7 +56,7 @@
             </div>
 
             <!-- Description -->
-            <div class="mb-3">
+            <div class="mb-4">
               <label class="txn-modal-label" for="description_u">
                 <i class="fa-solid fa-align-left me-1" style="color: var(--primary);"></i> Description
               </label>
@@ -77,47 +77,3 @@
     </div>
   </div>
 </div>
-
-<style>
-.txn-modal-label {
-    display: block;
-    font-size: 0.72rem;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    font-weight: 700;
-    color: #6b7280;
-    margin-bottom: 5px;
-}
-.txn-modal-input {
-    border: 1.5px solid #e5e7eb;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    padding: 9px 12px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-.txn-modal-input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(176, 163, 111, 0.18);
-    outline: none;
-}
-.txn-modal-submit {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
-    color: #e9d891;
-    border: none;
-    border-radius: 10px;
-    padding: 12px 24px;
-    font-size: 0.88rem;
-    font-weight: 700;
-    letter-spacing: 0.03em;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
-}
-.txn-modal-submit:hover {
-    opacity: 0.92;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(32, 27, 5, 0.28);
-}
-</style>
