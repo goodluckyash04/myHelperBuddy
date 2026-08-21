@@ -31,7 +31,7 @@ from accounts.models import (
     UserProfile,
 )
 from accounts.services.email_services import EmailService
-from accounts.services.google_services import GoogleDriveService
+from accounts.services.google_services import get_drive_service
 
 
 User = get_user_model()
@@ -60,15 +60,18 @@ class Command(BaseCommand):
     def __init__(self):
         """Initialize command with services and timezone."""
         super().__init__()
-        
+
         # Set IST timezone (UTC+5:30)
         ist_offset = datetime.timedelta(hours=5, minutes=30)
         ist_tz = datetime.timezone(ist_offset)
         self.now = datetime.datetime.now(datetime.timezone.utc).astimezone(ist_tz)
-        
-        # Initialize services
+
+        # Initialize services.
+        # `get_drive_service()` returns the shared singleton and reuses the
+        # cached access token — it only calls Google's token endpoint when the
+        # token is actually expired (or has less than 5 minutes remaining).
         self.email_service = EmailService()
-        self.google_service = GoogleDriveService()
+        self.google_service = get_drive_service()
     
     def handle(self, *args, **options):
         """
