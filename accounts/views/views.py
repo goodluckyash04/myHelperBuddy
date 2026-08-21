@@ -883,8 +883,7 @@ def manual_backup(request):
     try:
         # Capture management command output
         output = StringIO()
-        # Skip task reminders when manually triggered from UI
-        call_command('backup_db', stdout=output, skip_reminders=True)
+        call_command('backup_db', stdout=output)
         
         # Get the output
         backup_output = output.getvalue()
