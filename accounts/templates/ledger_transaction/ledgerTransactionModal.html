@@ -2,12 +2,12 @@
 {% load static %}
 <div class="modal fade" id="ledgerModal" tabindex="-1" aria-labelledby="ledgerModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="ledgerModalLabel">
-          <i class="fas fa-receipt me-2"></i> Add Ledger Entry
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);">
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <h5 class="modal-title" id="ledgerModalLabel" style="font-weight: 800; color: var(--primary-dark); font-size: 1.5rem;">
+          <i class="fa-solid fa-book-journal-whills me-2"></i><span>Ledger Entry</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close" style="background-color: rgba(0,0,0,0.05); border-radius: 50%; padding: 12px; margin-right: 0;"></button>
       </div>
 
       <div class="modal-body">
@@ -121,13 +121,10 @@
             <textarea class="form-control" name="description" id="description" rows="2"
                       placeholder="What is this for?"></textarea>
           </div>
-
-
-
-          <div class="d-grid">
-            <button type="submit" class="btn custom-btn-primary btn-lg" id="submitButton"
-                    onclick="prepareTabName()">
-              <i class="fas fa-save me-2"></i>Save Entry
+          <!-- Submit Button -->
+          <div class="mt-4">
+            <button id="submitButton" type="submit" class="btn w-100 shadow-sm fin-submit-btn" onclick="prepareTabName()">
+              <i class="fa-solid fa-check-circle me-1"></i> <span id="submitBtnText">Add Ledger Entry</span>
             </button>
           </div>
         </form>

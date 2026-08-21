@@ -1,17 +1,14 @@
 <!-- Add Transaction Modal -->
 <div class="modal fade" id="expensemodal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg" style="border-radius: 14px; overflow: hidden;">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);">
       
       <!-- Branded Modal Header -->
-      <div class="modal-header txn-modal-header">
-        <div class="d-flex align-items-center gap-2">
-            <div class="txn-modal-icon">
-                <i class="fa-solid fa-plus" style="color:#fff; font-size: 0.9rem;"></i>
-            </div>
-            <h5 class="modal-title txn-modal-title" id="wefef">Add Transaction</h5>
-        </div>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <h5 class="modal-title" style="font-weight: 800; color: var(--primary-dark); font-size: 1.5rem;">
+          <i class="fa-solid fa-receipt me-2"></i><span id="wefef">Transaction</span>
+        </h5>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close" style="background-color: rgba(0,0,0,0.05); border-radius: 50%; padding: 12px; margin-right: 0;"></button>
       </div>
 
       <div class="modal-body p-4">
@@ -117,8 +114,8 @@
             </div>
 
             <!-- Submit Button -->
-            <button id="submitButton" type="submit" class="txn-modal-submit w-100">
-                <i class="fa-solid fa-plus-circle me-2"></i> Add Transaction
+            <button id="submitButton" type="submit" class="btn w-100 shadow-sm fin-submit-btn">
+                <i class="fa-solid fa-check-circle me-1"></i> <span id="submitBtnText">Add Transaction</span>
             </button>
           </div>
         </form>
