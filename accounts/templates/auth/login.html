@@ -2,49 +2,163 @@
 {% load static %}
 {% block mainbody %}
 <style>
-  #login-form input::placeholder {
-    color: #c4c9d0;
+  /* Premium Animated Background */
+  .auth-bg {
+    min-height: 100vh;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    background: linear-gradient(-45deg, #f8f9fa, rgba(176, 163, 111, 0.15), rgba(185, 95, 95, 0.08), #ffffff);
+    background-size: 400% 400%;
+    animation: authGradientBG 15s ease infinite;
+    padding: 2rem 0;
+  }
+  @keyframes authGradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Glassmorphic Form Card */
+  .auth-card-premium {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 24px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.05), 0 5px 15px rgba(176, 163, 111, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .auth-card-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 8px 20px rgba(176, 163, 111, 0.15);
+  }
+
+  /* Gradient Text */
+  .text-gradient-premium {
+    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+  }
+
+  /* Premium Inputs */
+  .auth-card-premium .form-control {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1.5px solid rgba(176, 163, 111, 0.2);
+    border-radius: 12px;
+    color: var(--text-main, #1f2937);
+    transition: all 0.3s ease;
+  }
+  .auth-card-premium .form-control:focus {
+    background: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(176, 163, 111, 0.15);
+    outline: none;
+  }
+  .auth-card-premium .form-control::placeholder {
+    color: #9ca3af;
     font-weight: 400;
   }
-</style>
-<div style="min-height: 90vh; display: flex; align-items: center; justify-content: center;">
+  
+  /* Input Groups (e.g. Password toggle) */
+  .auth-card-premium .input-group {
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1.5px solid rgba(176, 163, 111, 0.2);
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .auth-card-premium .input-group:focus-within {
+    background: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(176, 163, 111, 0.15);
+  }
+  .auth-card-premium .input-group .form-control {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .auth-card-premium .input-group-text {
+    background: transparent !important;
+    border: none !important;
+  }
 
+  /* Premium Submit Button */
+  .btn-auth-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    padding: 0.8rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(176, 163, 111, 0.3);
+  }
+  .btn-auth-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(176, 163, 111, 0.4);
+    color: white;
+  }
+
+  /* Premium Outline Button */
+  .btn-auth-outline {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(176, 163, 111, 0.3);
+    color: var(--primary-dark);
+    border-radius: 12px;
+    font-weight: 600;
+    padding: 0.8rem;
+    transition: all 0.3s ease;
+  }
+  .btn-auth-outline:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    color: var(--primary-dark);
+  }
+</style>
+
+<div class="auth-bg">
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
 
-        <form method="post" action="/login" class="p-4 rounded shadow-sm" style="background: white;" id="login-form">
+        <form method="post" action="/login" class="p-4 p-md-5 auth-card-premium" id="login-form">
 
-          <h2 class="text-center mb-3">
-            <a class="text-decoration-none" style="color: var(--primary); font-family: 'Rubik Vinyl', cursive; font-weight: 500; font-size: 2.5rem;" href="/">MyHelperBuddy</a>
+          <h2 class="text-center mb-2">
+            <a class="text-decoration-none" style="font-family: 'Rubik Vinyl', cursive; font-size: clamp(1.5rem, 8vw, 2.2rem);" href="/">
+              <span class="text-gradient-premium">MyHelperBuddy</span>
+            </a>
           </h2>
-          <p class="fs-5 text-center mb-4" style="color: var(--primary); font-weight: 500;">Sign In</p>
+          <p class="text-center mb-4" style="color: var(--primary-dark); font-weight: 600; font-size: 1.1rem; opacity: 0.75; letter-spacing: 0.5px;">Sign In</p>
 
-          <div class="mb-3">
+          <div class="mb-4">
             <input
               type="text"
               placeholder="Username/Email"
-              class="form-control form-control-lg"
+              class="form-control form-control-lg px-3"
               name="username"
               id="username"
               required
-              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
               autocomplete="username"
             />
           </div>
 
-          <div class="mb-3 input-group" style="border-radius: 0.5rem; border: 1.5px solid #ddd;">
+          <div class="mb-3 input-group">
             <input
               type="password"
               placeholder="Password"
-              class="form-control form-control-lg border-0"
+              class="form-control form-control-lg px-3"
               name="password"
               id="password"
               required
-              style="font-size: medium; border-radius: 0.5rem 0 0 0.5rem;"
               autocomplete="current-password"
             />
-            <span class="input-group-text bg-white border-0" id="addon-wrapping" style="border-radius: 0 0.5rem 0.5rem 0; cursor: pointer;">
+            <span class="input-group-text pe-3" id="addon-wrapping" style="cursor: pointer;">
               <i class="fa-solid fa-eye" style="color: var(--primary);" id="showPasswordButton" onclick="togglePasswordVisibility()"></i>
             </span>
           </div>
@@ -57,18 +171,17 @@
 
           {% csrf_token %}
 
-          <div class="d-grid mb-3">
+          <div class="d-grid mb-3 mt-4">
             <button
               type="submit"
-              class="btn btn-primary btn-lg"
-              style="background-color: var(--primary); border: none; border-radius: 0.5rem; font-weight: 600;"
+              class="btn-auth-primary"
             >
               LOGIN
             </button>
           </div>
 
-          <div class="text-center mb-3">
-            <a href="/forgotPassword" class="text-decoration-none" style="color: var(--primary); font-weight: 500;">Forgot Password?</a>
+          <div class="text-center mb-4">
+            <a href="/forgotPassword" class="text-decoration-none" style="color: var(--primary-dark); font-weight: 600; font-size: 0.95rem;">Forgot Password?</a>
           </div>
 
           <div class="d-flex align-items-center my-3">
@@ -77,11 +190,11 @@
             <hr class="flex-grow-1">
           </div>
 
-          <div class="d-grid mb-3">
+          <div class="d-grid mb-4">
             <a href="{% url 'google_login' %}" 
-               class="btn btn-outline-secondary btn-lg d-flex align-items-center justify-content-center"
-               style="border-radius: 0.5rem; font-weight: 600; gap: 10px; border: 1.5px solid #ddd;">
-              <svg width="20" height="20" viewBox="0 0 24 24">
+               class="btn-auth-outline d-flex align-items-center justify-content-center text-decoration-none"
+               style="gap: 12px;">
+              <svg width="22" height="22" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -91,11 +204,9 @@
             </a>
           </div>
 
-          <hr>
-
           <div class="text-center">
             <a href="/signup" class="text-secondary text-decoration-none" style="font-weight: 500;">
-              Don't have an account? <b style="color: var(--primary);">Sign Up</b>
+              Don't have an account? <span class="text-gradient-premium" style="font-weight: 700;">Sign Up</span>
             </a>
           </div>
 
@@ -107,6 +218,10 @@
 
 </div>
 {% endblock mainbody %}
+
+{% block footer %}
+<!-- Remove footer from auth pages -->
+{% endblock footer %}
 
 {% block script %}
 <script>
