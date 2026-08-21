@@ -102,7 +102,6 @@ from .views.view_transaction import (
 # ============================================================================
 
 from .views.views import (
-    about,
     dashboard,
     index,
     manual_backup,
@@ -125,7 +124,6 @@ urlpatterns = [
     path("manual-backup/", manual_backup, name="manual-backup"),
     path("dashboard/", dashboard, name="dashboard"),
     path("utilities/", utilities, name="utilities"),
-    path("about/", about, name="about"),
     
     # ========================================================================
     # Authentication & User Management

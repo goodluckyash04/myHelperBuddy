@@ -651,20 +651,6 @@ def index(request):
 
 
 @login_required
-def about(request):
-    """
-    About page view.
-
-    Args:
-        request: Django HTTP request object.
-
-    Returns:
-        HttpResponse: Rendered about page.
-    """
-    return render(request, "about.html", {"user": request.user})
-
-
-@login_required
 
 @login_required
 def dashboard(request):
