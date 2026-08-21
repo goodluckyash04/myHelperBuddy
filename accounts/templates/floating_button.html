@@ -7,19 +7,19 @@
 
 
   <!-- Floating button -->
-  <button class="floating-button" id="floatingBtn" onclick="toggleActivityList()"><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
+  <button class="floating-button" id="floatingBtn" onclick="toggleActivityList()"><i class="fa-solid fa-plus"></i></button>
 
   <!-- Activity list -->
   <div class="activity-list" id="activityList">
     <ul>
       {% if m_type == 'transaction' or m_type == '*'  %}
-      <a data-bs-toggle="modal" data-bs-target="#expensemodal" ><li>Transaction</li></a>
+      <a data-bs-toggle="modal" data-bs-target="#expensemodal" ><li><i class="fa-solid fa-receipt"></i> Transaction</li></a>
       {% endif %}
       {% if m_type == 'finance' or m_type == '*'  %}
-      <a data-bs-toggle="modal" data-bs-target="#financeModal" ><li>Financial Entry</li></a>
+      <a data-bs-toggle="modal" data-bs-target="#financeModal" ><li><i class="fa-solid fa-chart-line"></i> Financial Entry</li></a>
       {% endif %}
       {% if m_type == 'ledger' or m_type == '*'  %}
-      <a data-bs-toggle="modal" data-bs-target="#ledgerModal" ><li>Ledger Entry</li></a>
+      <a data-bs-toggle="modal" data-bs-target="#ledgerModal" ><li><i class="fa-solid fa-book-journal-whills"></i> Ledger Entry</li></a>
       {% endif %}
     </ul>
   </div>
@@ -36,10 +36,13 @@
     // Function to toggle the activity list visibility
     function toggleActivityList() {
       var activityList = document.getElementById('activityList');
+      var floatingBtn = document.getElementById('floatingBtn');
       if (activityList.style.display === 'none' || activityList.style.display === '') {
         activityList.style.display = 'block';
+        floatingBtn.classList.add('active');
       } else {
         activityList.style.display = 'none';
+        floatingBtn.classList.remove('active');
       }
     }
   </script>

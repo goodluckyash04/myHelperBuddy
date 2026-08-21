@@ -7,11 +7,11 @@
 
     <!-- Floating button -->  
     {% if m_type == 'transaction' %}
-    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#expensemodal"  ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>      
+    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#expensemodal"  ><i class="fa-solid fa-plus"></i></button>      
     {% elif m_type == 'finance' %}
-    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#financeModal" ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
+    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#financeModal" ><i class="fa-solid fa-plus"></i></button>
     {% elif m_type == 'ledger' %}
-    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#ledgerModal" ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
+    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#ledgerModal" ><i class="fa-solid fa-plus"></i></button>
     {% endif %}
   
   {% include 'transaction/transactionModal.html' %}
