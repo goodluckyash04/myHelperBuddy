@@ -44,22 +44,22 @@
     justify-content: space-between;
     position: relative;
     z-index: 1;
-    text-align: center;
-    flex-direction: column;
 }
 .txn-banner-title {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: #fff;
-    margin: 0 0 6px;
-    letter-spacing: -0.01em;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
+        color: #fff;
+        margin: 0 0 6px;
+        letter-spacing: -0.01em;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        font-size: 2rem;
+        font-family: 'Dancing Script', cursive;
+        font-weight: 700;
+        line-height: 1.1;
+    }
 .txn-banner-subtitle {
-    font-size: 1rem;
     color: rgba(255,255,255,0.85);
-    margin: 0;
-    font-weight: 500;
+    font-size: 0.78rem;
+    opacity: 0.65;
+    margin-top: 4px;
 }
 
 /* ══════════════════════════════════════
@@ -185,13 +185,15 @@
     
     <!-- Animated Page Banner -->
     <div class="txn-page-banner">
-        <div class="txn-banner-content">
+    <div class="txn-banner-content">
+        <div>
             <h1 class="txn-banner-title">
                 <i class="fa-solid fa-toolbox me-2"></i>Utilities & Tools
             </h1>
             <p class="txn-banner-subtitle">Explore available modules and services</p>
         </div>
     </div>
+</div>
 
     <div class="container" style="position: relative; margin-top: -20px;">
         <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
