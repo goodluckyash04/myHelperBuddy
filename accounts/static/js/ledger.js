@@ -50,29 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-// Show/hide counterparty text input
-function counterpartyChange() {
-  const select = document.getElementById('counterparty');
-  const textDiv = document.getElementById('counterparty_txt_div');
-  const textInput = document.getElementById('counterparty_txt');
 
-  if (!select || !textDiv) return;
-
-  if (select.value === 'other') {
-    textDiv.style.display = 'block';
-    if (textInput) {
-      textInput.focus();
-      select.removeAttribute('required');
-      textInput.setAttribute('required', 'required');
-    }
-  } else {
-    textDiv.style.display = 'none';
-    if (textInput) {
-      textInput.removeAttribute('required');
-      select.setAttribute('required', 'required');
-    }
-  }
-}
 
 
 // Global function to populate form for editing (called from parent page)
@@ -115,6 +93,24 @@ window.editTransaction = function (txnId) {
         counterpartyTxtDiv.style.display = 'block';
         counterpartySelect.removeAttribute('required');
         counterpartyTxtInput.setAttribute('required', 'required');
+      }
+      
+      // Trigger counterparty change to load tabs
+      if (typeof counterpartyChange === 'function') {
+        counterpartyChange();
+        
+        // After populating tabs, select the correct one
+        setTimeout(() => {
+          const tabSelect = document.getElementById('tab_name_select');
+          if (tabSelect && data.tab_name) {
+            const tabOptions = Array.from(tabSelect.options);
+            const foundTab = tabOptions.find(opt => opt.value === data.tab_name);
+            if (foundTab) {
+              tabSelect.value = data.tab_name;
+              if (typeof tabSelectChange === 'function') tabSelectChange();
+            }
+          }
+        }, 50);
       }
 
       // Set dates and amounts

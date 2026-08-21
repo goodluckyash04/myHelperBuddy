@@ -42,7 +42,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.models import LedgerTransaction
 from accounts.views.view_financial_instrument import desired_date
-from accounts.views.views import get_counter_parties
+from accounts.views.views import get_counter_parties, get_counterparty_tabs_json
 
 
 # ============================================================================
@@ -272,7 +272,8 @@ def ledger_transaction_details(request: HttpRequest) -> HttpResponse:
         context = {
             'user': user,
             'receivables_payables': receivables_payables,
-            'counterparties': counterparties
+            'counterparties': counterparties,
+            'counterparty_tabs_json': get_counterparty_tabs_json(user)
         }
         
         return render(request, 'ledger_transaction/counterparty.html', context)
@@ -379,6 +380,7 @@ def get_ledger_transactions_by_party(
             'pending_count': pending_count,
             'entry_count': entry_count,
             'counterparties': get_counter_parties(user),
+            'counterparty_tabs_json': get_counterparty_tabs_json(user),
             'active_tab': active_tab,
             'all_tabs': all_tabs,
         }
@@ -477,7 +479,10 @@ def get_ledger_transactions_by_party(
         'page_obj': page_obj,
         'current_filter': filter_type,
         'counter_party': counterparty,
+        'receivable_transactions': [],
         'counterparties': get_counter_parties(user),
+        'counterparty_tabs_json': get_counterparty_tabs_json(user),
+        'all_tabs': [],
         'filters': {
             'status': status_filter,
             'type': type_filter,

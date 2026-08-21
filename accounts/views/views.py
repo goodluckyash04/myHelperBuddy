@@ -53,6 +53,19 @@ def get_counter_parties(user):
         .distinct()
     )
 
+import json
+def get_counterparty_tabs_json(user):
+    """Returns a JSON string mapping counterparties to their available tabs."""
+    qs = LedgerTransaction.objects.filter(created_by=user, is_deleted=False).values_list('counterparty', 'tab_name').distinct()
+    data = {}
+    for cp, tab in qs:
+        tab = tab or 'General'
+        if cp not in data:
+            data[cp] = []
+        if tab not in data[cp]:
+            data[cp].append(tab)
+    return json.dumps(data)
+
 
 def calculate_financial_overview(transactions) -> Dict[str, str]:
     """
@@ -600,14 +613,15 @@ def utilities(request):
 
     items = module_registry.get_modules_for_user(user)
     counterparties = get_counter_parties(user)
+    counterparty_tabs_json = get_counterparty_tabs_json(user)
 
     return render(
         request,
         "utiltities.html",
         {
-            "user": user,
             "items": items,
             "counterparties": counterparties,
+            "counterparty_tabs_json": counterparty_tabs_json,
         },
     )
 
@@ -727,6 +741,8 @@ def dashboard(request):
         "today": date.today(),
         "current_period": period,
         "period_label": date_range['label'],
+        "counterparties": get_counter_parties(user),
+        "counterparty_tabs_json": get_counterparty_tabs_json(user),
     }
 
     return render(request, "dashboard.html", context=context)
@@ -762,6 +778,8 @@ def profile(request):
         "accessible_modules": accessible_modules,
         "account_age": account_age,
         "total_transactions": total_transactions,
+        "counterparties": get_counter_parties(user),
+        "counterparty_tabs_json": get_counterparty_tabs_json(user),
     }
 
     # Add admin-specific data
