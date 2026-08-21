@@ -1,67 +1,74 @@
 <!-- Edit File Modal -->
 <div class="modal fade" id="editDetailsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <form method="post" id="editDetailsForm">
       {% csrf_token %}
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Edit file details</h5>
+      <div class="modal-content fin-modal-content">
+        <div class="modal-header fin-modal-header" style="background: linear-gradient(-45deg, var(--primary-dark), #9a8855, var(--primary), #a69550); background-size: 400% 400%; animation: gradientBG 15s ease infinite; color: white;">
+          <h5 class="modal-title fin-modal-title">
+            <i class="bi bi-pencil-square me-2"></i> Edit File Details
+          </h5>
           <button
             type="button"
-            class="btn-close"
+            class="btn-close btn-close-white"
             data-bs-dismiss="modal"
           ></button>
         </div>
 
-        <div class="modal-body">
+        <div class="modal-body p-4">
           <!-- FILENAME -->
-          <div class="mb-3">
-            <label class="form-label">Filename</label>
+          <div class="mb-4 form-floating">
             <input
               type="text"
               name="filename"
-              class="form-control"
+              class="form-control fin-form-control"
               id="editFilename"
+              placeholder="Filename"
               required
             />
+            <label for="editFilename" class="text-muted"><i class="bi bi-file-earmark-text me-1"></i> Filename</label>
           </div>
 
           <!-- KEYWORDS -->
-          <div class="mb-3">
-            <label class="form-label">Keywords</label>
+          <div class="mb-4 form-floating">
             <input
               type="text"
               name="keywords"
-              class="form-control"
+              class="form-control fin-form-control"
               id="editKeywords"
+              placeholder="Keywords"
             />
-            <div class="form-text">Comma separated tags</div>
+            <label for="editKeywords" class="text-muted"><i class="bi bi-tags me-1"></i> Keywords (comma separated)</label>
           </div>
 
-          <!-- PASSWORD -->
-         <!-- PASSWORD SECTION -->
-            <div id="oldPasswordWrap" class="mb-3 d-none">
-            <label class="form-label">Current Password</label>
-            <input type="password" name="old_password" id="editOldPassword" class="form-control" placeholder="Enter current password">
+          <!-- PASSWORD SECTION -->
+          <div class="p-3 mb-3 rounded-3" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.05);">
+            <h6 class="fw-bold mb-3 text-dark"><i class="bi bi-shield-lock me-1"></i> Access Security</h6>
+            
+            <div id="oldPasswordWrap" class="mb-3 d-none form-floating">
+              <input type="password" name="old_password" id="editOldPassword" class="form-control fin-form-control" placeholder="Current Password">
+              <label for="editOldPassword" class="text-muted">Current Password</label>
             </div>
 
-            <div class="mb-3">
-            <label class="form-label">New Password (optional)</label>
-            <input type="password" name="password" id="editPassword" class="form-control" placeholder="Enter new password">
+            <div class="mb-3 form-floating">
+              <input type="password" name="password" id="editPassword" class="form-control fin-form-control" placeholder="New Password">
+              <label for="editPassword" class="text-muted">New Password (optional)</label>
             </div>
 
-            <div class="form-check mb-2">
-            <input class="form-check-input" type="checkbox" name="clear_password" value="1" id="clearEditPwd">
-            <label class="form-check-label" for="clearEditPwd">Remove existing password</label>
+            <div class="form-check custom-checkbox mt-2">
+              <input class="form-check-input" type="checkbox" name="clear_password" value="1" id="clearEditPwd">
+              <label class="form-check-label text-muted" for="clearEditPwd">Remove existing password protection</label>
             </div>
-
+          </div>
         </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+        <div class="modal-footer border-0 p-4 pt-0 justify-content-end gap-2">
+          <button type="button" class="btn fin-cancel-btn" data-bs-dismiss="modal">
             Cancel
           </button>
-          <button type="submit" class="btn btn-theme">Save</button>
+          <button type="submit" class="btn fin-submit-btn">
+            <i class="bi bi-save me-1"></i> Save Changes
+          </button>
         </div>
       </div>
     </form>

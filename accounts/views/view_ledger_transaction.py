@@ -605,6 +605,7 @@ def update_ledger_transaction(request: HttpRequest, id: int) -> HttpResponse:
                 'transaction_date': entry.transaction_date.strftime('%Y-%m-%d'),
                 'amount': str(entry.amount),
                 'counterparty': entry.counterparty,
+                'tab_name': entry.tab_name,
                 'description': entry.description,
                 'notes': entry.notes or '',
                 'status': entry.status,
@@ -628,6 +629,14 @@ def update_ledger_transaction(request: HttpRequest, id: int) -> HttpResponse:
         if counterparty == 'other' or counterparty == 'OTHER':
             counterparty = request.POST.get('counterparty_txt', '').strip().upper()
         entry.counterparty = counterparty.upper()
+
+        # Update tab_name
+        tab_name = request.POST.get('tab_name', entry.tab_name).strip()
+        if tab_name == '__new__':
+            tab_name = request.POST.get('tab_name_new', '').strip()
+        if not tab_name:
+            tab_name = 'General'
+        entry.tab_name = tab_name
         
         # Update notes
         entry.notes = request.POST.get('notes', '')

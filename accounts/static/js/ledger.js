@@ -32,12 +32,60 @@ function updateCounterpartyInModal(csrf) {
       console.error('Error updating counterparty name:', error);
       alert('Error updating counterparty name.');
     });
+  } else {
+    toggleEditName(currentRowId);
   }
-
-  // Close the modal
-  const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
-  modal.hide();
 }
+
+window.toggleEditName = function(rowId) {
+  const viewDiv = document.getElementById('name-view-' + rowId);
+  const editDiv = document.getElementById('name-edit-' + rowId);
+  const inputEl = document.getElementById('input-' + rowId);
+  
+  if (viewDiv.style.display === 'none') {
+    viewDiv.style.display = 'flex';
+    editDiv.style.display = 'none';
+  } else {
+    viewDiv.style.display = 'none';
+    editDiv.style.display = 'flex';
+    inputEl.focus();
+    inputEl.selectionStart = inputEl.selectionEnd = inputEl.value.length;
+  }
+};
+
+window.submitEditName = function(rowId, csrf) {
+  const newCounterparty = document.getElementById('input-' + rowId).value.trim();
+  const oldCounterparty = document.getElementById('counterparty-' + rowId).getAttribute('data-counterparty');
+
+  if (newCounterparty && newCounterparty !== oldCounterparty) {
+    fetch(`/update-counterparty-name/${oldCounterparty}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrf
+      },
+      body: JSON.stringify({ newCounterparty: newCounterparty })
+    }).then(response => {
+      if (response.ok) {
+        const rowLink = document.getElementById('row-link-' + rowId);
+        if(rowLink) {
+          rowLink.href = '/ledger-transaction/' + encodeURIComponent(newCounterparty);
+        }
+        const counterpartyElement = document.getElementById('counterparty-' + rowId);
+        counterpartyElement.textContent = newCounterparty;
+        counterpartyElement.setAttribute('data-counterparty', newCounterparty);
+        toggleEditName(rowId);
+      } else {
+        alert('Failed to update counterparty.');
+      }
+    }).catch(error => {
+      console.error('Error updating counterparty name:', error);
+      alert('Error updating counterparty name.');
+    });
+  } else {
+    toggleEditName(rowId);
+  }
+};
 
 
 
@@ -98,19 +146,6 @@ window.editTransaction = function (txnId) {
       // Trigger counterparty change to load tabs
       if (typeof counterpartyChange === 'function') {
         counterpartyChange();
-        
-        // After populating tabs, select the correct one
-        setTimeout(() => {
-          const tabSelect = document.getElementById('tab_name_select');
-          if (tabSelect && data.tab_name) {
-            const tabOptions = Array.from(tabSelect.options);
-            const foundTab = tabOptions.find(opt => opt.value === data.tab_name);
-            if (foundTab) {
-              tabSelect.value = data.tab_name;
-              if (typeof tabSelectChange === 'function') tabSelectChange();
-            }
-          }
-        }, 50);
       }
 
       // Set dates and amounts
@@ -119,15 +154,31 @@ window.editTransaction = function (txnId) {
 
       // Set other fields
       document.getElementById('description').value = data.description || '';
-      // notes field is optional in the modal — guard against null
       const notesEl = document.getElementById('notes');
       if (notesEl) notesEl.value = data.notes || '';
 
-      // Set tab_name selector if present
+      // Set tab_name selector securely
       const tabSel = document.getElementById('tab_name_select');
       if (tabSel && data.tab_name) {
-        const opt = Array.from(tabSel.options).find(o => o.value === data.tab_name);
-        if (opt) tabSel.value = data.tab_name;
+        const tabName = data.tab_name.trim();
+        let opt = Array.from(tabSel.options).find(o => o.value.trim().toUpperCase() === tabName.toUpperCase());
+        
+        if (!opt) {
+          // If the tab is missing (e.g. legacy or casing issue), inject it so it can be selected
+          opt = document.createElement('option');
+          opt.value = data.tab_name;
+          opt.textContent = data.tab_name;
+          // insert right before the "+ New Tab" (__new__) option
+          const newTabOpt = Array.from(tabSel.options).find(o => o.value === '__new__');
+          if (newTabOpt) {
+            tabSel.insertBefore(opt, newTabOpt);
+          } else {
+            tabSel.appendChild(opt);
+          }
+        }
+        
+        tabSel.value = opt.value;
+        if (typeof tabSelectChange === 'function') tabSelectChange();
       }
 
 
@@ -168,3 +219,56 @@ document.getElementById('ledgerModal').addEventListener('hidden.bs.modal', funct
   // Hide optional divs
   document.getElementById('counterparty_txt_div').style.display = 'none';
 });
+
+// Open modal from Passbook view and pre-fill details
+window.openPassbookModal = function(counterparty, tabName) {
+  const form = document.getElementById('myLedgerForm');
+  form.reset();
+  document.getElementById('transaction_id').value = '';
+  form.action = '/create-ledger-transaction/';
+  document.getElementById('ledgerModalLabel').innerHTML = '<i class="fas fa-receipt me-2"></i> Add Ledger Entry';
+  document.getElementById('submitButton').innerHTML = '<i class="fas fa-save me-2"></i>Save Entry';
+  
+  // Set date to today
+  document.getElementById('transaction_date').value = new Date().toISOString().split('T')[0];
+  
+  // Set default direction
+  const rdo = document.getElementById('paid');
+  if(rdo) rdo.checked = true;
+
+  // Set counterparty
+  const cpSelect = document.getElementById('counterparty');
+  const cpTxtInput = document.getElementById('counterparty_txt');
+  const cpTxtDiv = document.getElementById('counterparty_txt_div');
+  
+  if (cpSelect) {
+    let found = Array.from(cpSelect.options).find(opt => opt.value.trim().toUpperCase() === counterparty.toUpperCase());
+    if (found) {
+      cpSelect.value = found.value;
+      cpTxtDiv.style.display = 'none';
+      cpTxtInput.removeAttribute('required');
+      cpSelect.setAttribute('required', 'required');
+    } else {
+      cpSelect.value = 'other';
+      cpTxtInput.value = counterparty;
+      cpTxtDiv.style.display = 'block';
+      cpSelect.removeAttribute('required');
+      cpTxtInput.setAttribute('required', 'required');
+    }
+  }
+
+  // Trigger tab load
+  if (typeof counterpartyChange === 'function') {
+    counterpartyChange();
+    setTimeout(() => {
+      const tabSelect = document.getElementById('tab_name_select');
+      if (tabSelect && tabName) {
+        tabSelect.value = tabName;
+      }
+    }, 50);
+  }
+
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('ledgerModal'));
+  modal.show();
+};
