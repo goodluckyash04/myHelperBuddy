@@ -23,7 +23,6 @@ from urllib.parse import urlencode
 import requests
 from django.conf import settings
 from google.auth import exceptions
-from google.auth.transport.requests import Request
 from google.oauth2 import service_account
 from google.oauth2.credentials import Credentials as OAuthCredentials
 from googleapiclient.discovery import build
