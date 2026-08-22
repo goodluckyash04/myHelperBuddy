@@ -381,51 +381,89 @@ def calculate_monthly_income_expense(transactions, user) -> Dict[str, list]:
     }
 
 
-def calculate_weekly_spending(transactions, user) -> Dict[str, list]:
+def calculate_monthly_savings_rate_by_year(transactions, user) -> Dict[str, object]:
     """
-    Calculate daily spending for the last 30 days.
-    
-    Used for Weekly Spending Trend chart to identify spending patterns.
+    Calculate monthly savings rate (%) grouped by year, plus an all-time
+    per-month average line.
 
-    Args:
-        transactions: QuerySet of Transaction objects.
-        user: The Django user object.
+    Savings rate = ((income - expense) / income) * 100, per calendar month.
+
+    Rules:
+    - If income is 0 for a month, that month's rate is None (not 0) — avoid
+      implying "broke even" when there was actually no income data.
+    - Months in the current year that haven't occurred yet are None, not 0.
+    - The all-time average per month index (Jan..Dec) is the mean of that
+      month's rate across all years where the rate is not None.
+    - Only include the last 3 distinct years present in the data (or fewer
+      if the account has less history — do not pad with fake years).
 
     Returns:
-        Dict containing date labels and daily expense amounts.
+        {
+            "months": ["Jan", ..., "Dec"],
+            "years": [2024, 2025, 2026],   # sorted ascending, whatever's present
+            "by_year": {"2024": [12 values or None], "2025": [...], "2026": [...]},
+            "all_time_avg": [12 values or None]
+        }
     """
-    from datetime import timedelta
-    
-    current_date = timezone.now().date()
-    start_date = current_date - timedelta(days=29)  # Last 30 days including today
-    
-    daily_data = (
+    current_date = timezone.now()
+    current_year = current_date.year
+    current_month = current_date.month
+
+    monthly_data = (
         Transaction.objects.filter(
             created_by=user,
-            is_deleted=False,
-            type="Expense",
-            date__gte=start_date,
-            date__lte=current_date,
+            is_deleted=False
         )
-        .values("date")
-        .annotate(total=Sum("amount"))
-        .order_by("date")
+        .values("date__year", "date__month")
+        .annotate(
+            total_expense=Sum("amount", filter=Q(type="Expense")),
+            total_income=Sum("amount", filter=Q(type="Income")),
+        )
     )
+
+    years_present = set(item["date__year"] for item in monthly_data if item["date__year"])
     
-    # Create a complete date range with 0 for days with no expenses
-    date_dict = {item["date"]: float(item["total"]) for item in daily_data}
+    if not years_present:
+        return {
+            "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            "years": [],
+            "by_year": {},
+            "all_time_avg": [None] * 12
+        }
+
+    sorted_years = sorted(list(years_present))
+    target_years = sorted_years[-3:]
     
-    labels = []
-    amounts = []
+    year_data = {str(year): [None] * 12 for year in target_years}
     
-    for i in range(30):
-        date = start_date + timedelta(days=i)
-        labels.append(date.strftime("%d %b"))
-        amounts.append(date_dict.get(date, 0))
-    
+    for item in monthly_data:
+        yr = item["date__year"]
+        mth = item["date__month"]
+        if yr in target_years and yr and mth:
+            income = float(item["total_income"] or 0)
+            expense = float(item["total_expense"] or 0)
+            
+            if income == 0:
+                rate = None
+            else:
+                rate = round(((income - expense) / income) * 100, 1)
+            
+            if yr == current_year and mth > current_month:
+                rate = None
+                
+            year_data[str(yr)][mth - 1] = rate
+            
+    all_time_avg = [None] * 12
+    for m in range(12):
+        valid_rates = [year_data[str(yr)][m] for yr in target_years if year_data[str(yr)][m] is not None]
+        if valid_rates:
+            all_time_avg[m] = round(sum(valid_rates) / len(valid_rates), 1)
+            
     return {
-        "labels": labels,
-        "amounts": amounts,
+        "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        "years": target_years,
+        "by_year": year_data,
+        "all_time_avg": all_time_avg
     }
 
 
@@ -738,7 +776,7 @@ def dashboard(request):
         ),
         # New analytics for enhanced charts
         "monthly_cash_flow": calculate_monthly_income_expense(transactions, user),
-        "weekly_spending": calculate_weekly_spending(transactions, user),
+        "monthly_savings_rate": calculate_monthly_savings_rate_by_year(transactions, user),
         "top_expenses": calculate_top_expenses(transactions, user),
         "savings_rate": calculate_savings_rate(transactions, user),
         "income_sources": calculate_income_sources(transactions, user),
