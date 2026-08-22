@@ -107,6 +107,11 @@ def calculate_financial_overview(transactions) -> Dict[str, str]:
             filter=Q(source__type__iexact="split", status__iexact="pending", is_deleted=False),
             output_field=DecimalField(),
         ),
+        split_paid=Sum(
+            "amount",
+            filter=Q(source__type__iexact="split", status__iexact="completed", is_deleted=False),
+            output_field=DecimalField(),
+        ),
     )
 
     income = aggregations["income"] or 0
@@ -114,6 +119,7 @@ def calculate_financial_overview(transactions) -> Dict[str, str]:
     investment = aggregations["investment"] or 0
     overdue = aggregations["overdue"] or 0
     split_due = aggregations["split_due"] or 0
+    split_paid = aggregations["split_paid"] or 0
 
     return {
         "Income": format_amount(income),
@@ -121,7 +127,7 @@ def calculate_financial_overview(transactions) -> Dict[str, str]:
         "Investment": format_amount(investment),
         "EMI Due": format_amount(overdue),
         "Split Due": format_amount(split_due),
-        "Saving": format_amount(income - expense - investment),
+        "Saving": format_amount(income - expense - investment - split_due),
     }
 
 def calculate_category_wise_expenses(transactions) -> Dict[str, Any]:
