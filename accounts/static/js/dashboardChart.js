@@ -50,16 +50,23 @@ function showEmptyState(canvasId, message, icon = 'fa-inbox') {
 }
 
 
-// Color palette
 const colors = {
-  income: '#10b981',
-  expense: '#ef4444',
-  savings: '#3b82f6',
+  income: 'rgba(176, 163, 111, 1)',
+  expense: 'rgba(176, 163, 111, 0.4)',
+  savings: 'rgba(79, 73, 50, 1)', // Dark bronze/olive for contrast
   primary: 'rgba(176, 163, 111, 1)',
   primaryLight: 'rgba(176, 163, 111, 0.2)',
   categories: [
-    '#f76c5e', '#a1e6c6', '#9b7bbf', '#f1c40f', '#1abc9c',
-    '#e67e22', '#7f8c8d', '#d1b2a1', '#f5a623', '#8e8b3b'
+    'rgba(176, 163, 111, 1)',
+    'rgba(176, 163, 111, 0.9)',
+    'rgba(176, 163, 111, 0.8)',
+    'rgba(176, 163, 111, 0.7)',
+    'rgba(176, 163, 111, 0.6)',
+    'rgba(176, 163, 111, 0.5)',
+    'rgba(176, 163, 111, 0.4)',
+    'rgba(176, 163, 111, 0.3)',
+    'rgba(176, 163, 111, 0.2)',
+    'rgba(176, 163, 111, 0.1)'
   ]
 };
 
@@ -133,14 +140,14 @@ new Chart(document.getElementById('cashFlowChart'), {
         label: 'Net Savings',
         data: monthly_cash_flow.savings.reverse(),
         borderColor: colors.savings,
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        backgroundColor: 'rgba(79, 73, 50, 0.1)',
         borderWidth: 2,
         fill: true,
         tension: 0.4,
         pointRadius: 3,
         pointHoverRadius: 5,
         pointBackgroundColor: colors.savings,
-        pointBorderColor: '#fff',
+        pointBorderColor: 'rgba(176, 163, 111, 1)',
         pointBorderWidth: 2
       }
     ]
