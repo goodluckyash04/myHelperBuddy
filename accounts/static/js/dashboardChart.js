@@ -334,13 +334,13 @@ new Chart(document.getElementById('yearWiseChart'), {
       {
         label: 'Income',
         data: year_wise_data.income,
-        backgroundColor: colors.income,
+        backgroundColor: colors.primary,
         borderRadius: 8
       },
       {
         label: 'Expense',
         data: year_wise_data.expense,
-        backgroundColor: colors.expense,
+        backgroundColor: 'rgba(176, 163, 111, 0.4)',
         borderRadius: 8
       }
     ]

@@ -149,7 +149,15 @@ def calculate_category_wise_expenses(transactions) -> Dict[str, Any]:
         .order_by("-total")
     )
 
-    return {item["category"]: item["total"] for item in category_data}
+    result = {}
+    for item in category_data:
+        cat = item["category"]
+        if cat and cat.lower() == "emi":
+            cat = "Shopping"
+            
+        result[cat] = result.get(cat, 0) + float(item["total"] or 0)
+        
+    return dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
 
 
 def calculate_monthly_savings(transactions, user) -> Dict[str, float]:
