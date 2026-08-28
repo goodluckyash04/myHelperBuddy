@@ -7,7 +7,6 @@ Django management command that provides automated database backup and maintenanc
 - Uploads backups to Google Drive
 - Sends backup email notifications as fallback
 - Maintains backup retention policy (7 days + monthly)
-- Sends daily task and reminder notifications to users  
 
 Usage:
     python manage.py backup_db
@@ -39,18 +38,17 @@ User = get_user_model()
 
 class Command(BaseCommand):
     """
-    Automated database backup and task reminder management command.
-    
+    Automated database backup command.
+
     Features:
         - Change detection for database models
         - Encrypted database backups with Fernet
         - Google Drive upload with fallback to email
         - Smart backup retention (7 days + last of each month)
-        - Daily task and reminder email notifications
         - IST timezone support (UTC+5:30)
     """
-    
-    help = "Backup encrypted database and send task/reminder notifications"
+
+    help = "Backup encrypted database to Google Drive"
     
     # Backup retention settings
     RETENTION_DAYS = 7

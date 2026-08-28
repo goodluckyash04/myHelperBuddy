@@ -256,8 +256,8 @@
             <div class="glass-card profile-header">
                 <!-- Profile Picture with Upload Overlay -->
                 <div class="profile-avatar-wrap">
-                    {% if user.profile_picture %}
-                        <img src="{{ user.profile_picture.url }}" class="profile-avatar" alt="Profile Picture" id="profileImage">
+                    {% if user.profile.profile_picture %}
+                        <img src="{{ user.profile.profile_picture.url }}" class="profile-avatar" alt="Profile Picture" id="profileImage">
                     {% else %}
                         <img src="{% static 'image/user_m.jpg' %}" class="profile-avatar" alt="Profile Picture" id="profileImage">
                     {% endif %}

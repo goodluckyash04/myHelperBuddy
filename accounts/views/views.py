@@ -24,6 +24,7 @@ from accounts.models import (
     LedgerTransaction,
     RefreshToken,
     Transaction,
+    UserProfile,
 )
 from accounts.services.security_services import security_service
 from accounts.services.module_registry import module_registry
@@ -724,22 +725,19 @@ def index(request):
 
 
 @login_required
-
-@login_required
 def dashboard(request):
     """
-    Main dashboard view with financial analytics, reminders, and tasks.
+    Main dashboard view with financial analytics.
 
-    Displays comprehensive overview including:
-    - Financial overview (income, expense, savings, etc.)
-    - Today's active reminders
-    - Pending tasks till today
-    - Category-wise expenses
-    - Monthly savings for last 12 months
-    - Year-wise income and expense
+    Displays a comprehensive financial overview including:
+    - Financial overview (income, expense, savings, EMI due, investments)
+    - Category-wise expense breakdown
+    - Monthly savings for the last 12 months
+    - Year-wise income and expense comparison
     - Current month's category breakdown
-    
-    Supports date range filtering via ?period= parameter.
+    - Monthly cash flow, savings rate, and top expenses
+
+    Supports date range filtering via ?period= query parameter.
 
     Args:
         request: Django HTTP request object.
@@ -764,7 +762,7 @@ def dashboard(request):
     # User information
     user_info = {
         "first_txn_date": (
-            min(entry.date for entry in transactions if entry.category.lower())
+            min(t.date for t in transactions)
             if transactions
             else ""
         ),
@@ -887,19 +885,22 @@ def update_profile(request):
 
     # Handle profile picture upload
     if request.FILES.get("profile_picture"):
-        # Delete old picture if exists
-        if user.profile_picture:
-            user.profile_picture.delete(save=False)
+        # Use get_or_create to safely handle users created before the signal existed
+        profile, _ = UserProfile.objects.get_or_create(user=user)
 
-        user.profile_picture = request.FILES["profile_picture"]
-        user.save()
+        # Delete old picture file from disk before replacing it
+        if profile.profile_picture:
+            profile.profile_picture.delete(save=False)
+
+        profile.profile_picture = request.FILES["profile_picture"]
+        profile.save()
 
         return JsonResponse(
             {
                 "success": True,
                 "message": "Profile updated successfully",
                 "profile_picture_url": (
-                    user.profile_picture.url if user.profile_picture else None
+                    profile.profile_picture.url if profile.profile_picture else None
                 ),
             }
         )
@@ -907,7 +908,6 @@ def update_profile(request):
     return JsonResponse({"success": True, "message": "Name updated successfully"})
 
 
-@login_required
 @login_required
 def manual_backup(request):
     """

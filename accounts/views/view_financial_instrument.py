@@ -12,6 +12,7 @@ Features:
 - Soft delete functionality
 """
 
+import calendar
 import datetime
 import decimal
 import traceback
@@ -21,6 +22,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db import transaction as db_transaction
 from django.db.models import F, Q, Sum
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -36,32 +38,40 @@ from accounts.models import FinancialProduct, Transaction
 def desired_date(start_date: str, months_offset: int) -> str:
     """
     Calculate a date N months from the start date.
-    
-    Handles month/year rollovers properly. Used for calculating
-    EMI/installment due dates.
-    
+
+    Handles month/year rollovers and day-of-month clamping. If the original
+    day does not exist in the target month (e.g. Jan 31 + 1 month), the day
+    is clamped to the last valid day of that month (Feb 28 or 29).
+
+    Used for calculating EMI/installment due dates.
+
     Args:
         start_date: Start date in YYYY-MM-DD format
         months_offset: Number of months to add
-        
+
     Returns:
         str: Calculated date in YYYY-MM-DD format
-        
+
     Example:
         >>> desired_date("2024-01-31", 1)
-        "2024-02-29"  # Handles month boundaries
+        "2024-02-29"  # Clamped to last day of February (leap year)
+        >>> desired_date("2024-01-31", 3)
+        "2024-04-30"  # Clamped to last day of April
     """
     payment_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-    current_month = payment_date.month
-    current_year = payment_date.year
     current_day = payment_date.day
-    
-    desired_month = current_month + months_offset
-    desired_year = current_year + (desired_month - 1) // 12
+
+    desired_month = payment_date.month + months_offset
+    desired_year = payment_date.year + (desired_month - 1) // 12
     desired_month = (desired_month - 1) % 12 + 1
-    
-    desired_date_obj = datetime.datetime(desired_year, desired_month, current_day)
-    return desired_date_obj.strftime('%Y-%m-%d')
+
+    # Clamp day to the last valid day of the target month.
+    # This prevents ValueError when e.g. a loan starts on the 31st
+    # and the target month only has 28, 29, or 30 days.
+    max_day = calendar.monthrange(desired_year, desired_month)[1]
+    clamped_day = min(current_day, max_day)
+
+    return datetime.datetime(desired_year, desired_month, clamped_day).strftime('%Y-%m-%d')
 
 
 def calculate_finance_stats(user):
@@ -218,44 +228,51 @@ def create_finance(request: HttpRequest) -> HttpResponse:
         except ObjectDoesNotExist:
             pass  # Product doesn't exist, proceed with creation
         
-        # Create financial product
-        new_product = FinancialProduct.objects.create(
-            name=name,
-            type=product_type,
-            amount=amount,
-            no_of_installments=no_of_installments,
-            started_on=started_on,
-            created_by=user
-        )
-        
-        # Calculate installment amount
-        emi_amount = round((amount / no_of_installments), 2)
-        
-        # Determine category and description based on type
+        # Determine category and description based on type before entering atomic block
         if product_type == 'Loan':
             category = "EMI"
             sub_label = "EMI"
         elif product_type == "Split":
             sub_label = product_type
-            # category remains as provided
+            # category remains as provided by the form
         else:  # SIP or other
             category = "Investment"
             sub_label = product_type
-        
-        # Generate installment transactions
-        for i in range(no_of_installments):
-            Transaction.objects.create(
-                type="Expense",
-                category=category,
-                date=desired_date(started_on, i),
-                amount=emi_amount,
-                beneficiary='Self',
-                description=f'{name} {sub_label} {i + 1}',
-                status="Pending",
-                created_by=user,
-                source=new_product
+
+        # Calculate installment amount
+        emi_amount = round((amount / no_of_installments), 2)
+
+        # Wrap product creation + all installments in a single atomic transaction.
+        # If any installment fails to insert, the FinancialProduct row is also
+        # rolled back — no orphaned/partially-instantiated products in the DB.
+        with db_transaction.atomic():
+            new_product = FinancialProduct.objects.create(
+                name=name,
+                type=product_type,
+                amount=amount,
+                no_of_installments=no_of_installments,
+                started_on=started_on,
+                created_by=user
             )
-        
+
+            # Build all installment objects in memory first, then insert in one query.
+            # This is both faster (1 INSERT vs N INSERTs) and atomic with the product.
+            installments = [
+                Transaction(
+                    type="Expense",
+                    category=category,
+                    date=desired_date(started_on, i),
+                    amount=emi_amount,
+                    beneficiary='Self',
+                    description=f'{name} {sub_label} {i + 1}',
+                    status="Pending",
+                    created_by=user,
+                    source=new_product
+                )
+                for i in range(no_of_installments)
+            ]
+            Transaction.objects.bulk_create(installments)
+
         messages.success(request, f'{product_type} "{name}" added successfully')
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
         
