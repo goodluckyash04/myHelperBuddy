@@ -4,11 +4,11 @@ URL Configuration for Accounts App
 This module defines URL patterns for all account-related views including:
 - Authentication and user management
 - Transactions (income/expense tracking)
-- Tasks and reminders
 - Financial instruments (loans, SIPs, splits)
 - Ledger transactions (receivables/payables)
 - Document management
 - Profile and dashboard
+- Utilities (module launcher)
 """
 
 from django.urls import path

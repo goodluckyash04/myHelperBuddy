@@ -346,17 +346,26 @@ class PaymentRecord(models.Model):
         return f"Payment ₹{self.amount_paid} on {self.payment_date}"
     
     def save(self, *args, **kwargs):
-        """Update parent ledger transaction when payment is recorded"""
-        super().save(*args, **kwargs)
-        
-        # Update parent transaction's paid amount
-        transaction = self.ledger_transaction
-        total_paid = sum(
-            payment.amount_paid 
-            for payment in transaction.payments.all()
-        )
-        transaction.paid_amount = total_paid
-        transaction.save()  # This will trigger auto-status update
+        """Update parent ledger transaction when payment is recorded.
+
+        Both writes (this payment record and the parent's paid_amount) are
+        wrapped in a single atomic block so they always succeed or fail together.
+        This prevents the balance from becoming inconsistent if an error occurs
+        between the two saves.
+        """
+        from django.db import transaction as db_transaction
+
+        with db_transaction.atomic():
+            super().save(*args, **kwargs)
+
+            # Recalculate total paid from all payment records for this ledger entry
+            parent = self.ledger_transaction
+            total_paid = sum(
+                payment.amount_paid
+                for payment in parent.payments.all()
+            )
+            parent.paid_amount = total_paid
+            parent.save()  # triggers auto-status update in LedgerTransaction.save()
 
 
 class RefreshToken(models.Model):

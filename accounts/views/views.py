@@ -18,7 +18,6 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from accounts.decorators import auth_user
 from accounts.models import (
     UtilityModule,
     LedgerTransaction,

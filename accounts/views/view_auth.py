@@ -271,9 +271,13 @@ def forgotPassword(request: HttpRequest) -> HttpResponse:  # now sends reset lin
         return redirect('login')
 
     except User.DoesNotExist:
-        return render(request, "auth/forgotPassword.html", {
-            "msg": "No account found with that username or email."
-        })
+        # Always redirect with the same message regardless of whether the account exists.
+        # Returning a different message for missing accounts allows user enumeration
+        # — an attacker could probe usernames to find valid accounts.
+        request.session['forgot_password_msg'] = (
+            "If an account exists with that username or email, a reset link has been sent."
+        )
+        return redirect('login')
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -471,9 +475,12 @@ def send_otp(request: HttpRequest) -> JsonResponse:
 
         # Send OTP email
         email_service = EmailService()
+        # Send OTP only to the user's own email.
+        # DO NOT include ADMIN_EMAIL — sending live OTPs to the admin is a security risk:
+        # it exposes user authentication codes and breaks OTP secrecy.
         email_sent = email_service.send_email(
             subject="Email Verification - OTP Code",
-            recipient_list=[email, settings.ADMIN_EMAIL],
+            recipient_list=[email],
             template_name="email_templates/otp_verification.html",
             context={"otp": otp},
             is_html=True,
