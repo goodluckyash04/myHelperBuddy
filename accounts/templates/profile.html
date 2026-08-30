@@ -256,11 +256,13 @@
             <div class="glass-card profile-header">
                 <!-- Profile Picture with Upload Overlay -->
                 <div class="profile-avatar-wrap">
-                    {% if user.profile.profile_picture %}
-                        <img src="{{ user.profile.profile_picture.url }}" class="profile-avatar" alt="Profile Picture" id="profileImage">
-                    {% else %}
-                        <img src="{% static 'image/user_m.jpg' %}" class="profile-avatar" alt="Profile Picture" id="profileImage">
-                    {% endif %}
+                    {% with profile=user.profile|default:None %}
+                        {% if profile and profile.profile_picture %}
+                            <img src="{{ profile.profile_picture.url }}" class="profile-avatar" alt="Profile Picture" id="profileImage">
+                        {% else %}
+                            <img src="{% static 'image/user_m.jpg' %}" class="profile-avatar" alt="Profile Picture" id="profileImage">
+                        {% endif %}
+                    {% endwith %}
                     <label for="profilePictureInput" style="position: absolute; bottom: 5px; right: 5px; background: var(--primary); color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s;">
                         <i class="fa-solid fa-camera"></i>
                     </label>

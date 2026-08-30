@@ -12,6 +12,7 @@ This module defines URL patterns for all account-related views including:
 """
 
 from django.urls import path
+from django.views.generic import TemplateView
 
 # ============================================================================
 # View Imports - Authentication
@@ -204,4 +205,16 @@ urlpatterns = [
     # Password Reset
     # ========================================================================
     path("reset/<uidb64>/<token>/", confirm_password_reset, name="confirm-password-reset"),
+
+    # ========================================================================
+    # PWA — Service Worker served from root so scope covers entire origin
+    # ========================================================================
+    path(
+        "service-worker.js",
+        TemplateView.as_view(
+            template_name="service-worker.js",
+            content_type="application/javascript; charset=utf-8",
+        ),
+        name="service-worker",
+    ),
 ]
