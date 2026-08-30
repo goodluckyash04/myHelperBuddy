@@ -579,13 +579,17 @@ def update_finance_detail(request: HttpRequest, id: int) -> HttpResponse:
                                 trn.amount = emi_amount
                                 trn.save()
 
-                        # Create new transactions
+                        # Create new transactions anchored from the ORIGINAL start date
+                        # using the absolute installment index as the month offset.
+                        # This mirrors the creation logic and ensures that per-month
+                        # day clamping is recalculated independently (e.g. Oct 31 start:
+                        # installment 4 → Feb 28, installment 5 → Mar 31, not Mar 28).
                         last_trn = transactions.last()
                         for i in range(previous_installments, previous_installments + new_trn_count):
                             Transaction.objects.create(
                                 type=last_trn.type,
                                 category=last_trn.category,
-                                date=desired_date(last_trn.date.strftime("%Y-%m-%d"), 1),
+                                date=desired_date(started_on, i),
                                 amount=emi_amount,
                                 beneficiary='Self',
                                 description=f'{name} {sub_label} {i + 1}',
@@ -625,12 +629,17 @@ def update_finance_detail(request: HttpRequest, id: int) -> HttpResponse:
                             trn.amount = emi_amount
                             trn.save()
 
+                        # Create new transactions anchored from the ORIGINAL start date
+                        # using the absolute installment index as the month offset.
+                        # This mirrors the creation logic and ensures that per-month
+                        # day clamping is recalculated independently (e.g. Oct 31 start:
+                        # installment 4 → Feb 28, installment 5 → Mar 31, not Mar 28).
                         last_trn = transactions.last()
                         for i in range(previous_installments, previous_installments + new_trn_count):
                             Transaction.objects.create(
                                 type=last_trn.type,
                                 category=last_trn.category,
-                                date=desired_date(last_trn.date.strftime("%Y-%m-%d"), 1),
+                                date=desired_date(started_on, i),
                                 amount=emi_amount,
                                 beneficiary='Self',
                                 description=f'{name} {sub_label} {i + 1}',
