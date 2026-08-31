@@ -4,14 +4,15 @@ URL Configuration for Accounts App
 This module defines URL patterns for all account-related views including:
 - Authentication and user management
 - Transactions (income/expense tracking)
-- Tasks and reminders
 - Financial instruments (loans, SIPs, splits)
 - Ledger transactions (receivables/payables)
 - Document management
 - Profile and dashboard
+- Utilities (module launcher)
 """
 
 from django.urls import path
+from django.views.generic import TemplateView
 
 # ============================================================================
 # View Imports - Authentication
@@ -79,42 +80,9 @@ from .views.view_ledger_transaction import (
     get_cash_flow_projection,
 )
 
-# ============================================================================
-# View Imports - Reminders
-# ============================================================================
 
-from .views.view_reminder import (
-    add_reminder,
-    cancel_reminder,
-    dismiss_reminder,
-    reminder_list,
-    snooze_reminder,
-    todays_reminder,
-    update_reminder,
-)
 
-# ============================================================================
-# View Imports - Tasks
-# ============================================================================
 
-from .views.view_task import (
-    addTask,
-    currentMonthTaskReport,
-    editTask,
-    taskAction,
-    taskReports,
-)
-
-from .views.view_task_management import (
-    addCategory,
-    addTag,
-    deleteCategory,
-    deleteTag,
-    editCategory,
-    editTag,
-    manageCategories,
-    manageTags,
-)
 
 # ============================================================================
 # View Imports - Transactions
@@ -135,12 +103,10 @@ from .views.view_transaction import (
 # ============================================================================
 
 from .views.views import (
-    about,
     dashboard,
     index,
     manual_backup,
     profile,
-    redirect_to_streamlit,
     update_profile,
     utilities,
 )
@@ -154,12 +120,11 @@ urlpatterns = [
     # Home & Core Pages
     # ========================================================================
     path("", index, name="index"),
-    path("utilities/", utilities, name="utilities"),
     path("profile/", profile, name="profile"),
     path("update-profile/", update_profile, name="update-profile"),
     path("manual-backup/", manual_backup, name="manual-backup"),
     path("dashboard/", dashboard, name="dashboard"),
-    path("about/", about, name="about"),
+    path("utilities/", utilities, name="utilities"),
     
     # ========================================================================
     # Authentication & User Management
@@ -189,26 +154,7 @@ urlpatterns = [
     path("undo-transaction/", undo_transaction, name="undo-transaction"),
     path("undo-transaction/<int:id>", undo_transaction, name="undo-transaction"),
     
-    # ========================================================================
-    # Task Management
-    # ========================================================================
-    path("addTask/", addTask, name="addTask"),
-    path("currentMonthTaskReport/", currentMonthTaskReport, name="currentMonthTaskReport"),
-    path("taskReports/", taskReports, name="taskReports"),
-    path("editTask/<int:id>", editTask, name="editTask"),
-    path("task/action/<int:id>/<str:action>/", taskAction, name="taskAction"),
-    
-    # Category Management
-    path("manageCategories/", manageCategories, name="manageCategories"),
-    path("addCategory/", addCategory, name="addCategory"),
-    path("editCategory/<int:id>", editCategory, name="editCategory"),
-    path("deleteCategory/<int:id>", deleteCategory, name="deleteCategory"),
-    
-    # Tag Management
-    path("manageTags/", manageTags, name="manageTags"),
-    path("addTag/", addTag, name="addTag"),
-    path("editTag/<int:id>", editTag, name="editTag"),
-    path("deleteTag/<int:id>", deleteTag, name="deleteTag"),
+
     
     # ========================================================================
     # Financial Instruments (Loans, SIPs, Splits)
@@ -242,16 +188,7 @@ urlpatterns = [
     path("aging-report/", get_aging_report, name="aging-report"),
     path("cash-flow-projection/", get_cash_flow_projection, name="cash-flow-projection"),
     
-    # ========================================================================
-    # Reminder Management
-    # ========================================================================
-    path("create-reminder/", add_reminder, name="add_reminder"),
-    path("update-reminder/<int:id>/", update_reminder, name="update_reminder"),
-    path("view-today-reminder/", todays_reminder, name="todays-reminder"),
-    path("view-reminder/", reminder_list, name="view-reminders"),
-    path("cancel-reminder/<int:id>", cancel_reminder, name="cancel-reminder"),
-    path("snooze-reminder/<int:id>/<int:hours>/", snooze_reminder, name="snooze-reminder"),
-    path("dismiss-reminder/<int:id>/", dismiss_reminder, name="dismiss-reminder"),
+
     
     # ========================================================================
     # Document Management
@@ -262,14 +199,22 @@ urlpatterns = [
     path("document/<int:pk>/download/", download_file, name="download_file"),
     path("document/<int:pk>/delete/", delete_file, name="delete_file"),
     
-    # ========================================================================
-    # Advanced Utilities
-    # ========================================================================
-    path("advance-utils/", redirect_to_streamlit, name="advance-utils"),
 
 
     # ========================================================================
     # Password Reset
     # ========================================================================
     path("reset/<uidb64>/<token>/", confirm_password_reset, name="confirm-password-reset"),
+
+    # ========================================================================
+    # PWA — Service Worker served from root so scope covers entire origin
+    # ========================================================================
+    path(
+        "service-worker.js",
+        TemplateView.as_view(
+            template_name="service-worker.js",
+            content_type="application/javascript; charset=utf-8",
+        ),
+        name="service-worker",
+    ),
 ]

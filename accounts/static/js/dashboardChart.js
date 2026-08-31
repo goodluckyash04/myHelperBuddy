@@ -4,7 +4,7 @@ const savings = data.savings;
 const year_wise_data = data.year_wise_data;
 const category_wise_month = data.category_wise_month;
 const monthly_cash_flow = data.monthly_cash_flow;
-const weekly_spending = data.weekly_spending;
+const monthly_savings_rate = data.monthly_savings_rate;
 const top_expenses = data.top_expenses;
 const savings_rate = data.savings_rate;
 const income_sources = data.income_sources;
@@ -50,16 +50,23 @@ function showEmptyState(canvasId, message, icon = 'fa-inbox') {
 }
 
 
-// Color palette
 const colors = {
-  income: '#10b981',
-  expense: '#ef4444',
-  savings: '#3b82f6',
+  income: 'rgba(176, 163, 111, 1)',
+  expense: 'rgba(176, 163, 111, 0.4)',
+  savings: 'rgba(79, 73, 50, 1)', // Dark bronze/olive for contrast
   primary: 'rgba(176, 163, 111, 1)',
   primaryLight: 'rgba(176, 163, 111, 0.2)',
   categories: [
-    '#f76c5e', '#a1e6c6', '#9b7bbf', '#f1c40f', '#1abc9c',
-    '#e67e22', '#7f8c8d', '#d1b2a1', '#f5a623', '#8e8b3b'
+    'rgba(176, 163, 111, 1)',
+    'rgba(176, 163, 111, 0.9)',
+    'rgba(176, 163, 111, 0.8)',
+    'rgba(176, 163, 111, 0.7)',
+    'rgba(176, 163, 111, 0.6)',
+    'rgba(176, 163, 111, 0.5)',
+    'rgba(176, 163, 111, 0.4)',
+    'rgba(176, 163, 111, 0.3)',
+    'rgba(176, 163, 111, 0.2)',
+    'rgba(176, 163, 111, 0.1)'
   ]
 };
 
@@ -133,14 +140,14 @@ new Chart(document.getElementById('cashFlowChart'), {
         label: 'Net Savings',
         data: monthly_cash_flow.savings.reverse(),
         borderColor: colors.savings,
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        backgroundColor: 'rgba(79, 73, 50, 0.1)',
         borderWidth: 2,
         fill: true,
         tension: 0.4,
         pointRadius: 3,
         pointHoverRadius: 5,
         pointBackgroundColor: colors.savings,
-        pointBorderColor: '#fff',
+        pointBorderColor: 'rgba(176, 163, 111, 1)',
         pointBorderWidth: 2
       }
     ]
@@ -230,60 +237,100 @@ new Chart(document.getElementById('expenseCategoryChart'), {
   }
 });
 
-// 6. Weekly Spending Trend
-new Chart(document.getElementById('weeklySpendingChart'), {
-  type: 'line',
-  data: {
-    labels: weekly_spending.labels,
-    datasets: [{
-      label: 'Daily Expense',
-      data: weekly_spending.amounts,
-      borderColor: '#f59e0b',
-      backgroundColor: 'rgba(245, 158, 11, 0.1)',
-      borderWidth: 2,
-      fill: true,
-      tension: 0.4,
-      pointRadius: 0,
-      pointHoverRadius: 4,
-      pointBackgroundColor: '#f59e0b',
-      pointBorderColor: '#fff',
-      pointBorderWidth: 2
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: true,
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: currencyFormatter
+// 6. Monthly Savings Rate by Year
+if (!monthly_savings_rate || !monthly_savings_rate.years || monthly_savings_rate.years.length === 0) {
+  showEmptyState('monthlySavingsRateChart', 'No savings data available yet', 'fa-piggy-bank');
+} else {
+  // Generate datasets dynamically based on years present
+  const datasets = [];
+  const barColors = [
+    'rgba(176, 163, 111, 0.4)',  // Oldest
+    'rgba(176, 163, 111, 0.7)',
+    'rgba(176, 163, 111, 1)'     // Newest
+  ];
+  
+  monthly_savings_rate.years.forEach((year, index) => {
+    datasets.push({
+      type: 'bar',
+      label: year.toString(),
+      data: monthly_savings_rate.by_year[year],
+      backgroundColor: barColors[barColors.length - monthly_savings_rate.years.length + index] || barColors[0],
+      borderRadius: 4,
+      barPercentage: 0.7,
+      categoryPercentage: 0.8
+    });
+  });
+
+  // Add all-time average line
+  datasets.push({
+    type: 'line',
+    label: 'All-time Avg',
+    data: monthly_savings_rate.all_time_avg,
+    borderColor: colors.expense, // Reference/benchmark color
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderDash: [5, 4],
+    pointRadius: 3,
+    pointHoverRadius: 5,
+    pointBackgroundColor: colors.expense,
+    pointBorderColor: '#fff',
+    tension: 0.3
+  });
+
+  new Chart(document.getElementById('monthlySavingsRateChart'), {
+    data: {
+      labels: monthly_savings_rate.months,
+      datasets: datasets
     },
-    scales: {
-      y: {
-        beginAtZero: true,
-        position: 'right',
-        ticks: {
-          callback: function (value) {
-            return '₹' + (value / 1000).toFixed(1) + 'k';
+    options: {
+      ...commonOptions,
+      aspectRatio: window.innerWidth < 768 ? 1.6 : 2,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          labels: {
+            usePointStyle: true,
+            padding: 15,
+            font: { size: 10 }
           }
         },
-        grid: {
-          color: 'rgba(0, 0, 0, 0.05)'
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.parsed.y !== null && context.parsed.y !== undefined) {
+                label += context.parsed.y + '%';
+              }
+              return label;
+            }
+          }
         }
       },
-      x: {
-        ticks: {
-          maxTicksLimit: 10,
-          font: { size: 9 }
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function (value) {
+              return value + '%';
+            }
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
         },
-        grid: {
-          display: false
+        x: {
+          grid: {
+            display: false
+          }
         }
       }
     }
-  }
-});
+  });
+}
 
 // 7. Year-wise Income and Expense
 new Chart(document.getElementById('yearWiseChart'), {
@@ -294,13 +341,13 @@ new Chart(document.getElementById('yearWiseChart'), {
       {
         label: 'Income',
         data: year_wise_data.income,
-        backgroundColor: colors.income,
+        backgroundColor: colors.primary,
         borderRadius: 8
       },
       {
         label: 'Expense',
         data: year_wise_data.expense,
-        backgroundColor: colors.expense,
+        backgroundColor: 'rgba(176, 163, 111, 0.4)',
         borderRadius: 8
       }
     ]

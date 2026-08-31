@@ -1,168 +1,122 @@
 <!-- Add Transaction Modal -->
-<div
-  class="modal fade"
-  id="expensemodal"
-  tabindex="-1"
-  aria-labelledby="exampleModalLabel"
-  aria-hidden="true"
->
+<div class="modal fade" id="expensemodal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title fs-5" id="wefef">Transaction</h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);">
+      
+      <!-- Branded Modal Header -->
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <h5 class="modal-title" style="font-weight: 800; color: var(--primary-dark); font-size: 1.5rem;">
+          <i class="fa-solid fa-receipt me-2"></i><span id="wefef">Transaction</span>
+        </h5>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close" style="background-color: rgba(0,0,0,0.05); border-radius: 50%; padding: 12px; margin-right: 0;"></button>
       </div>
 
-      <div class="modal-body">
+      <div class="modal-body p-4">
         <form action="/create-transaction/" id="myExpenseForm" method="post">
           {% csrf_token %}
+          
           <!-- Transaction Type -->
-          <div id="transactionType" class="mb-4">
-            <div class="form-check form-check-inline">
-              <input
-                class="form-check-input shadow-sm"
-                type="radio"
-                name="type"
-                id="Expense"
-                value="Expense"
-                onchange="payType()"
-                required
-              />
-              <label class="form-check-label" for="Expense">Expense</label>
+          <div id="transactionType" class="txn-radio-group">
+            <div class="txn-radio-option">
+              <input type="radio" name="type" id="Expense" value="Expense" onchange="payType()" required />
+              <label class="txn-radio-label" for="Expense">
+                <i class="fa-solid fa-arrow-trend-down me-2" style="color: #e11d48;"></i> Expense
+              </label>
             </div>
-            <div class="form-check form-check-inline">
-              <input
-                class="form-check-input shadow-sm"
-                type="radio"
-                name="type"
-                id="Income"
-                value="Income"
-                onchange="payType()"
-              />
-              <label class="form-check-label" for="Income">Income</label>
+            <div class="txn-radio-option">
+              <input type="radio" name="type" id="Income" value="Income" onchange="payType()" />
+              <label class="txn-radio-label" for="Income">
+                <i class="fa-solid fa-arrow-trend-up me-2" style="color: #10b981;"></i> Income
+              </label>
             </div>
           </div>
 
           <div id="transactionBody" style="display: none">
             <!-- Transaction Category -->
             <div class="mb-3">
-              <select
-                class="form-select shadow-sm"
-                id="category"
-                name="category"
-                aria-label="Select Category"
-              >
-                <option value="" disabled selected>
-                  -- Select Category --
-                </option>
+              <label class="txn-modal-label">
+                <i class="fa-solid fa-tag me-1" style="color: var(--primary);"></i> Category
+              </label>
+              <div class="txn-pill-group" id="category">
                 <!-- Categories will be populated dynamically -->
-              </select>
+              </div>
             </div>
 
             <!-- Beneficiary -->
-            <div class="mb-3">
-              <select
-                class="form-select shadow-sm"
-                name="beneficiary"
-                id="beneficiary"
-                onchange="beneficiary_s()"
-              >
-                <option value="Self" selected>Self</option>
-                <option value="Home">Home</option>
-                <option value="Other">Other</option>
-              </select>
+            <div class="mb-3" id="beneficiary_container">
+              <label class="txn-modal-label">
+                <i class="fa-solid fa-user me-1" style="color: var(--primary);"></i> Beneficiary
+              </label>
+              <input type="hidden" name="beneficiary" id="beneficiary" value="Self">
+              <div class="txn-pill-group" style="margin-top: 5px;">
+                <div class="txn-pill-option">
+                  <input type="radio" name="beneficiary_radio" id="beneficiary_self" value="Self" onchange="updateBeneficiary(this)" checked>
+                  <label class="txn-pill-label" for="beneficiary_self">Self</label>
+                </div>
+                <div class="txn-pill-option">
+                  <input type="radio" name="beneficiary_radio" id="beneficiary_home" value="Home" onchange="updateBeneficiary(this)">
+                  <label class="txn-pill-label" for="beneficiary_home">Home</label>
+                </div>
+                <div class="txn-pill-option">
+                  <input type="radio" name="beneficiary_radio" id="beneficiary_other" value="Other" onchange="updateBeneficiary(this)">
+                  <label class="txn-pill-label" for="beneficiary_other">Other</label>
+                </div>
+              </div>
             </div>
 
             <!-- Beneficiary if "Other" is selected -->
-            <div class="mb-3" id="other_beneficiary"  style="display: none">
-              <input
-                type="text"
-                class="form-control shadow-sm"
-                id="beneficiary_text"
-                name="beneficiary_text"
-                placeholder="Please specify the beneficiary"
-              />
+            <div class="mb-3" id="other_beneficiary" style="display: none">
+              <label class="txn-modal-label" for="beneficiary_text">
+                <i class="fa-solid fa-user-plus me-1" style="color: var(--primary);"></i> Specify Beneficiary
+              </label>
+              <input type="text" class="form-control txn-modal-input" id="beneficiary_text" name="beneficiary_text" placeholder="Please specify the beneficiary" />
             </div>
 
-            <!-- Transaction Date -->
-            <div class="mb-3">
-              <input
-                type="date"
-                class="form-control shadow-sm"
-                name="date"
-                id="date"
-                required
-              />
-            </div>
-
-            <!-- Transaction Amount -->
-            <div class="mb-3">
-              <input
-                type="number"
-                class="form-control shadow-sm"
-                name="amount"
-                id="amount"
-                placeholder="Amount",
-                step="0.01"
-                required
-              />
+            <!-- Date / Amount row -->
+            <div class="row g-3 mb-3">
+              <div class="col-6">
+                <label class="txn-modal-label" for="date">
+                  <i class="fa-solid fa-calendar me-1" style="color: var(--primary);"></i> Date
+                </label>
+                <input type="date" class="form-control txn-modal-input" name="date" id="date" required />
+              </div>
+              <div class="col-6">
+                <label class="txn-modal-label" for="amount">
+                  <i class="fa-solid fa-indian-rupee-sign me-1" style="color: var(--primary);"></i> Amount
+                </label>
+                <input type="number" class="form-control txn-modal-input" name="amount" id="amount" placeholder="0.00" step="0.01" required />
+              </div>
             </div>
 
             <!-- Transaction Description -->
             <div class="mb-3">
-              <input
-                type="text"
-                class="form-control shadow-sm"
-                name="description"
-                id="description"
-                placeholder="Description"
-                required
-              />
-            </div>
-
-            <!-- Transaction Mode -->
-            <div class="mb-3">
-              <select class="form-select shadow-sm" name="mode" id="mode">
-                <option value="CreditCard">Credit Card</option>
-                <option value="Online" selected>Online</option>
-                <option value="Cash">Cash</option>
-              </select>
-            </div>
-
-            <!-- Mode Details -->
-            <div class="mb-3">
-              <input
-                type="text"
-                class="form-control shadow-sm"
-                name="mode_detail"
-                id="mode_detail"
-                placeholder="Mode description (e.g., bankDR, bankUPI, cash)"
-              />
+              <label class="txn-modal-label" for="description">
+                <i class="fa-solid fa-align-left me-1" style="color: var(--primary);"></i> Description
+              </label>
+              <input type="text" class="form-control txn-modal-input" name="description" id="description" placeholder="Brief note…" required />
             </div>
 
             <!-- Transaction Status -->
-            <div class="mb-3">
-              <select class="form-select shadow-sm" name="status" id="status">
-                <option value="Completed" selected>Completed</option>
-                <option value="Pending">Pending</option>
-              </select>
+            <div class="mb-4" id="status_container">
+              <label class="txn-modal-label">
+                <i class="fa-solid fa-circle-check me-1" style="color: var(--primary);"></i> Status
+              </label>
+              <div class="txn-radio-group" style="margin-bottom: 0; margin-top: 5px;">
+                <div class="txn-radio-option">
+                  <input type="radio" name="status" id="status_completed" value="Completed" checked>
+                  <label class="txn-radio-label" for="status_completed" style="padding: 8px;">Completed</label>
+                </div>
+                <div class="txn-radio-option">
+                  <input type="radio" name="status" id="status_pending" value="Pending">
+                  <label class="txn-radio-label" for="status_pending" style="padding: 8px;">Pending</label>
+                </div>
+              </div>
             </div>
 
             <!-- Submit Button -->
-            <div class="d-flex justify-content-center">
-              <button
-                id="submitButton"
-                type="submit"
-                class="btn custom-btn-primary w-100 shadow-sm"
-              >
-                <i class="fa-solid fa-plus-circle"></i> Add Transaction
-              </button>
-            </div>
+            <button id="submitButton" type="submit" class="btn w-100 shadow-sm fin-submit-btn">
+                <i class="fa-solid fa-check-circle me-1"></i> <span id="submitBtnText">Add Transaction</span>
+            </button>
           </div>
         </form>
       </div>
@@ -171,5 +125,8 @@
 </div>
 
 <script>
-  document.getElementById("beneficiary").addEventListener("change", beneficiary);
+  function updateBeneficiary(radio) {
+    document.getElementById("beneficiary").value = radio.value;
+    beneficiary_s();
+  }
 </script>

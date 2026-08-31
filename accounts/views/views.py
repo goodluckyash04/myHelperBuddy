@@ -7,7 +7,7 @@ and various analytics/statistics calculations.
 
 import json
 import re
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from typing import Dict, Any, Optional
 
 from dateutil.relativedelta import relativedelta
@@ -18,18 +18,17 @@ from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.utils import timezone
 
-from accounts.decorators import auth_user
 from accounts.models import (
     UtilityModule,
     LedgerTransaction,
     RefreshToken,
-    Task,
     Transaction,
+    UserProfile,
 )
-from accounts.services.module_registry import module_registry
 from accounts.services.security_services import security_service
+from accounts.services.module_registry import module_registry
 from accounts.utilitie_functions import convert_decimal, format_amount
-from accounts.views.view_reminder import calculate_reminder
+
 
 
 # ============================================================================
@@ -53,6 +52,19 @@ def get_counter_parties(user):
         .values_list("counterparty", flat=True)
         .distinct()
     )
+
+import json
+def get_counterparty_tabs_json(user):
+    """Returns a JSON string mapping counterparties to their available tabs."""
+    qs = LedgerTransaction.objects.filter(created_by=user, is_deleted=False).values_list('counterparty', 'tab_name').distinct()
+    data = {}
+    for cp, tab in qs:
+        tab = tab or 'General'
+        if cp not in data:
+            data[cp] = []
+        if tab not in data[cp]:
+            data[cp].append(tab)
+    return json.dumps(data)
 
 
 def calculate_financial_overview(transactions) -> Dict[str, str]:
@@ -92,9 +104,14 @@ def calculate_financial_overview(transactions) -> Dict[str, str]:
         ),
         split_due=Sum(
             "amount",
-            filter=Q(status__iexact="pending", mode_detail__iexact="split"),
+            filter=Q(source__type__iexact="split", status__iexact="pending", is_deleted=False),
             output_field=DecimalField(),
-        )
+        ),
+        split_paid=Sum(
+            "amount",
+            filter=Q(source__type__iexact="split", status__iexact="completed", is_deleted=False),
+            output_field=DecimalField(),
+        ),
     )
 
     income = aggregations["income"] or 0
@@ -102,14 +119,15 @@ def calculate_financial_overview(transactions) -> Dict[str, str]:
     investment = aggregations["investment"] or 0
     overdue = aggregations["overdue"] or 0
     split_due = aggregations["split_due"] or 0
+    split_paid = aggregations["split_paid"] or 0
 
     return {
         "Income": format_amount(income),
         "Expense": format_amount(expense),
         "Investment": format_amount(investment),
         "EMI Due": format_amount(overdue),
-        "Saving": format_amount(income - expense - investment - split_due),
         "Split Due": format_amount(split_due),
+        "Saving": format_amount(income - expense - investment - split_due),
     }
 
 def calculate_category_wise_expenses(transactions) -> Dict[str, Any]:
@@ -131,7 +149,15 @@ def calculate_category_wise_expenses(transactions) -> Dict[str, Any]:
         .order_by("-total")
     )
 
-    return {item["category"]: item["total"] for item in category_data}
+    result = {}
+    for item in category_data:
+        cat = item["category"]
+        if cat and cat.lower() == "emi":
+            cat = "Shopping"
+            
+        result[cat] = result.get(cat, 0) + float(item["total"] or 0)
+        
+    return dict(sorted(result.items(), key=lambda x: x[1], reverse=True))
 
 
 def calculate_monthly_savings(transactions, user) -> Dict[str, float]:
@@ -363,51 +389,89 @@ def calculate_monthly_income_expense(transactions, user) -> Dict[str, list]:
     }
 
 
-def calculate_weekly_spending(transactions, user) -> Dict[str, list]:
+def calculate_monthly_savings_rate_by_year(transactions, user) -> Dict[str, object]:
     """
-    Calculate daily spending for the last 30 days.
-    
-    Used for Weekly Spending Trend chart to identify spending patterns.
+    Calculate monthly savings rate (%) grouped by year, plus an all-time
+    per-month average line.
 
-    Args:
-        transactions: QuerySet of Transaction objects.
-        user: The Django user object.
+    Savings rate = ((income - expense) / income) * 100, per calendar month.
+
+    Rules:
+    - If income is 0 for a month, that month's rate is None (not 0) — avoid
+      implying "broke even" when there was actually no income data.
+    - Months in the current year that haven't occurred yet are None, not 0.
+    - The all-time average per month index (Jan..Dec) is the mean of that
+      month's rate across all years where the rate is not None.
+    - Only include the last 3 distinct years present in the data (or fewer
+      if the account has less history — do not pad with fake years).
 
     Returns:
-        Dict containing date labels and daily expense amounts.
+        {
+            "months": ["Jan", ..., "Dec"],
+            "years": [2024, 2025, 2026],   # sorted ascending, whatever's present
+            "by_year": {"2024": [12 values or None], "2025": [...], "2026": [...]},
+            "all_time_avg": [12 values or None]
+        }
     """
-    from datetime import timedelta
-    
-    current_date = timezone.now().date()
-    start_date = current_date - timedelta(days=29)  # Last 30 days including today
-    
-    daily_data = (
+    current_date = timezone.now()
+    current_year = current_date.year
+    current_month = current_date.month
+
+    monthly_data = (
         Transaction.objects.filter(
             created_by=user,
-            is_deleted=False,
-            type="Expense",
-            date__gte=start_date,
-            date__lte=current_date,
+            is_deleted=False
         )
-        .values("date")
-        .annotate(total=Sum("amount"))
-        .order_by("date")
+        .values("date__year", "date__month")
+        .annotate(
+            total_expense=Sum("amount", filter=Q(type="Expense")),
+            total_income=Sum("amount", filter=Q(type="Income")),
+        )
     )
+
+    years_present = set(item["date__year"] for item in monthly_data if item["date__year"])
     
-    # Create a complete date range with 0 for days with no expenses
-    date_dict = {item["date"]: float(item["total"]) for item in daily_data}
+    if not years_present:
+        return {
+            "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+            "years": [],
+            "by_year": {},
+            "all_time_avg": [None] * 12
+        }
+
+    sorted_years = sorted(list(years_present))
+    target_years = sorted_years[-3:]
     
-    labels = []
-    amounts = []
+    year_data = {str(year): [None] * 12 for year in target_years}
     
-    for i in range(30):
-        date = start_date + timedelta(days=i)
-        labels.append(date.strftime("%d %b"))
-        amounts.append(date_dict.get(date, 0))
-    
+    for item in monthly_data:
+        yr = item["date__year"]
+        mth = item["date__month"]
+        if yr in target_years and yr and mth:
+            income = float(item["total_income"] or 0)
+            expense = float(item["total_expense"] or 0)
+            
+            if income == 0:
+                rate = None
+            else:
+                rate = round(((income - expense) / income) * 100, 1)
+            
+            if yr == current_year and mth > current_month:
+                rate = None
+                
+            year_data[str(yr)][mth - 1] = rate
+            
+    all_time_avg = [None] * 12
+    for m in range(12):
+        valid_rates = [year_data[str(yr)][m] for yr in target_years if year_data[str(yr)][m] is not None]
+        if valid_rates:
+            all_time_avg[m] = round(sum(valid_rates) / len(valid_rates), 1)
+            
     return {
-        "labels": labels,
-        "amounts": amounts,
+        "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        "years": target_years,
+        "by_year": year_data,
+        "all_time_avg": all_time_avg
     }
 
 
@@ -591,8 +655,38 @@ def get_service_status(user) -> Dict[str, bool]:
     return {module.title: module.has_access(user) for module in all_modules}
 
 
+@login_required
+def utilities(request):
+    """
+    Utilities home page view.
+
+    Displays all available utility modules for the user.
+
+    Args:
+        request: Django HTTP request object.
+
+    Returns:
+        HttpResponse: Rendered utilities page.
+    """
+    user = request.user
+
+    items = module_registry.get_modules_for_user(user)
+    counterparties = get_counter_parties(user)
+    counterparty_tabs_json = get_counterparty_tabs_json(user)
+
+    return render(
+        request,
+        "utiltities.html",
+        {
+            "items": items,
+            "counterparties": counterparties,
+            "counterparty_tabs_json": counterparty_tabs_json,
+        },
+    )
+
+
 # ============================================================================
-# Public Views
+# Authentication & Registration Views
 # ============================================================================
 
 
@@ -630,34 +724,19 @@ def index(request):
 
 
 @login_required
-def about(request):
-    """
-    About page view.
-
-    Args:
-        request: Django HTTP request object.
-
-    Returns:
-        HttpResponse: Rendered about page.
-    """
-    return render(request, "about.html", {"user": request.user})
-
-
-@login_required
 def dashboard(request):
     """
-    Main dashboard view with financial analytics, reminders, and tasks.
+    Main dashboard view with financial analytics.
 
-    Displays comprehensive overview including:
-    - Financial overview (income, expense, savings, etc.)
-    - Today's active reminders
-    - Pending tasks till today
-    - Category-wise expenses
-    - Monthly savings for last 12 months
-    - Year-wise income and expense
+    Displays a comprehensive financial overview including:
+    - Financial overview (income, expense, savings, EMI due, investments)
+    - Category-wise expense breakdown
+    - Monthly savings for the last 12 months
+    - Year-wise income and expense comparison
     - Current month's category breakdown
-    
-    Supports date range filtering via ?period= parameter.
+    - Monthly cash flow, savings rate, and top expenses
+
+    Supports date range filtering via ?period= query parameter.
 
     Args:
         request: Django HTTP request object.
@@ -682,7 +761,7 @@ def dashboard(request):
     # User information
     user_info = {
         "first_txn_date": (
-            min(entry.date for entry in transactions if entry.category.lower())
+            min(t.date for t in transactions)
             if transactions
             else ""
         ),
@@ -702,75 +781,28 @@ def dashboard(request):
         ),
         # New analytics for enhanced charts
         "monthly_cash_flow": calculate_monthly_income_expense(transactions, user),
-        "weekly_spending": calculate_weekly_spending(transactions, user),
+        "monthly_savings_rate": calculate_monthly_savings_rate_by_year(transactions, user),
         "top_expenses": calculate_top_expenses(transactions, user),
         "savings_rate": calculate_savings_rate(transactions, user),
         "income_sources": calculate_income_sources(transactions, user),
     }
 
-    # Get today's reminders
-    from accounts.views.view_reminder import calculate_reminder
-    todays_reminders = calculate_reminder(user)
-
-    # Get pending tasks till today
-    from datetime import date
-    today = date.today()
-    pending_tasks = Task.objects.filter(
-        created_by=user,
-        is_deleted=False,
-        status='Pending',
-        complete_by_date__lte=today
-    ).order_by('complete_by_date')[:10]  # Latest 10 pending tasks
-    
-
 
     context = {
         "data": json.dumps(analytics, default=convert_decimal),
         "financial_data": financial_data,
-        "split_due_display": financial_data.get("Split Due", "₹0"),
         "emi_due_display": financial_data.get("EMI Due", "₹0"),
+        "split_due_display": financial_data.get("Split Due", "₹0"),
         "user_info": user_info,
         "user": user,
-        "todays_reminders": todays_reminders[:5],  # Show top 5 reminders
-        "pending_tasks": pending_tasks,
-        "today": today,
+        "today": date.today(),
         "current_period": period,
         "period_label": date_range['label'],
+        "counterparties": get_counter_parties(user),
+        "counterparty_tabs_json": get_counterparty_tabs_json(user),
     }
 
     return render(request, "dashboard.html", context=context)
-
-
-@login_required
-def utilities(request):
-    """
-    Utilities home page view.
-
-    Displays all available utility modules for the user along with
-    reminder count and counterparties.
-
-    Args:
-        request: Django HTTP request object.
-
-    Returns:
-        HttpResponse: Rendered utilities page.
-    """
-    user = request.user
-
-    items = module_registry.get_modules_for_user(user)
-    reminder_count = len(calculate_reminder(user))
-    counterparties = get_counter_parties(user)
-
-    return render(
-        request,
-        "utiltities.html",
-        {
-            "user": user,
-            "items": items,
-            "counterparties": counterparties,
-            "badge": reminder_count,
-        },
-    )
 
 
 @login_required
@@ -778,7 +810,7 @@ def profile(request):
     """
     User profile view.
 
-    Displays user profile information, accessible modules,
+    Displays user profile information
     and account statistics.
 
     Args:
@@ -789,16 +821,8 @@ def profile(request):
     """
     user = request.user
 
-    # Get accessible modules with full details
-    accessible_modules = [
-        {
-            "title": module.title,
-            "icon": module.icon or "fa-puzzle-piece",
-            "access_type": module.get_access_type_display(),
-        }
-        for module in UtilityModule.objects.filter(is_active=True)
-        if module.has_access(user)
-    ]
+    # Fetch accessible modules for the user
+    accessible_modules = module_registry.get_modules_for_user(user)
 
     # Calculate account statistics
     account_age = (timezone.now() - user.date_joined).days
@@ -808,10 +832,11 @@ def profile(request):
 
     context = {
         "user": user,
-        "service_status": get_service_status(user),
         "accessible_modules": accessible_modules,
         "account_age": account_age,
         "total_transactions": total_transactions,
+        "counterparties": get_counter_parties(user),
+        "counterparty_tabs_json": get_counterparty_tabs_json(user),
     }
 
     # Add admin-specific data
@@ -859,44 +884,27 @@ def update_profile(request):
 
     # Handle profile picture upload
     if request.FILES.get("profile_picture"):
-        # Delete old picture if exists
-        if user.profile_picture:
-            user.profile_picture.delete(save=False)
+        # Use get_or_create to safely handle users created before the signal existed
+        profile, _ = UserProfile.objects.get_or_create(user=user)
 
-        user.profile_picture = request.FILES["profile_picture"]
-        user.save()
+        # Delete old picture file from disk before replacing it
+        if profile.profile_picture:
+            profile.profile_picture.delete(save=False)
+
+        profile.profile_picture = request.FILES["profile_picture"]
+        profile.save()
 
         return JsonResponse(
             {
                 "success": True,
                 "message": "Profile updated successfully",
                 "profile_picture_url": (
-                    user.profile_picture.url if user.profile_picture else None
+                    profile.profile_picture.url if profile.profile_picture else None
                 ),
             }
         )
 
     return JsonResponse({"success": True, "message": "Name updated successfully"})
-
-
-@login_required
-def redirect_to_streamlit(request):
-    """
-    Redirect to Streamlit app with encrypted authentication token.
-
-    Creates an encrypted token containing user ID and username,
-    then redirects to the Streamlit URL with the token as a query parameter.
-
-    Args:
-        request: Django HTTP request object.
-
-    Returns:
-        HttpResponseRedirect: Redirect to Streamlit with auth token.
-    """
-    token = security_service.encrypt_text(
-        {"user_id": request.user.id, "username": request.user.username}
-    )
-    return redirect(f"{settings.STREAMLIT_URL}?_id={token}")
 
 
 @login_required
@@ -926,8 +934,7 @@ def manual_backup(request):
     try:
         # Capture management command output
         output = StringIO()
-        # Skip task reminders when manually triggered from UI
-        call_command('backup_db', stdout=output, skip_reminders=True)
+        call_command('backup_db', stdout=output)
         
         # Get the output
         backup_output = output.getvalue()
@@ -959,4 +966,6 @@ def manual_backup(request):
             }, status=500)
         
         return redirect('profile')
+
+
 

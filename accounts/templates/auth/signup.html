@@ -1,31 +1,152 @@
 {% extends 'index.html' %}
 {% load static %}
 {% block mainbody %}
-<div style="min-height: 90vh; display: flex; align-items: center; justify-content: center;">
+<style>
+  /* Premium Animated Background */
+  .auth-bg {
+    min-height: 100vh;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    background: linear-gradient(-45deg, #f8f9fa, rgba(176, 163, 111, 0.15), rgba(185, 95, 95, 0.08), #ffffff);
+    background-size: 400% 400%;
+    animation: authGradientBG 15s ease infinite;
+    padding: 2rem 0;
+  }
+  @keyframes authGradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  /* Glassmorphic Form Card */
+  .auth-card-premium {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 24px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.05), 0 5px 15px rgba(176, 163, 111, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .auth-card-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 8px 20px rgba(176, 163, 111, 0.15);
+  }
+
+  /* Gradient Text */
+  .text-gradient-premium {
+    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+  }
+
+  /* Premium Inputs */
+  .auth-card-premium .form-control {
+    background: rgba(255, 255, 255, 0.5);
+    border: 1.5px solid rgba(176, 163, 111, 0.2);
+    border-radius: 12px;
+    color: var(--text-main, #1f2937);
+    transition: all 0.3s ease;
+  }
+  .auth-card-premium .form-control:focus {
+    background: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(176, 163, 111, 0.15);
+    outline: none;
+  }
+  .auth-card-premium .form-control::placeholder {
+    color: #9ca3af;
+    font-weight: 400;
+  }
   
+  /* Input Groups (e.g. Password toggle) */
+  .auth-card-premium .input-group {
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border: 1.5px solid rgba(176, 163, 111, 0.2);
+    transition: all 0.3s ease;
+    overflow: hidden;
+  }
+  .auth-card-premium .input-group:focus-within {
+    background: #ffffff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(176, 163, 111, 0.15);
+  }
+  .auth-card-premium .input-group .form-control {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+  .auth-card-premium .input-group-text {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  /* Premium Submit Button */
+  .btn-auth-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    padding: 0.8rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(176, 163, 111, 0.3);
+  }
+  .btn-auth-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(176, 163, 111, 0.4);
+    color: white;
+  }
+
+  /* Premium Outline Button */
+  .btn-auth-outline {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(176, 163, 111, 0.3);
+    color: var(--primary-dark);
+    border-radius: 12px;
+    font-weight: 600;
+    padding: 0.8rem;
+    transition: all 0.3s ease;
+  }
+  .btn-auth-outline:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    color: var(--primary-dark);
+  }
+</style>
+
+<div class="auth-bg">
   <div class="container mt-2">
     <div class="row justify-content-center">
       <div class="col-12 col-sm-10 col-md-7 col-lg-5 col-xl-4">
 
-        <form method="post" action="/signup/" class="p-4 rounded shadow-sm" style="background: white;" id="signup-form">
+        <form method="post" action="/signup/" class="p-4 p-md-5 auth-card-premium" id="signup-form">
 
           {% csrf_token %}
-          <h2 class="text-center mb-3">
-            <a class="text-decoration-none" style="color: var(--primary); font-family: 'Rubik Vinyl', cursive; font-weight: 500; font-size: 2.5rem;" href="/">MyHelperBuddy</a>
+          <h2 class="text-center mb-2">
+            <a class="text-decoration-none" style="font-family: 'Rubik Vinyl', cursive; font-size: clamp(1.5rem, 8vw, 2.2rem);" href="/">
+              <span class="text-gradient-premium">MyHelperBuddy</span>
+            </a>
           </h2>
-          <p class="fs-5 text-center mb-4" style="color: var(--primary); font-weight: 500;">Create Account</p>
+          <p class="text-center mb-4" style="color: var(--primary-dark); font-weight: 600; font-size: 1.1rem; opacity: 0.75; letter-spacing: 0.5px;">Create Account</p>
 
           <!-- Name Field -->
           <div class="mb-3">
             <input
               type="text"
               placeholder="Full Name"
-              class="form-control form-control-lg"
+              class="form-control form-control-lg px-3"
               name="name"
               id="name"
               value="{{ name }}"
               required
-              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
             />
           </div>
 
@@ -34,42 +155,39 @@
             <input
               type="text"
               placeholder="Username"
-              class="form-control form-control-lg"
+              class="form-control form-control-lg px-3"
               name="username"
               id="username"
               value="{{ username }}"
               required
-              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
             />
-            <small class="field-hint"><i class="fa-solid fa-circle-info"></i> At least 3 characters</small>
+            <small class="field-hint text-muted ms-2 mt-1 d-block" style="font-size: 0.8rem;"><i class="fa-solid fa-circle-info"></i> At least 3 characters</small>
           </div>
 
           <!-- Email Field with auto-send OTP -->
           <div class="mb-3">
-            <label for="email" class="form-label">Email Address</label>
-            <div class="input-group" style="border-radius: 0.5rem; border: 1.5px solid #ddd;">
+            <div class="input-group">
               <input
                 type="email"
                 placeholder="your@email.com"
-                class="form-control form-control-lg border-0"
+                class="form-control form-control-lg px-3"
                 name="email"
                 id="email"
                 value="{{ email }}"
                 required
-                style="font-size: medium; border-radius: 0.5rem 0 0 0.5rem;"
               />
               <button
                 type="button"
-                class="input-group-text bg-white border-0"
+                class="input-group-text pe-3"
                 id="send-otp-btn"
-                style="border-radius: 0 0.5rem 0.5rem 0; cursor: pointer;"
+                style="cursor: pointer;"
                 onclick="sendOTP()"
                 title="Send OTP"
               >
                 <i class="fa-regular fa-paper-plane" style="color: var(--primary);"></i>
               </button>
             </div>
-            <small class="field-hint"><i class="fa-solid fa-circle-info"></i> We'll send you a verification code</small>
+            <small class="field-hint text-muted ms-2 mt-1 d-block" style="font-size: 0.8rem;"><i class="fa-solid fa-circle-info"></i> We'll send you a verification code</small>
           </div>
 
           <!-- OTP Field (hidden initially) -->
@@ -81,53 +199,56 @@
             <input
               type="text"
               placeholder="Enter 6-digit code"
-              class="form-control form-control-lg"
+              class="form-control form-control-lg px-3"
               name="otp"
               id="otp"
               maxlength="6"
               pattern="[0-9]{6}"
-              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd; letter-spacing: 0.5rem; text-align: center; font-weight: 600;"
+              style="letter-spacing: 0.5rem; text-align: center; font-weight: 600;"
             />
             <div class="d-flex justify-content-between mt-2">
               <small class="text-muted">Check your email inbox</small>
-              <button type="button" class="btn btn-link btn-sm p-0" onclick="sendOTP()" style="color: var(--primary);">
+              <button type="button" class="btn btn-link btn-sm p-0" onclick="sendOTP()" style="color: var(--primary); text-decoration: none; font-weight: 600;">
                 Resend Code
               </button>
             </div>
           </div>
 
           <!-- Password Field with strength meter -->
-          <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input
-              type="password"
-              placeholder="Create a strong password"
-              class="form-control form-control-lg"
-              name="password"
-              id="password"
-              required
-              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
-            />
-            <div class="password-strength-container mt-2" style="display: none;">
-              <div class="password-strength-bg" style="height: 4px; background: #e0e0e0; border-radius: 2px; overflow: hidden;">
-                <div id="password-strength" class="password-strength-bar" style="height: 100%; width: 0%; transition: all 0.3s;"></div>
-              </div>
-              <small id="password-strength-text" class="password-strength-text"></small>
+          <div class="mb-4">
+            <div class="input-group">
+              <input
+                type="password"
+                placeholder="Create Password"
+                class="form-control form-control-lg px-3"
+                name="password"
+                id="password"
+                required
+                autocomplete="new-password"
+                onkeyup="checkPasswordStrength(this.value)"
+              />
+              <span class="input-group-text pe-3" id="addon-wrapping" style="cursor: pointer;">
+                <i class="fa-solid fa-eye" style="color: var(--primary);" id="showPasswordButton" onclick="togglePasswordVisibility()"></i>
+              </span>
             </div>
-            <small class="field-hint"><i class="fa-solid fa-circle-info"></i> Min 8 chars, include uppercase, number &amp; special character</small>
+            <!-- Password Strength Indicator -->
+            <div class="password-strength-meter mt-2" id="password-strength-container" style="display: none;">
+              <div class="progress" style="height: 4px; border-radius: 2px;">
+                <div id="password-strength-bar" class="progress-bar bg-danger" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <small id="password-strength-text" class="text-muted d-block mt-1" style="font-size: 0.75rem;">Password strength</small>
+            </div>
           </div>
 
           <!-- Confirm Password Field -->
           <div class="mb-3">
-            <label for="rpassword" class="form-label">Confirm Password</label>
             <input
               type="password"
-              placeholder="Re-enter your password"
-              class="form-control form-control-lg"
+              placeholder="Confirm Password"
+              class="form-control form-control-lg px-3"
               name="rpassword"
               id="rpassword"
               required
-              style="font-size: medium; border-radius: 0.5rem; border: 1.5px solid #ddd;"
             />
           </div>
 
@@ -139,11 +260,11 @@
           {% endif %}
 
           <!-- Submit Button -->
-          <div class="d-grid mb-3">
+          <div class="d-grid mb-4 mt-3">
             <button
               type="submit"
-              class="btn btn-primary btn-lg"
-              style="background-color: var(--primary); border: none; border-radius: 0.5rem; font-weight: 600;"
+              class="btn-auth-primary"
+              id="signup-btn"
             >
               CREATE ACCOUNT
             </button>
@@ -157,26 +278,24 @@
           </div>
 
           <!-- Google Sign Up Button -->
-          <div class="d-grid mb-3">
+          <div class="d-grid mb-4">
             <a href="{% url 'google_login' %}" 
-               class="btn btn-outline-secondary btn-lg d-flex align-items-center justify-content-center"
-               style="border-radius: 0.5rem; font-weight: 600; gap: 10px; border: 1.5px solid #ddd;">
-              <svg width="20" height="20" viewBox="0 0 24 24">
+               class="btn-auth-outline d-flex align-items-center justify-content-center text-decoration-none"
+               style="gap: 12px;">
+              <svg width="22" height="22" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              Continue with Google
+              Sign up with Google
             </a>
           </div>
-
-          <hr>
 
           <!-- Sign In Link -->
           <div class="text-center">
             <a href="/login" class="text-secondary text-decoration-none" style="font-weight: 500;">
-              Already have an account? <b style="color: var(--primary);">Sign In</b>
+              Already have an account? <span class="text-gradient-premium" style="font-weight: 700;">Sign In</span>
             </a>
           </div>
 
@@ -253,12 +372,16 @@
   .invalid-feedback {
     display: block;
     color: #dc3545;
-    font-size: 0.875rem;
+    font-size: clamp(0.75rem, 0.7rem + 0.5vw, 0.875rem);
     margin-top: 0.25rem;
   }
 </style>
 
 {% endblock mainbody %}
+
+{% block footer %}
+<!-- Remove footer from auth pages -->
+{% endblock footer %}
 
 {% block script %}
 <script src="{% static 'js/auth.js' %}"></script>

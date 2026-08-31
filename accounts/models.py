@@ -27,11 +27,6 @@ class UserProfile(models.Model):
         verbose_name_plural = _("User Profiles")
 
 
-
-
-
-
-
 class FinancialProduct(models.Model):
     name = models.CharField(max_length=100)
     type = models.CharField(max_length=100)
@@ -76,11 +71,6 @@ class Transaction(models.Model):
         ("Completed", _("Completed")),
         ("Pending", _("Pending")),
     ]
-    MODE_CHOICES = [
-        ("CreditCard", _("CreditCard")),
-        ("Online", _("Online")),
-        ("Cash", _("Cash")),
-    ]
     type = models.CharField(
         max_length=50
     )  # type is a reserved keyword, consider renaming this field
@@ -100,8 +90,6 @@ class Transaction(models.Model):
         default=None,
     )
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="Pending")
-    mode = models.CharField(max_length=10, choices=MODE_CHOICES, null=True)
-    mode_detail = models.CharField(max_length=10, null=True)
     is_deleted = models.BooleanField(default=False)
     deleted_at = models.DateField(blank=True, null=True)
     created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
@@ -126,19 +114,6 @@ class Transaction(models.Model):
             models.Index(fields=['created_by', 'is_deleted', 'date']),
             models.Index(fields=['created_by', 'is_deleted', 'status']),
         ]
-
-
-# Import enhanced task models from separate file
-from accounts.task_models import (
-    TaskCategory,
-    TaskTag,
-    RecurringPattern,
-    Task,
-    TaskTemplate,
-    TimeLog,
-    TaskAttachment,
-)
-
 
 
 class LedgerTransaction(models.Model):
@@ -371,302 +346,26 @@ class PaymentRecord(models.Model):
         return f"Payment ₹{self.amount_paid} on {self.payment_date}"
     
     def save(self, *args, **kwargs):
-        """Update parent ledger transaction when payment is recorded"""
-        super().save(*args, **kwargs)
-        
-        # Update parent transaction's paid amount
-        transaction = self.ledger_transaction
-        total_paid = sum(
-            payment.amount_paid 
-            for payment in transaction.payments.all()
-        )
-        transaction.paid_amount = total_paid
-        transaction.save()  # This will trigger auto-status update
+        """Update parent ledger transaction when payment is recorded.
 
+        Both writes (this payment record and the parent's paid_amount) are
+        wrapped in a single atomic block so they always succeed or fail together.
+        This prevents the balance from becoming inconsistent if an error occurs
+        between the two saves.
+        """
+        from django.db import transaction as db_transaction
 
-class Reminder(models.Model):
-    # Legacy frequency choices (kept for backward compatibility)
-    DAILY = "daily"
-    MONTHLY = "monthly"
-    YEARLY = "yearly"
-    CUSTOM = "custom"
+        with db_transaction.atomic():
+            super().save(*args, **kwargs)
 
-    REMINDER_FREQUENCY_CHOICES = [
-        (DAILY, "Daily"),
-        (MONTHLY, "Monthly"),
-        (YEARLY, "Yearly"),
-        (CUSTOM, "Custom"),
-    ]
-
-    # Smart Reminder Types
-    ONE_TIME = 'one_time'
-    DAILY_TYPE = 'daily'
-    WEEKLY = 'weekly'
-    MONTHLY_TYPE = 'monthly'
-    YEARLY_TYPE = 'yearly'
-    CUSTOM_TYPE = 'custom'
-    LINKED_TASK = 'linked_task'
-    LINKED_FINANCE = 'linked_finance'
-
-    TYPE_CHOICES = [
-        (ONE_TIME, _("One-time")),
-        (DAILY_TYPE, _("Daily")),
-        (WEEKLY, _("Weekly")),
-        (MONTHLY_TYPE, _("Monthly")),
-        (YEARLY_TYPE, _("Yearly")),
-        (CUSTOM_TYPE, _("Custom Recurring")),
-        (LINKED_TASK, _("Linked to Task")),
-        (LINKED_FINANCE, _("Linked to Payment")),
-    ]
-
-    # Priority Levels
-    CRITICAL = 'critical'
-    HIGH = 'high'
-    MEDIUM = 'medium'
-    LOW = 'low'
-
-    PRIORITY_CHOICES = [
-        (CRITICAL, _("Critical")),
-        (HIGH, _("High")),
-        (MEDIUM, _("Medium")),
-        (LOW, _("Low")),
-    ]
-
-    # Core fields
-    title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
-    reminder_date = models.DateField()
-    reminder_time = models.TimeField(null=True, blank=True, help_text="Specific time for reminder")
-
-    # Type and Priority
-    reminder_type = models.CharField(
-        max_length=20,
-        choices=TYPE_CHOICES,
-        default=ONE_TIME,
-        help_text="Type of reminder"
-    )
-    priority = models.CharField(
-        max_length=10,
-        choices=PRIORITY_CHOICES,
-        default=MEDIUM,
-        help_text="Priority level"
-    )
-
-    # Legacy field (kept for backward compatibility - will migrate to reminder_type)
-    frequency = models.CharField(
-        max_length=10,
-        choices=REMINDER_FREQUENCY_CHOICES,
-        default=DAILY,
-        null=True,
-        blank=True
-    )
-
-    # Recurring pattern fields
-    custom_repeat_days = models.PositiveIntegerField(
-        null=True,
-        blank=True,
-        help_text="Days interval for custom recurring"
-    )
-    weekdays = models.JSONField(
-        null=True,
-        blank=True,
-        help_text="List of weekdays (0=Mon, 6=Sun) for weekly reminders"
-    )
-    month_days = models.JSONField(
-        null=True,
-        blank=True,
-        help_text="List of days (1-31) for monthly reminders"
-    )
-
-    # Linked items
-    linked_task = models.ForeignKey(
-        'Task',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='reminders',
-        help_text="Task this reminder is linked to"
-    )
-    linked_finance = models.ForeignKey(
-        'FinancialProduct',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='reminders',
-        help_text="Finance product this reminder is linked to"
-    )
-
-    # Snooze functionality
-    is_snoozed = models.BooleanField(default=False)
-    snoozed_until = models.DateTimeField(null=True, blank=True)
-    last_notified = models.DateTimeField(null=True, blank=True)
-    notification_count = models.PositiveIntegerField(default=0)
-
-    # Status fields
-    is_dismissed = models.BooleanField(default=False)
-    dismissed_at = models.DateTimeField(null=True, blank=True)
-    is_deleted = models.BooleanField(default=False)
-    deleted_at = models.DateField(blank=True, null=True)
-
-    # Audit fields
-    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.title} ({self.get_priority_display()})"
-
-    def get_priority_color(self):
-        """Get color hex code for priority level"""
-        colors = {
-            self.CRITICAL: '#EF4444',  # Red
-            self.HIGH: '#F59E0B',      # Orange
-            self.MEDIUM: '#FBBF24',    # Yellow
-            self.LOW: '#3B82F6',       # Blue
-        }
-        return colors.get(self.priority, '#6B7280')  # Gray default
-
-    def get_priority_icon(self):
-        """Get emoji icon for priority level"""
-        icons = {
-            self.CRITICAL: '🔴',
-            self.HIGH: '🟠',
-            self.MEDIUM: '🟡',
-            self.LOW: '🔵',
-        }
-        return icons.get(self.priority, '⚪')
-
-    def get_type_icon(self):
-        """Get icon for reminder type"""
-        icons = {
-            self.ONE_TIME: '📌',
-            self.DAILY_TYPE: '🔁',
-            self.WEEKLY: '📅',
-            self.MONTHLY_TYPE: '📆',
-            self.YEARLY_TYPE: '🎂',
-            self.CUSTOM_TYPE: '🔄',
-            self.LINKED_TASK: '✅',
-            self.LINKED_FINANCE: '💰',
-        }
-        return icons.get(self.reminder_type, '🔔')
-
-    def is_due_today(self):
-        """Check if reminder is due today"""
-        from datetime import date
-        today = date.today()
-
-        # Check if snoozed
-        if self.is_snoozed and self.snoozed_until:
-            from django.utils import timezone
-            if timezone.now() < self.snoozed_until:
-                return False
-
-        # Check if dismissed
-        if self.is_dismissed:
-            return False
-
-        # One-time reminder
-        if self.reminder_type == self.ONE_TIME:
-            return self.reminder_date == today
-
-        # Daily reminder
-        if self.reminder_type == self.DAILY_TYPE:
-            return self.reminder_date <= today
-
-        # Weekly reminder
-        if self.reminder_type == self.WEEKLY:
-            if self.reminder_date > today:
-                return False
-            if self.weekdays:
-                return today.weekday() in self.weekdays
-            return False
-
-        # Monthly reminder
-        if self.reminder_type == self.MONTHLY_TYPE:
-            if self.reminder_date > today:
-                return False
-            if self.month_days:
-                return today.day in self.month_days
-            return self.reminder_date.day == today.day
-
-        # Yearly reminder
-        if self.reminder_type == self.YEARLY_TYPE:
-            if self.reminder_date > today:
-                return False
-            return (self.reminder_date.day == today.day and 
-                    self.reminder_date.month == today.month)
-
-        # Custom recurring
-        if self.reminder_type == self.CUSTOM_TYPE:
-            if self.custom_repeat_days and self.reminder_date <= today:
-                days_elapsed = (today - self.reminder_date).days
-                return days_elapsed % self.custom_repeat_days == 0
-            return False
-
-        # Linked reminders
-        if self.reminder_type == self.LINKED_TASK and self.linked_task:
-            return self.linked_task.deadline == today if hasattr(self.linked_task, 'deadline') else False
-
-        if self.reminder_type == self.LINKED_FINANCE and self.linked_finance:
-            # Check next payment date from finance transactions
-            return False  # Implement based on finance logic
-
-        return False
-
-    def get_next_occurrence(self):
-        """Calculate next occurrence date"""
-        from datetime import date, timedelta
-        today = date.today()
-
-        if self.reminder_type == self.ONE_TIME:
-            return self.reminder_date if self.reminder_date >= today else None
-
-        if self.reminder_type == self.DAILY_TYPE:
-            return today if self.reminder_date <= today else self.reminder_date
-
-        if self.reminder_type == self.WEEKLY and self.weekdays:
-            # Find next matching weekday
-            for i in range(7):
-                check_date = today + timedelta(days=i)
-                if check_date.weekday() in self.weekdays:
-                    return check_date
-
-        if self.reminder_type == self.MONTHLY_TYPE and self.month_days:
-            # Find next matching day of month
-            for i in range(31):
-                check_date = today + timedelta(days=i)
-                if check_date.day in self.month_days:
-                    return check_date
-
-        if self.reminder_type == self.CUSTOM_TYPE and self.custom_repeat_days:
-            days_since = (today - self.reminder_date).days
-            if days_since < 0:
-                return self.reminder_date
-            remainder = days_since % self.custom_repeat_days
-            days_until_next = self.custom_repeat_days - remainder if remainder != 0 else 0
-            return today + timedelta(days=days_until_next)
-
-        return None
-
-    def can_snooze(self):
-        """Check if reminder can be snoozed"""
-        return not self.is_dismissed and not self.is_deleted
-
-    class Meta:
-        verbose_name = _("Reminder")
-        verbose_name_plural = _("Reminders")
-        indexes = [
-            models.Index(fields=['created_by']),
-            models.Index(fields=['reminder_date']),
-            models.Index(fields=['is_deleted']),
-            models.Index(fields=['reminder_type']),
-            models.Index(fields=['priority']),
-            models.Index(fields=['is_snoozed']),
-            # Composite indexes
-            models.Index(fields=['created_by', 'is_deleted']),
-            models.Index(fields=['created_by', 'reminder_date']),
-            models.Index(fields=['reminder_type', 'priority']),
-        ]
+            # Recalculate total paid from all payment records for this ledger entry
+            parent = self.ledger_transaction
+            total_paid = sum(
+                payment.amount_paid
+                for payment in parent.payments.all()
+            )
+            parent.paid_amount = total_paid
+            parent.save()  # triggers auto-status update in LedgerTransaction.save()
 
 
 class RefreshToken(models.Model):
@@ -855,3 +554,6 @@ class UploadedFile(models.Model):
             seen.add(nk)
             cleaned.append(nk)
         self.keywords = ", ".join(cleaned)
+
+
+

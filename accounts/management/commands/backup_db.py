@@ -7,7 +7,6 @@ Django management command that provides automated database backup and maintenanc
 - Uploads backups to Google Drive
 - Sends backup email notifications as fallback
 - Maintains backup retention policy (7 days + monthly)
-- Sends daily task and reminder notifications to users
 
 Usage:
     python manage.py backup_db
@@ -27,69 +26,61 @@ from django.db.models import Q
 from accounts.models import (
     FinancialProduct,
     LedgerTransaction,
-    Reminder,
-    Task,
     Transaction,
     UserProfile,
 )
 from accounts.services.email_services import EmailService
-from accounts.services.google_services import GoogleDriveService
-from accounts.views.view_reminder import calculate_reminder
+from accounts.services.google_services import get_drive_service
+
 
 User = get_user_model()
 
 
 class Command(BaseCommand):
     """
-    Automated database backup and task reminder management command.
-    
+    Automated database backup command.
+
     Features:
         - Change detection for database models
         - Encrypted database backups with Fernet
         - Google Drive upload with fallback to email
         - Smart backup retention (7 days + last of each month)
-        - Daily task and reminder email notifications
         - IST timezone support (UTC+5:30)
     """
-    
-    help = "Backup encrypted database and send task/reminder notifications"
+
+    help = "Backup encrypted database to Google Drive"
     
     # Backup retention settings
     RETENTION_DAYS = 7
     
-    def add_arguments(self, parser):
-        """Add custom command arguments."""
-        parser.add_argument(
-            '--skip-reminders',
-            action='store_true',
-            help='Skip sending task reminder emails (only backup database)',
-        )
+
     
     def __init__(self):
         """Initialize command with services and timezone."""
         super().__init__()
-        
+
         # Set IST timezone (UTC+5:30)
         ist_offset = datetime.timedelta(hours=5, minutes=30)
         ist_tz = datetime.timezone(ist_offset)
         self.now = datetime.datetime.now(datetime.timezone.utc).astimezone(ist_tz)
-        
-        # Initialize services
+
+        # Initialize services.
+        # `get_drive_service()` returns the shared singleton and reuses the
+        # cached access token — it only calls Google's token endpoint when the
+        # token is actually expired (or has less than 5 minutes remaining).
         self.email_service = EmailService()
-        self.google_service = GoogleDriveService()
+        self.google_service = get_drive_service()
     
     def handle(self, *args, **options):
         """
         Main entry point for the management command.
         
         Executes:
-            1. Task and reminder notifications (unless --skip-reminders)
-            2. Database backup (if needed)
+            1. Database backup (if needed)
         
         Args:
-            options: Command options including skip_reminders flag
+            options: Command options
         """
-        skip_reminders = options.get('skip_reminders', False)
         
         try:
             self.stdout.write(self.style.SUCCESS("\n" + "=" * 60))
@@ -99,14 +90,6 @@ class Command(BaseCommand):
                 )
             )
             self.stdout.write(self.style.SUCCESS("=" * 60))
-            
-            # Send task reminders to users (unless skipped)
-            if not skip_reminders:
-                self.send_todays_task_reminder()
-            else:
-                self.stdout.write(
-                    self.style.WARNING("\n⏭️  Skipping task reminder emails")
-                )
             
             # Backup database if needed
             self.backup_database()
@@ -146,19 +129,12 @@ class Command(BaseCommand):
             Transaction,
             LedgerTransaction,
             FinancialProduct,
-            Task,
-            Reminder,
         ]
-        
-        for model in models_to_check:
-            if model.objects.filter(query).exists():
-                self.stdout.write(
-                    self.style.WARNING(f"   📝 Changes detected in {model.__name__}")
-                )
-                return True
-        
-        self.stdout.write(self.style.SUCCESS("   ✅ No recent changes detected"))
-        return False
+
+        return any(
+            model.objects.filter(query).exists()
+            for model in models_to_check
+        )
     
     # ========================================================================
     # Encryption

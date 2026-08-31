@@ -1,258 +1,531 @@
-{% extends 'header.html' %} {% load static %} {% block body %}
+{% extends 'header.html' %} 
+{% load static %} 
+{% block body %}
 
 <style>
-  /* small polish */
-
-  @media (max-width: 575.98px) {
-
-    /* make search full width on extra small */
-    #fileSearchInput {
-      min-width: 0;
+    /* ── Premium Document Manager Styles ───────────────────────────── */
+    
+    /* Soft Glass Background */
+    body {
+        background-color: #f8f9fa;
+        background-image: 
+            radial-gradient(at 0% 0%, rgba(176, 163, 111, 0.08) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(74, 124, 89, 0.05) 0px, transparent 50%);
+        background-attachment: fixed;
     }
-  }
 
-  .chip-outline {
-    padding: 4px 12px;
-    border-radius: 12px;
-    border: 1px solid #ccc;
-    font-size: 0.75rem;
-    color: #555;
-    transition: 0.2s;
-    text-decoration: none;
-  }
+    /* Page Banner (Matching Ledger Module) */
+    .doc-banner {
+        background: linear-gradient(-45deg, var(--primary-dark), #9a8855, var(--primary), #a69550);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+        padding: 40px 32px 60px;
+        margin-bottom: -40px; /* Overlap with content */
+        position: relative;
+        overflow: hidden;
+        border-radius: 0 0 32px 32px;
+        box-shadow: 0 10px 30px rgba(32, 27, 5, 0.15);
+    }
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    .doc-banner::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 250px; height: 250px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(10px);
+    }
+    .doc-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -60px; left: 20%;
+        width: 200px; height: 200px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+    }
+    .doc-banner-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        z-index: 1;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+    }
+    .doc-banner-title {
+        color: #fff;
+        margin: 0 0 6px;
+        letter-spacing: -0.01em;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        font-size: 2.2rem;
+        font-family: 'Dancing Script', cursive;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+    .doc-banner-subtitle {
+        color: rgba(255,255,255,0.85);
+        font-size: 0.85rem;
+        opacity: 0.8;
+        margin-top: 4px;
+        margin-bottom: 0;
+    }
 
-  .chip-outline:hover {
-    background: #f0f0f0;
-    border-color: #999;
-    color: #000;
-  }
+    /* Controls (Search & Upload) */
+    .doc-controls {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+    .doc-search-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 320px;
+    }
+    .doc-search-input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.6rem 1rem 0.6rem 2.8rem;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    .doc-search-input::placeholder {
+        color: rgba(255,255,255,0.6);
+    }
+    .doc-search-input:focus {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(176, 163, 111, 0.6);
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(176, 163, 111, 0.15);
+    }
+    .doc-search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255,255,255,0.6);
+    }
+    .doc-upload-btn {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        backdrop-filter: blur(10px);
+        padding: 0.6rem 1.4rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(176, 163, 111, 0.3);
+    }
+    .doc-upload-btn:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
 
-  /* Pagination color override */
-  .pagination .page-link {
-    color: var(--primary);
-    border-color: var(--primary);
-    transition: 0.25s;
-  }
+    /* Fix z-index for dropdowns in grid */
+    .file-card {
+        position: relative;
+        z-index: 1;
+    }
+    .file-card:hover, .file-card:focus-within {
+        z-index: 10;
+    }
 
-  .pagination .page-link:hover {
-    background-color: rgba(0, 0, 0, 0.04);
-    color: var(--primary-dark);
-    border-color: var(--primary-dark);
-  }
+    /* Tags / Chips */
+    .chip-premium {
+        background: rgba(0,0,0,0.03);
+        border: 1px solid rgba(0,0,0,0.06);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #4b5563;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .chip-premium:hover {
+        background: rgba(176, 163, 111, 0.1);
+        border-color: rgba(176, 163, 111, 0.3);
+        color: #b0a36f;
+    }
+    .active-tag-badge {
+        background: rgba(176, 163, 111, 0.15);
+        color: #8c8051;
+        border: 1px solid rgba(176, 163, 111, 0.3);
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .active-tag-badge a {
+        color: #8c8051;
+        text-decoration: none;
+        font-size: 1.1rem;
+        line-height: 1;
+    }
+    .active-tag-badge a:hover {
+        color: #1f2937;
+    }
 
-  .pagination .page-item.active .page-link {
-    background-color: var(--primary);
-    border-color: var(--primary);
-    color: white;
-    font-weight: 600;
-  }
+    /* Glassmorphic Cards */
+    .card-file-premium {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 20px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        transition: all 0.3s ease;
+        height: 100%;
+        overflow: visible; /* for dropdowns */
+    }
+    .card-file-premium:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+        border-color: rgba(176, 163, 111, 0.3);
+    }
+    .file-icon-box {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(176, 163, 111, 0.1), rgba(176, 163, 111, 0.02));
+        color: #b0a36f;
+        font-size: 1.5rem;
+        border: 1px solid rgba(176, 163, 111, 0.15);
+        flex-shrink: 0;
+    }
+    .file-title {
+        font-weight: 700;
+        color: #1f2937;
+        font-size: 1.05rem;
+        margin-bottom: 0.2rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        word-break: break-all;
+    }
+    .file-meta {
+        font-size: 0.8rem;
+        color: #6b7280;
+        font-weight: 500;
+    }
+    
+    /* 3-Dot Action Menu */
+    .file-action-btn {
+        background: transparent;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9ca3af;
+        transition: all 0.2s;
+    }
+    .file-action-btn:hover, .file-action-btn:focus {
+        background: rgba(0,0,0,0.05);
+        color: #1f2937;
+    }
+    .dropdown-menu-premium {
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        padding: 0.5rem;
+        min-width: 200px;
+        animation: fadeIn 0.2s ease;
+    }
+    .dropdown-menu-premium .dropdown-item {
+        border-radius: 10px;
+        padding: 0.6rem 1rem;
+        font-weight: 500;
+        color: #4b5563;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+    }
+    .dropdown-menu-premium .dropdown-item i {
+        width: 24px;
+        color: #9ca3af;
+        transition: all 0.2s;
+    }
+    .dropdown-menu-premium .dropdown-item:hover {
+        background: rgba(176, 163, 111, 0.1);
+        color: #1f2937;
+    }
+    .dropdown-menu-premium .dropdown-item:hover i {
+        color: #b0a36f;
+    }
+    .dropdown-menu-premium .dropdown-item.text-danger:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: #dc2626;
+    }
+    .dropdown-menu-premium .dropdown-item.text-danger:hover i {
+        color: #dc2626;
+    }
 
-  .pagination .page-item.disabled .page-link {
-    color: #b0b0b0;
-    border-color: #ddd;
-    background-color: #f7f7f7;
-  }
+    /* Empty State */
+    .doc-empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: rgba(255,255,255,0.5);
+        border: 2px dashed rgba(0,0,0,0.1);
+        border-radius: 24px;
+        margin: 2rem 1.5rem;
+    }
+    .doc-empty-icon {
+        font-size: 4rem;
+        color: rgba(176, 163, 111, 0.3);
+        margin-bottom: 1rem;
+    }
+    
+    /* Pagination */
+    .pagination-premium .page-link {
+        border: none;
+        color: #6b7280;
+        background: transparent;
+        font-weight: 600;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 4px;
+        transition: all 0.2s;
+    }
+    .pagination-premium .page-item.active .page-link {
+        background: linear-gradient(135deg, #b0a36f, #d4af37);
+        color: #fff;
+        box-shadow: 0 4px 10px rgba(176, 163, 111, 0.3);
+    }
+    .pagination-premium .page-link:hover:not(.active) {
+        background: rgba(0,0,0,0.05);
+        color: #1f2937;
+    }
+    .pagination-premium .page-item.disabled .page-link {
+        color: #d1d5db;
+        background: transparent;
+    }
 
-  .pagination .page-link {
-    border-radius: 6px;
-    padding: 4px 10px;
-  }
-
-  .pagination {
-    gap: 4px;
-  }
+    @media (max-width: 768px) {
+        .doc-banner {
+            margin: 1rem;
+            padding: 2rem 1.5rem;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .doc-search-wrapper {
+            max-width: 100%;
+        }
+        .doc-controls {
+            flex-wrap: wrap;
+            justify-content: flex-start;
+        }
+    }
 </style>
 
-<!-- Header container -->
-<div class="container-fluid my-3">
-  <div class="row align-items-center">
-    <div class="col-12 col-md-6 mb-2 mb-md-0">
-      <h1 class="h3 mb-0" style="
-          color: var(--primary);
-          font-family: 'Dancing Script', system-ui, sans-serif;
-        ">
-        My Documents
-      </h1>
-    </div>
-
-    <div class="col-12 col-md-6">
-      <div class="d-flex justify-content-md-end align-items-center gap-2">
-        <!-- search form -->
-        <form class="d-flex align-items-center w-100 w-md-auto" method="get" role="search" aria-label="Search files">
-          <div class="input-group input-group-sm" style="min-width: 220px; max-width: 420px">
-            <input name="q" id="fileSearchInput" value="{{ q }}" class="form-control form-control-sm"
-              placeholder="Search filename or keywords" aria-label="Search files" />
-            {% if tag %}
-            <input type="hidden" name="tag" value="{{ tag }}" />
-            {% endif %}
-            <button class="btn btn-sm custom-btn-primary" type="submit" aria-label="Submit search">
-              <i class="bi bi-search"></i>
+<!-- Premium Header Banner -->
+<div class="doc-banner mb-5">
+    <div class="doc-banner-content">
+        <div>
+            <h1 class="doc-banner-title">
+                <i class="bi bi-folder2-open me-2"></i>Document Manager
+            </h1>
+            <p class="doc-banner-subtitle">Store, organize, and manage your files securely.</p>
+        </div>
+        
+        <div class="doc-controls">
+            <form method="get" role="search" aria-label="Search files" class="doc-search-wrapper mb-0">
+                <i class="bi bi-search doc-search-icon"></i>
+                <input name="q" value="{{ q }}" class="doc-search-input" placeholder="Search filenames or tags..." />
+                {% if tag %}
+                    <input type="hidden" name="tag" value="{{ tag }}" />
+                {% endif %}
+            </form>
+            
+            <button class="doc-upload-btn text-nowrap" data-bs-toggle="modal" data-bs-target="#fileUploadModal">
+                <i class="bi bi-cloud-arrow-up-fill fs-5"></i> Upload
             </button>
-          </div>
-        </form>
-
-        <!-- active tag badge -->
-        {% if tag %}
-        <div class="d-none d-md-block ms-2">
-          <span class="badge bg-info text-dark" title="Active tag">
-            Tag: {{ tag }}
-            <a href="?{% if q %}q={{ q }}&{% endif %}" class="ms-2 text-decoration-none" aria-label="Clear tag">×</a>
-          </span>
         </div>
-        {% endif %}
-
-        <!-- upload button -->
-        <div class="ms-2">
-          <button class="btn btn-sm custom-btn-primary d-flex align-items-center gap-2" data-bs-toggle="modal"
-            data-bs-target="#fileUploadModal" type="button">
-            <i class="bi bi-cloud-upload-fill"></i>
-            <span>Upload</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- show active tag under search on small screens -->
-      {% if tag %}
-      <div class="d-block d-md-none mt-2">
-        <span class="badge bg-info text-dark">Tag: {{ tag }}
-          <a href="?{% if q %}q={{ q }}&{% endif %}" class="ms-2 text-decoration-none" aria-label="Clear tag">×</a>
-        </span>
-      </div>
-      {% endif %}
     </div>
-  </div>
 </div>
 
-<!-- pagination -->
-<div class="d-flex justify-content-between px-3">
-  <div class="small text-muted text-center my-2">
-    Showing {{ files.start_index }}–{{ files.end_index }} of {{ files.paginator.count }} files
-  </div>
-  <nav aria-label="Pagination">
-    <ul class="pagination pagination-sm mb-0">
-      {% if files.has_previous %}
-      <li class="page-item">
-        <a class="page-link" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ files.previous_page_number }}">
-          &laquo;
-        </a>
-      </li>
-      {% else %}
-      <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-      {% endif %} {% for p in page_range %} {% if p == '…' or p == '...' %}
-      <li class="page-item disabled"><span class="page-link">…</span></li>
-      {% else %} {% if p == files.number %}
-      <li class="page-item active"><span class="page-link">{{ p }}</span></li>
-      {% else %}
-      <li class="page-item">
-        <a class="page-link" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ p }}">{{ p }}</a>
-      </li>
-      {% endif %} {% endif %} {% endfor %} {% if files.has_next %}
-      <li class="page-item">
-        <a class="page-link" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ files.next_page_number }}">
-          &raquo;
-        </a>
-      </li>
-      {% else %}
-      <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
-      {% endif %}
-    </ul>
-  </nav>
+<!-- Active Tag Display -->
+{% if tag %}
+<div class="px-4 mb-4 position-relative" style="z-index: 2;">
+    <div class="active-tag-badge">
+        <i class="bi bi-tag-fill"></i> Filtering by tag: {{ tag }}
+        <a href="?{% if q %}q={{ q }}&{% endif %}" title="Clear tag">×</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Files Grid -->
+<div id="filesGrid" class="row g-4 mx-2 mx-md-3 mb-5">
+    {% for f in files %}
+    <div class="col-12 col-md-6 col-xl-4 file-card">
+        <div class="card-file-premium p-4">
+            <div class="d-flex align-items-start gap-3">
+                
+                <!-- Premium Icon Box -->
+                <div class="file-icon-box">
+                    <i class="bi {{ f.icon_class }}"></i>
+                </div>
+
+                <!-- File Details -->
+                <div class="flex-grow-1" style="min-width: 0;">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div style="flex: 1; overflow: hidden; padding-right: 8px;">
+                            <h3 class="file-title" title="{{ f.filename }}">{{ f.filename }}</h3>
+                            <div class="file-meta">
+                                <span>{{ f.size|default:"unknown" }}</span> &bull; 
+                                <span class="text-uppercase">{{ f.file_type|default:"FILE" }}</span>
+                            </div>
+                        </div>
+                        
+                        <!-- 3-Dot Action Menu -->
+                        <div class="dropdown">
+                            <button class="file-action-btn" id="cardMenu{{ forloop.counter }}" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-premium" aria-labelledby="cardMenu{{ forloop.counter }}">
+                                {% if f.password_protected %}
+                                <li>
+                                    <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#pwdModal"
+                                        data-file-id="{{ f.pk }}" data-filename="{{ f.filename }}">
+                                        <i class="bi bi-lock-fill"></i> Download (Protected)
+                                    </button>
+                                </li>
+                                {% else %}
+                                <li>
+                                    <a class="dropdown-item" href="/document/{{ f.pk }}/download/">
+                                        <i class="bi bi-cloud-download"></i> Download
+                                    </a>
+                                </li>
+                                {% endif %}
+                                
+                                <li>
+                                    <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editDetailsModal"
+                                        data-file-id="{{ f.pk }}" data-filename="{{ f.filename }}" data-keywords="{{ f.keywords }}"
+                                        data-protected="{{ f.password_protected|yesno:'1,0' }}">
+                                        <i class="bi bi-pencil-square"></i> Edit Details
+                                    </button>
+                                </li>
+                                
+                                <li><hr class="dropdown-divider" /></li>
+                                
+                                <li>
+                                    <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
+                                        data-file-id="{{ f.pk }}" data-filename="{{ f.filename }}"
+                                        data-protected="{{ f.password_protected|yesno:'1,0' }}">
+                                        <i class="bi bi-trash3-fill"></i> Delete File
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Tags / Chips -->
+                    {% if f.keyword_list %}
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        {% for tag_item in f.keyword_list %}
+                        <a href="?tag={{ tag_item }}{% if q %}&q={{ q }}{% endif %}" class="chip-premium">
+                            <i class="bi bi-hash text-muted"></i>{{ tag_item }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="doc-empty-state">
+            <i class="bi bi-folder-x doc-empty-icon"></i>
+            <h4 class="fw-bold text-dark mb-2">No Documents Found</h4>
+            <p class="text-muted mb-0">Upload a new document or change your search filter.</p>
+        </div>
+    </div>
+    {% endfor %}
 </div>
 
-<!-- files grid -->
-<div id="filesGrid" class="row g-3 mx-3 mt-1">
-  {% for f in files %}
-  <div class="col-md-6 col-lg-4 file-card" data-filename="{{ f.filename|lower }}"
-    data-mimetype="{{ f.content_type|default:''|lower }}" data-uploaded="{{ f.uploaded_at.isoformat }}"
-    data-size="{{ f.size }}">
-    <div class="card card-file h-100 shadow-sm">
-      <div class="card-body d-flex flex-column">
-        <div class="d-flex align-items-start gap-3 mb-2">
-          <!-- icon or thumbnail -->
-          <div style="width: 56px; height: 56px; flex: 0 0 56px">
-            <div class="d-flex align-items-center justify-content-center bg-light rounded"
-              style="width: 56px; height: 56px">
-              <i class="bi {{ f.icon_class }} fs-1"></i>
-            </div>
-          </div>
-
-          <!-- file name and size and tags -->
-          <div class="flex-grow-1">
-            <p class="card-title mb-0 fs-6" title="{{ f.filename }}">
-              {{ f.filename }}
-            </p>
-            <div class="small text-muted">
-              <span>{{ f.size|default:"unknown" }}</span> ·
-              <span>{{ f.file_type|default:"unknown" }}</span>
-            </div>
-            <!-- tags -->
-            <div class="mt-2 d-flex flex-wrap gap-2">
-              {% for tag_item in f.keyword_list %}
-              <a href="?tag={{ tag_item }}{% if q %}&q={{ q }}{% endif %}" class="chip-outline"
-                title="Filter by tag: {{ tag_item }}">
-                <i class="bi bi-hash"></i> {{ tag_item }}
-              </a>
-              {% endfor %}
-            </div>
-          </div>
-
-          <!-- three-dot actions -->
-          <div class="ms-2 dropdown">
-            <a class="text-muted" href="#" id="cardMenu{{ forloop.counter }}" data-bs-toggle="dropdown"
-              aria-expanded="false">
-              <i class="bi bi-three-dots-vertical"></i>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="cardMenu{{ forloop.counter }}">
-              {% if f.password_protected %}
-              <li>
-                <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#pwdModal"
-                  data-file-id="{{ f.pk }}" data-filename="{{ f.filename }}">
-                  <i class="bi bi-lock-fill me-2"></i> Download (protected)
-                </button>
-              </li>
-              {% else %}
-              <li>
-                <a class="dropdown-item" href="/document/{{ f.pk }}/download/">
-                  <i class="bi bi-download me-2"></i> Download
+<!-- Premium Pagination -->
+{% if files.paginator.count > 0 %}
+<div class="d-flex flex-column align-items-center mb-5 px-3">
+    <div class="small text-muted mb-3 fw-bold">
+        Showing {{ files.start_index }} – {{ files.end_index }} of {{ files.paginator.count }} files
+    </div>
+    <nav aria-label="Pagination">
+        <ul class="pagination pagination-premium mb-0">
+            {% if files.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ files.previous_page_number }}">
+                    <i class="bi bi-chevron-left"></i>
                 </a>
-              </li>
-              {% endif %}
-              <li>
-                <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#editDetailsModal"
-                  data-file-id="{{ f.pk }}" data-filename="{{ f.filename }}" data-keywords="{{ f.keywords }}"
-                  data-protected="{{ f.password_protected|yesno:'1,0' }}">
-                  <i class="bi bi-pencil me-2"></i> Edit
-                </button>
-              </li>
-              <li>
-                <hr class="dropdown-divider" />
-              </li>
-              <li>
-                <button class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"
-                  data-file-id="{{ f.pk }}" data-filename="{{ f.filename }}"
-                  data-protected="{{ f.password_protected|yesno:'1,0' }}">
-                  <i class="bi bi-trash-fill me-2"></i> Delete
-                </button>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {% empty %}
-  <div class="col-12">
-    <div class="alert alert-secondary text-center">No file found.</div>
-  </div>
-  {% endfor %}
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>
+            {% endif %} 
+            
+            {% for p in page_range %} 
+                {% if p == '…' or p == '...' %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% else %} 
+                    {% if p == files.number %}
+                        <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ p }}">{{ p }}</a>
+                        </li>
+                    {% endif %} 
+                {% endif %} 
+            {% endfor %} 
+            
+            {% if files.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if base_qs %}{{ base_qs }}&{% endif %}page={{ files.next_page_number }}">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li>
+            {% endif %}
+        </ul>
+    </nav>
 </div>
+{% endif %}
 
 {% include 'document_manager/document_upload_modal.html' %}
 {% include 'document_manager/document_update_modal.html' %}
 {% include 'document_manager/document_delete_confirmation_modal.html' %}
 {% include 'document_manager/download_password_modal.html' %}
-{% endblock body %} {% block script %}
+{% endblock body %} 
 
+{% block script %}
 <script src="{% static 'js/downloadManager.js' %}"></script>
 {% endblock %}

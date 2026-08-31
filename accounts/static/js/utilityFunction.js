@@ -23,7 +23,7 @@ function generateCSV() {
 
   var csvContent = csvRows.join("\n");
 
-  var blob = new Blob([csvContent], { type: "text/csv" });
+  var blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
 
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);

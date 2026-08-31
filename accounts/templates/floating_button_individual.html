@@ -7,22 +7,16 @@
 
     <!-- Floating button -->  
     {% if m_type == 'transaction' %}
-    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#expensemodal"  ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>      
+    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#expensemodal"  ><i class="fa-solid fa-plus"></i></button>      
     {% elif m_type == 'finance' %}
-    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#financeModal" ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
-    {% elif m_type == 'task' %}
-    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#taskmodal" ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
+    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#financeModal" ><i class="fa-solid fa-plus"></i></button>
     {% elif m_type == 'ledger' %}
-    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#ledgerModal" ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
-    {% elif m_type == 'reminder' %}
-    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#reminderModal" ><i class="fa-solid fa-plus" style="color:var(--secondary)"></i></button>
+    <button class="floating-button" data-bs-toggle="modal" data-bs-target="#ledgerModal" ><i class="fa-solid fa-plus"></i></button>
     {% endif %}
   
   {% include 'transaction/transactionModal.html' %}
   {% include 'financial_instrument/addFinanceModal.html' %}
-  {% include 'task/taskModal.html' %}
   {% include 'ledger_transaction/ledgerTransactionModal.html' with counterparties=counterparties %} 
-  {% include 'reminder/createReminderModal.html' %} 
   {% endblock body %}
 
   {% block script %}
@@ -40,4 +34,5 @@
     }
   </script>
     {% endblock script %}
+
 

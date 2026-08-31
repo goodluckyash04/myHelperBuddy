@@ -1,49 +1,108 @@
 /* Floating button styles */
 .floating-button {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: var(--primary);
+  bottom: 24px;
+  right: 24px;
+  background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
   border: none;
-  border-radius: 40%;
-  width: 50px;
-  height: 50px;
-  font-size: 20px;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 24px;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 25px rgba(32, 27, 5, 0.4);
   z-index: 1000;
-} 
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
 
+.floating-button:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 15px 30px rgba(32, 27, 5, 0.5);
+}
+
+.floating-button i {
+  color: #fff !important;
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.floating-button.active i {
+  transform: rotate(135deg);
+}
 
 /* Activity list styles */
 .activity-list {
   position: fixed;
-  bottom: 90px; /* Adjust this to position the list above the button */
-  right: 20px;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  width: 200px;
-  padding: 10px;
-  padding-bottom: 0;
-  display: none; /* Initially hidden */
+  bottom: 96px; /* Position above button */
+  right: 24px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  width: 220px;
+  padding: 12px;
+  display: none; /* Controlled by JS */
   z-index: 999;
+  animation: slideUpFade 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .activity-list ul {
   list-style-type: none;
   padding: 0;
+  margin: 0;
 }
 
 .activity-list li {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+  padding: 12px 16px;
+  margin-bottom: 6px;
+  border-radius: 12px;
   cursor: pointer;
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.2s ease;
+  border-bottom: none;
+}
+
+.activity-list li:last-child {
+  margin-bottom: 0;
+}
+
+.activity-list li i {
+  color: var(--primary);
+  font-size: 1.1rem;
+  width: 24px;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.activity-list a {
+  text-decoration: none;
 }
 
 .activity-list li:hover {
-  background-color: var(--secondary);
+  background: rgba(176, 163, 111, 0.15); /* Soft primary tint */
+  color: var(--primary-dark);
+  transform: translateX(4px);
+}
+
+.activity-list li:hover i {
+  transform: scale(1.15);
 }

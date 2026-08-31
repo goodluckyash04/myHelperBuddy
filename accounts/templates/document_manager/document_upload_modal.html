@@ -1,21 +1,27 @@
 <style>
-  /* nicer dropzone focus/drag state */
+  /* Premium dropzone */
   #dropzone {
     cursor: pointer;
-    transition: border-color 0.15s, background-color 0.15s;
+    background-color: rgba(0, 0, 0, 0.02);
+    border: 2px dashed rgba(176, 163, 111, 0.3) !important;
+    border-radius: 16px;
+    transition: all 0.3s ease;
   }
-  #dropzone:focus {
+  #dropzone:hover, #dropzone:focus {
+    background-color: rgba(176, 163, 111, 0.05);
+    border-color: #b0a36f !important;
     outline: none;
-    box-shadow: 0 0 0 0.15rem rgba(25, 135, 84, 0.12);
   }
   #dropzone.dragover {
-    border-color: var(--bs-primary);
-    background: rgba(13, 110, 253, 0.03);
+    background-color: rgba(176, 163, 111, 0.1);
+    border-color: #b0a36f !important;
   }
 
-  /* subtle gradient for icon circle */
-  .bg-gradient-light {
-    background: linear-gradient(180deg, #ffffff, #f8f9fa);
+  /* premium gradient for icon circle */
+  .bg-gradient-premium {
+    background: linear-gradient(135deg, rgba(176, 163, 111, 0.15), rgba(176, 163, 111, 0.05));
+    border: 1px solid rgba(176, 163, 111, 0.2);
+    color: #b0a36f;
   }
 
   /* truncate filename in preview */
@@ -25,38 +31,114 @@
     text-overflow: ellipsis;
   }
 
+  /* Premium Tag Chips */
   .tag-chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 8px;
-    background: #f1f3f5;
-    border-radius: 999px;
+    padding: 4px 12px;
+    background: rgba(176, 163, 111, 0.1);
+    border-radius: 20px;
     font-size: 0.85rem;
-    color: #212529;
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    font-weight: 600;
+    color: #8c8051;
+    border: 1px solid rgba(176, 163, 111, 0.2);
     cursor: default;
+    transition: all 0.2s ease;
   }
   .tag-chip .remove {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
-    background: transparent;
+    background: rgba(176, 163, 111, 0.15);
     border: none;
-    color: rgba(0, 0, 0, 0.45);
+    color: #8c8051;
     cursor: pointer;
+    transition: all 0.2s ease;
   }
   .tag-chip .remove:hover {
-    color: rgba(0, 0, 0, 0.8);
+    background: rgba(176, 163, 111, 0.3);
+    color: #1f2937;
   }
-  .tag-chip.clickable {
-    cursor: pointer;
+  
+  #tagInputWrap {
+    border-radius: 12px;
+    border: 1.5px solid rgba(0,0,0,0.06);
+    background: rgba(0,0,0,0.02);
+    transition: all 0.3s ease;
   }
   #tagInputWrap:focus-within {
-    box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.08);
+    background: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(176, 163, 111, 0.15);
+  }
+  
+  /* Shared Premium Form Controls */
+  .fin-form-control {
+    background-color: rgba(0, 0, 0, 0.02) !important;
+    border: 1.5px solid rgba(0, 0, 0, 0.06) !important;
+    border-radius: 12px !important;
+    font-weight: 500;
+    color: #1f2937 !important;
+    transition: all 0.3s ease !important;
+  }
+  .fin-form-control:focus {
+    background-color: #fff !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px rgba(176, 163, 111, 0.15) !important;
+  }
+  
+  /* Modal Content */
+  .fin-modal-content {
+    border-radius: 24px;
+    border: none;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+  .fin-modal-header {
+    background: linear-gradient(-45deg, var(--primary-dark), #9a8855, var(--primary), #a69550);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color: white;
+    padding: 1.2rem 1.5rem;
+    border-bottom: none;
+  }
+  @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+  }
+  .fin-modal-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 600;
+    font-size: 1.25rem;
+  }
+  .fin-submit-btn {
+    background: linear-gradient(135deg, #b0a36f, #d4af37);
+    color: #111827;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  .fin-submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(176, 163, 111, 0.3);
+    color: #000;
+  }
+  .fin-cancel-btn {
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .fin-cancel-btn:hover {
+    color: #1f2937;
   }
 </style>
 <div
@@ -67,10 +149,15 @@
   aria-hidden="true"
 >
   <div class="modal-dialog modal-dialog-centered modal-md">
-    <div class="modal-content border-0 shadow-lg">
-      <div class="modal-header border-0 pb-0"></div>
+    <div class="modal-content fin-modal-content">
+      <div class="modal-header fin-modal-header">
+        <h5 class="modal-title fin-modal-title">
+            <i class="bi bi-cloud-upload me-2"></i> Upload Document
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
 
-      <div class="modal-body pt-2 pb-3">
+      <div class="modal-body p-4">
         <form
           id="uploadForm"
           method="post"
@@ -83,35 +170,31 @@
           <!-- Dropzone -->
           <div
             id="dropzone"
-            class="rounded-3 border border-2 p-3 text-center mb-3"
+            class="p-4 text-center mb-4"
             role="button"
             tabindex="0"
             aria-describedby="dropHelp"
           >
             <div class="d-flex flex-column align-items-center">
               <div
-                class="bg-gradient-light rounded-circle d-flex align-items-center justify-content-center mb-2"
-                style="width: 56px; height: 56px"
+                class="bg-gradient-premium rounded-circle d-flex align-items-center justify-content-center mb-3"
+                style="width: 64px; height: 64px"
               >
-                <i
-                  class="bi bi-cloud-upload-fill fs-3"
-                  style="color: var(--primary)"
-                ></i>
+                <i class="bi bi-cloud-upload fs-2"></i>
               </div>
 
-              <div class="fw-semibold">Drop or select a file</div>
-              <div class="small text-muted">
+              <div class="fw-bold text-dark fs-5 mb-1">Click or drag a file to upload</div>
+              <div class="small text-muted mb-3">
                 PNG, JPG, PDF, DOCX, XLSX, TXT, ZIP — Max
-                <span id="maxSizeLabel">10 MB</span>
+                <span id="maxSizeLabel" class="fw-bold">10 MB</span>
               </div>
 
               <button
                 type="button"
                 id="chooseFileBtn"
-                class="btn btn-link btn-sm mt-2"
-                style="color: var(--primary)"
+                class="btn fin-submit-btn"
               >
-                Choose a file
+                Browse Files
               </button>
 
               <!-- hidden file input -->
@@ -157,95 +240,80 @@
           </div>
 
           <!-- password input with visibility toggle -->
-          <div class="mb-3">
-            <label for="download_password" class="form-label small mb-1">
-              Download password (optional)
-            </label>
-
-            <div class="input-group input-group-sm">
-              <input
-                type="password"
-                name="download_password"
-                id="download_password"
-                class="form-control pwd-toggle-input"
-                placeholder="Optional: password to protect downloads"
-                autocomplete="new-password"
-                aria-label="Download password"
-              />
-              <button
-                class="btn btn-outline-secondary btn-toggle-pwd"
-                type="button"
-                aria-label="Toggle password visibility"
-                title="Show password"
-                aria-pressed="false"
-              >
-                <i class="bi bi-eye"></i>
-              </button>
-            </div>
-
-            <div class="form-text small">Leave blank for no password.</div>
+          <div class="mb-3 form-floating" style="position: relative;">
+            <input
+              type="password"
+              name="download_password"
+              id="download_password"
+              class="form-control fin-form-control pwd-toggle-input"
+              placeholder="Password"
+              autocomplete="new-password"
+            />
+            <label for="download_password" class="text-muted"><i class="bi bi-shield-lock me-1"></i> Download Password (Optional)</label>
+            <button
+              class="btn btn-toggle-pwd"
+              type="button"
+              style="position: absolute; right: 10px; top: 12px; background: transparent; border: none; color: #9ca3af;"
+              title="Show password"
+            >
+              <i class="bi bi-eye"></i>
+            </button>
           </div>
 
           <!-- Tag input -->
-          <div class="mb-3">
-            <label for="keywords" class="form-label small"
-              >Keywords / tags (optional)</label
-            >
-
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-muted mb-1"><i class="bi bi-tags me-1"></i> Keywords / Tags</label>
             <div
               id="tagInputWrap"
-              class="form-control p-1 d-flex flex-wrap align-items-center"
-              style="min-height: 44px; gap: 0.35rem"
+              class="p-2 d-flex flex-wrap align-items-center"
+              style="min-height: 48px; gap: 0.5rem"
             >
               <div
                 id="tagChips"
-                class="d-flex flex-wrap align-items-center"
+                class="d-flex flex-wrap align-items-center gap-2"
               ></div>
               <input
                 id="tagInput"
                 type="text"
-                class="border-0 flex-grow-1"
-                style="min-width: 120px; outline: none"
-                placeholder="Add tags (press Enter / comma)"
+                class="border-0 flex-grow-1 bg-transparent"
+                style="min-width: 120px; outline: none; font-size: 0.9rem;"
+                placeholder="Type and press Enter..."
               />
             </div>
-
             <input type="hidden" name="keywords" id="keywords" />
-            <div class="form-text small">Tags are saved in lowercase.</div>
           </div>
 
           <!-- progress & messages -->
-          <div id="uploadFeedback" class="mb-2 d-none">
-            <div class="progress" style="height: 8px">
+          <div id="uploadFeedback" class="mb-3 d-none">
+            <div class="progress" style="height: 8px; border-radius: 4px;">
               <div
                 id="uploadProgress"
                 class="progress-bar"
+                style="background: linear-gradient(135deg, #b0a36f, #d4af37);"
                 role="progressbar"
                 style="width: 0%"
               ></div>
             </div>
-            <div id="uploadMsg" class="small text-muted mt-1"></div>
+            <div id="uploadMsg" class="small text-muted mt-1 fw-bold text-center"></div>
           </div>
 
           <!-- actions -->
-          <div class="d-flex justify-content-between align-items-center">
-            <div>
-              <button
-                id="submitBtn"
-                type="submit"
-                class="btn custom-btn-primary btn-sm"
-                disabled
-              >
-                <i class="bi bi-upload me-1"></i> Upload
-              </button>
-              <button
-                type="button"
-                class="btn btn-light btn-sm ms-2"
-                data-bs-dismiss="modal"
-              >
-                Cancel
-              </button>
-            </div>
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button
+              type="button"
+              class="btn fin-cancel-btn"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button
+              id="submitBtn"
+              type="submit"
+              class="btn fin-submit-btn"
+              disabled
+            >
+              <i class="bi bi-cloud-arrow-up-fill me-1"></i> Upload
+            </button>
           </div>
         </form>
       </div>

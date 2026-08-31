@@ -40,9 +40,27 @@
     </a>
     {% endfor %}
     {# Add new tab trigger #}
-    <button class="pb-tab pb-tab-add" onclick="openNewTabModal()">
+    <button type="button" class="pb-tab pb-tab-add" id="showNewTabBtn" onclick="toggleNewTabInput()">
       <i class="fas fa-plus me-1"></i>New Tab
     </button>
+
+    {# Inline New Tab Form #}
+    <form action="/create-ledger-transaction/" method="post" id="inlineNewTabForm" style="display:none; margin:0; animation: fadeIn 0.2s ease;">
+      {% csrf_token %}
+      <input type="hidden" name="counterparty" value="{{ counter_party }}">
+      <input type="hidden" name="transaction_type" value="PAID">
+      <input type="hidden" name="amount" value="0.01">
+      <input type="hidden" name="transaction_date" id="inlineNewTabDate">
+      <input type="hidden" name="description" value="Tab created">
+      
+      <div style="display:flex; align-items:center; gap:4px; background:rgba(255,255,255,0.95); border:1.5px solid var(--primary); border-radius:999px; padding:4px 4px 4px 16px; box-shadow:0 4px 12px rgba(176,163,111,0.15);">
+        <input type="text" name="tab_name" id="inlineNewTabName" 
+               style="border:none; outline:none; background:transparent; font-size:0.95rem; font-weight:700; color:var(--primary-dark); width:130px;" 
+               placeholder="Tab name…" required maxlength="100">
+        <button type="submit" style="border:none; background:var(--primary); color:#fff; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; transition: transform 0.2s;"><i class="fas fa-check" style="font-size:0.8rem;"></i></button>
+        <button type="button" onclick="toggleNewTabInput()" style="border:none; background:rgba(0,0,0,0.05); color:#6b7280; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; transition: background 0.2s;"><i class="fas fa-times" style="font-size:0.8rem;"></i></button>
+      </div>
+    </form>
   </div>
 
   {# ── Quick-Entry Form ── #}
@@ -53,16 +71,16 @@
       <input type="hidden" name="tab_name" value="{{ active_tab }}">
       <input type="hidden" name="transaction_type" id="txn_type_input" value="PAID">
 
-      <div class="pb-toggle-row">
-        <button type="button" id="btn_gave" class="pb-toggle-btn active-gave" onclick="setDirection('PAID')">
-          <i class="fas fa-arrow-circle-up me-1"></i>I Gave
-        </button>
-        <button type="button" id="btn_got" class="pb-toggle-btn" onclick="setDirection('RECEIVED')">
-          <i class="fas fa-arrow-circle-down me-1"></i>I Got
-        </button>
-      </div>
-
       <div class="pb-fields-row">
+        <!-- Segmented Control -->
+        <div class="pb-field p-1" style="flex: 0 0 auto; background: rgba(0,0,0,0.03); border-radius: 12px; display: flex; gap: 4px; border: 1.5px solid rgba(0,0,0,0.04);">
+          <button type="button" id="btn_gave" class="pb-toggle-btn active-gave" onclick="setDirection('PAID')">
+            I Gave
+          </button>
+          <button type="button" id="btn_got" class="pb-toggle-btn" onclick="setDirection('RECEIVED')">
+            I Got
+          </button>
+        </div>
         <div class="pb-field pb-field-amount">
           <span class="pb-rupee">₹</span>
           <input type="number" name="amount" id="entry_amount" class="pb-input"
@@ -76,12 +94,11 @@
           <input type="date" name="transaction_date" id="entry_date" class="pb-input" required>
         </div>
         <button type="submit" class="pb-add-btn" id="addEntryBtn">
-          <i class="fas fa-plus"></i><span class="d-none d-md-inline ms-1">Add</span>
+          <i class="fas fa-plus"></i><span class="ms-1">Add</span>
         </button>
       </div>
     </form>
   </div>
-
   {# ── Passbook Table ── #}
   {% if transaction_data %}
   <div class="pb-table-wrap">
@@ -145,44 +162,18 @@
     </table>
   </div>
   {% else %}
-  <div class="pb-empty">
-    <i class="fas fa-book-open"></i>
-    <p>No entries in <strong>{{ active_tab }}</strong> yet. Add the first one above.</p>
+  <div class="pb-empty" style="background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 24px; border: 1px dashed rgba(0,0,0,0.1); margin-bottom: 24px;">
+    <div style="background: linear-gradient(135deg, rgba(176,163,111,0.1), rgba(176,163,111,0.2)); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+      <i class="fas fa-book-open" style="font-size: 2rem; color: var(--primary); margin: 0; opacity: 1;"></i>
+    </div>
+    <h5 style="font-weight: 800; color: var(--primary-dark); margin-bottom: 8px;">No entries in {{ active_tab }}</h5>
+    <p style="color: var(--text-muted); font-weight: 500; font-size: 0.95rem;">Add your first transaction above to get started.</p>
   </div>
   {% endif %}
 
 </div>
 
-{# ── New Tab Modal ── #}
-<div class="modal fade" id="newTabModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
-    <div class="modal-content">
-      <div class="modal-header border-0 pb-0">
-        <h6 class="modal-title fw-bold">Create New Tab</h6>
-        <button class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body pt-2">
-        <p class="text-muted small mb-3">Add a parallel ledger tab for <strong>{{ counter_party }}</strong> (e.g. Loan, Daily, Rent)</p>
-        <form action="/create-ledger-transaction/" method="post" id="newTabForm">
-          {% csrf_token %}
-          <input type="hidden" name="counterparty" value="{{ counter_party }}">
-          <input type="hidden" name="transaction_type" value="PAID">
-          <input type="hidden" name="amount" value="0.01">
-          <input type="hidden" name="transaction_date" id="newTabDate">
-          <input type="hidden" name="description" value="Tab created">
-          <div class="mb-3">
-            <input type="text" name="tab_name" id="newTabNameInput"
-                   class="form-control" placeholder="Tab name…" required maxlength="100" autofocus>
-          </div>
-          <div class="d-grid">
-            <button type="submit" class="btn custom-btn-primary">Create Tab</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
+{# ── Modals ── #}
 {% include 'ledger_transaction/ledgerTransactionModal.html' %}
 {% include 'utility/confirmation_modal.html' with title='Confirm Delete' body='Are you sure?' confirmButton='Delete' %}
 
@@ -201,96 +192,116 @@ document.getElementById('quickEntryForm').addEventListener('submit', function() 
   document.getElementById('addEntryBtn').disabled = true;
 });
 
-function openNewTabModal() {
-  document.getElementById('newTabDate').value = new Date().toISOString().split('T')[0];
-  new bootstrap.Modal(document.getElementById('newTabModal')).show();
+function toggleNewTabInput() {
+  const btn = document.getElementById('showNewTabBtn');
+  const form = document.getElementById('inlineNewTabForm');
+  const input = document.getElementById('inlineNewTabName');
+  
+  if (form.style.display === 'none') {
+    btn.style.display = 'none';
+    form.style.display = 'block';
+    document.getElementById('inlineNewTabDate').value = new Date().toISOString().split('T')[0];
+    input.focus();
+  } else {
+    form.style.display = 'none';
+    btn.style.display = 'inline-block';
+    input.value = '';
+  }
 }
 </script>
 
 <style>
 :root {
-  --pb-gave: #16a34a;
-  --pb-gave-bg: rgba(22,163,74,.08);
-  --pb-got: #dc2626;
-  --pb-got-bg: rgba(220,38,38,.08);
-  --pb-border: rgba(0,0,0,.07);
-  --pb-radius: 14px;
+  --pb-gave: #4A7C59;
+  --pb-got: #B95F5F;
+  --pb-border: rgba(0,0,0,0.05);
+  --pb-radius: 24px;
 }
 .passbook-wrapper { max-width: auto; margin: 0 auto; padding: 12px 14px 40px; }
 
 /* Header */
-.pb-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
-.pb-header-left { display:flex; align-items:center; gap:14px; }
-.pb-back-btn { width:36px; height:36px; border-radius:50%; border:1px solid var(--pb-border); display:flex; align-items:center; justify-content:center; color:var(--primary); text-decoration:none; transition:background .2s; }
-.pb-back-btn:hover { background:var(--pb-gave-bg); }
-.pb-name { font-size:1.3rem; font-weight:700; color:var(--primary-dark,#333); margin:0; letter-spacing:.5px; }
-.pb-meta { font-size:.78rem; color:#888; }
-.pb-balance-chip { display:flex; align-items:center; gap:6px; padding:8px 18px; border-radius:999px; font-size:.88rem; font-weight:600; }
-.chip-positive { background:var(--pb-gave-bg); color:var(--pb-gave); border:1px solid var(--pb-gave); }
-.chip-negative { background:var(--pb-got-bg); color:var(--pb-got); border:1px solid var(--pb-got); }
-.chip-zero { background:#f3f4f6; color:#6b7280; border:1px solid #d1d5db; }
-.pb-balance-amt { font-size:1.05rem; font-weight:800; margin-left:4px; }
+.pb-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--pb-radius);
+  padding: 20px 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.02);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;
+}
+.pb-header-left { display:flex; align-items:center; gap:16px; }
+.pb-back-btn { width:42px; height:42px; border-radius:50%; background:rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.05); display:flex; align-items:center; justify-content:center; color:var(--primary-dark); text-decoration:none; transition:all 0.3s ease; }
+.pb-back-btn:hover { background:var(--primary); color:#fff; transform:translateY(-2px); box-shadow:0 4px 12px rgba(176,163,111,0.2); }
+.pb-name { font-size:1.4rem; font-weight:800; color:var(--primary-dark); margin:0; letter-spacing:0.02em; }
+.pb-meta { font-size:0.85rem; color:var(--text-muted); font-weight:600; }
+.pb-balance-chip { display:flex; align-items:center; gap:8px; padding:10px 22px; border-radius:999px; font-size:0.95rem; font-weight:700; border:none; }
+.chip-positive { background:linear-gradient(135deg, rgba(74,124,89,0.1), rgba(74,124,89,0.15)); color:#4A7C59; box-shadow:0 4px 12px rgba(74,124,89,0.15); }
+.chip-negative { background:linear-gradient(135deg, rgba(185,95,95,0.1), rgba(185,95,95,0.15)); color:#B95F5F; box-shadow:0 4px 12px rgba(185,95,95,0.15); }
+.chip-zero { background:#f3f4f6; color:#6b7280; box-shadow:0 4px 12px rgba(0,0,0,0.05); }
+.pb-balance-amt { font-size:1.15rem; font-weight:800; margin-left:4px; font-family:monospace; }
 
 /* Tabs */
-.pb-tabs-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
-.pb-tab { padding:6px 16px; border-radius:999px; border:1.5px solid #e5e7eb; background:#f9fafb; color:#6b7280; font-size:.82rem; font-weight:600; text-decoration:none; cursor:pointer; transition:all .15s; }
-.pb-tab:hover { border-color:#9ca3af; color:#374151; }
-.pb-tab-active { background:var(--primary,#6366f1); border-color:var(--primary,#6366f1); color:#fff !important; }
-.pb-tab-add { border-style:dashed; }
+.pb-tabs-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px; }
+.pb-tab { padding:10px 24px; border-radius:999px; border:1px solid rgba(0,0,0,0.05); background:rgba(255,255,255,0.7); backdrop-filter:blur(10px); color:#4b5563; font-size:0.95rem; font-weight:700; text-decoration:none; cursor:pointer; transition:all 0.3s ease; }
+.pb-tab:hover { background:rgba(255,255,255,0.95); transform:translateY(-2px); box-shadow:0 6px 15px rgba(0,0,0,0.05); color:var(--primary-dark); }
+.pb-tab-active { background:linear-gradient(135deg, var(--primary), var(--primary-dark)); border-color:transparent; color:#fff !important; box-shadow:0 6px 16px rgba(176,163,111,0.3); }
+.pb-tab-add { border-style:dashed; background:rgba(255,255,255,0.4); }
 
 /* Entry card */
-.pb-entry-card { background:#fff; border:1px solid var(--pb-border); border-radius:var(--pb-radius); padding:14px 16px; margin-bottom:18px; box-shadow:0 2px 10px rgba(0,0,0,.05); }
-.pb-toggle-row { display:flex; gap:8px; margin-bottom:12px; }
-.pb-toggle-btn { flex:1; padding:9px 12px; border-radius:8px; border:1.5px solid #e5e7eb; background:#f9fafb; color:#6b7280; font-size:.88rem; font-weight:600; cursor:pointer; transition:all .18s; }
-.pb-toggle-btn.active-gave { background:var(--pb-gave-bg); border-color:var(--pb-gave); color:var(--pb-gave); }
-.pb-toggle-btn.active-got  { background:var(--pb-got-bg);  border-color:var(--pb-got);  color:var(--pb-got); }
-.pb-fields-row { display:flex; gap:8px; align-items:stretch; flex-wrap:wrap; }
-.pb-field { display:flex; align-items:center; background:#f9fafb; border:1.5px solid #e5e7eb; border-radius:8px; overflow:hidden; transition:border-color .18s; }
-.pb-field:focus-within { border-color:var(--primary,#6366f1); }
-.pb-field-amount { flex:0 0 138px; }
-.pb-field-note   { flex:1 1 180px; }
-.pb-field-date   { flex:0 0 140px; }
-.pb-rupee { padding:0 8px; color:#9ca3af; font-size:.95rem; }
-.pb-input { border:none; background:transparent; padding:9px 10px; font-size:.9rem; width:100%; outline:none; color:#1f2937; }
-.pb-input::placeholder { color:#c4c9d4; }
-.pb-add-btn { padding:9px 20px; border-radius:8px; border:none; background:var(--primary,#6366f1); color:#fff; font-weight:700; font-size:.9rem; cursor:pointer; transition:opacity .18s,transform .1s; flex-shrink:0; }
-.pb-add-btn:hover { opacity:.88; transform:translateY(-1px); }
+.pb-entry-card { background:rgba(255, 255, 255, 0.95); backdrop-filter:blur(20px); border-radius:var(--pb-radius); padding:24px; margin-bottom:24px; box-shadow:0 10px 30px rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.02); }
+.pb-toggle-btn { padding:10px 20px; border-radius:10px; border:none; background:transparent; color:#6b7280; font-size:0.95rem; font-weight:800; cursor:pointer; transition:all 0.3s ease; }
+.pb-toggle-btn.active-gave { background:linear-gradient(135deg, #4A7C59, #3A6347); color:#fff; box-shadow:0 4px 12px rgba(74,124,89,0.25); }
+.pb-toggle-btn.active-got  { background:linear-gradient(135deg, #B95F5F, #994B4B); color:#fff; box-shadow:0 4px 12px rgba(185,95,95,0.25); }
+.pb-fields-row { display:flex; gap:12px; align-items:stretch; flex-wrap:wrap; }
+.pb-field { display:flex; align-items:center; background:rgba(0,0,0,0.02); border:1.5px solid rgba(0,0,0,0.06); border-radius:12px; overflow:hidden; transition:all 0.3s ease; }
+.pb-field:focus-within { background:#fff; border-color:var(--primary); box-shadow:0 0 0 4px rgba(176,163,111,0.15); }
+.pb-field-amount { flex:0 0 160px; }
+.pb-field-note   { flex:1 1 200px; }
+.pb-field-date   { flex:0 0 150px; }
+.pb-rupee { padding:0 12px; color:var(--primary-dark); font-size:1.1rem; font-weight:800; }
+.pb-input { border:none; background:transparent; padding:14px 12px; font-size:1rem; font-weight:600; width:100%; outline:none; color:#1f2937; }
+.pb-input::placeholder { color:#9ca3af; font-weight:500; }
+.pb-add-btn { background:linear-gradient(135deg, var(--primary), var(--primary-dark)); color:#fff; border:none; border-radius:12px; padding:0 30px; font-weight:800; font-size:1rem; cursor:pointer; transition:all 0.3s ease; box-shadow:0 6px 16px rgba(176,163,111,0.2); flex-shrink:0; }
+.pb-add-btn:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(176,163,111,0.3); color:white; }
 
 /* Table */
-.pb-table-wrap { background:#fff; border:1px solid var(--pb-border); border-radius:var(--pb-radius); overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.05); }
-.pb-table { width:100%; border-collapse:collapse; font-size:.88rem; }
-.pb-table thead tr { background:#f9fafb; border-bottom:1.5px solid var(--pb-border); }
-.pb-table thead th { padding:10px 14px; font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:#9ca3af; font-weight:600; }
-.pb-row { border-bottom:1px solid var(--pb-border); transition:background .15s; }
+.pb-table-wrap { background:rgba(255, 255, 255, 0.95); backdrop-filter:blur(20px); border-radius:var(--pb-radius); overflow-x:auto; overflow-y:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.02); }
+.pb-table { width:100%; border-collapse:collapse; font-size:0.95rem; }
+.pb-table thead tr { background:rgba(0,0,0,0.02); border-bottom:1.5px solid rgba(0,0,0,0.04); }
+.pb-table thead th { padding:14px 20px; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); font-weight:800; }
+.pb-row { border-bottom:1px solid rgba(0,0,0,0.03); transition:background 0.2s; }
 .pb-row:last-child { border-bottom:none; }
-.pb-row:hover { background:#fafafa; }
-.pb-row.row-gave { border-left:3px solid var(--pb-gave); }
-.pb-row.row-got  { border-left:3px solid var(--pb-got); }
-.pb-table td { padding:10px 14px; vertical-align:middle; }
-.col-date { white-space:nowrap; min-width:60px; }
-.pb-date-day { display:block; font-weight:700; font-size:.95rem; color:#1f2937; }
-.pb-date-mon { display:block; font-size:.72rem; color:#9ca3af; }
-.col-note { max-width:260px; }
-.pb-note-text { display:block; color:#374151; }
-.pb-pending-badge { display:inline-block; font-size:.7rem; color:#9a6200; background:rgba(251,191,36,.15); border:1px solid rgba(251,191,36,.4); border-radius:4px; padding:1px 6px; margin-top:3px; }
-.amt-gave { color:var(--pb-gave); }
-.amt-got  { color:var(--pb-got); }
+.pb-row:hover { background:rgba(176,163,111,0.03); }
+.pb-row.row-gave { border-left:4px solid var(--pb-gave); }
+.pb-row.row-got  { border-left:4px solid var(--pb-got); }
+.pb-table td { padding:16px 20px; vertical-align:middle; }
+.col-date { white-space:nowrap; min-width:70px; }
+.pb-date-day { display:block; font-weight:800; font-size:1.1rem; color:var(--primary-dark); }
+.pb-date-mon { display:block; font-size:0.8rem; color:var(--text-muted); font-weight:600; text-transform:uppercase; letter-spacing:1px; }
+.col-note { max-width:300px; }
+.pb-note-text { display:block; color:var(--text-main); font-weight:600; font-size:1rem; }
+.pb-pending-badge { display:inline-block; font-size:0.75rem; font-weight:700; color:#b45309; background:rgba(245,158,11,0.15); border-radius:6px; padding:3px 8px; margin-top:6px; letter-spacing:0.5px; }
+.amt-gave { color:var(--pb-gave); font-weight:800; font-size:1.05rem; }
+.amt-got  { color:var(--pb-got); font-weight:800; font-size:1.05rem; }
 .bal-pos  { color:var(--pb-gave); }
 .bal-neg  { color:var(--pb-got); }
 .bal-zero { color:#9ca3af; }
-.pb-act-btns { display:flex; gap:4px; justify-content:center; }
-.pb-icon-btn { width:30px; height:30px; border-radius:6px; border:1px solid #e5e7eb; background:#f9fafb; color:#6b7280; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:.78rem; transition:all .15s; }
-.pb-icon-btn:hover { background:#f3f4f6; color:#374151; }
-.pb-icon-del:hover { background:var(--pb-got-bg); color:var(--pb-got); border-color:var(--pb-got); }
-.pb-empty { text-align:center; padding:60px 20px; color:#9ca3af; }
-.pb-empty i { font-size:2.5rem; display:block; margin-bottom:12px; opacity:.4; }
+.pb-act-btns { display:flex; gap:8px; justify-content:center; opacity:0; transition:opacity 0.2s; }
+.pb-row:hover .pb-act-btns { opacity:1; }
+.pb-icon-btn { width:36px; height:36px; border-radius:10px; border:1.5px solid rgba(0,0,0,0.05); background:rgba(0,0,0,0.02); color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:0.9rem; transition:all 0.2s; }
+.pb-icon-btn:hover { background:#fff; color:var(--primary); border-color:var(--primary); box-shadow:0 4px 10px rgba(176,163,111,0.15); transform:translateY(-1px); }
+.pb-icon-del:hover { background:#fff; color:var(--danger-color); border-color:var(--danger-color); box-shadow:0 4px 10px rgba(220,38,38,0.15); }
+.pb-empty { text-align:center; padding:80px 20px; color:var(--text-muted); }
+.pb-empty i { font-size:3rem; display:block; margin-bottom:16px; opacity:0.3; color:var(--primary); }
 
 @media (max-width: 640px) {
+  .pb-act-btns { opacity:1; }
   .pb-fields-row { flex-direction:column; }
+  .pb-toggle-btn { flex: 1; text-align: center; }
   .pb-field-amount,.pb-field-date,.pb-field-note { flex:1 1 100%; }
-  .pb-add-btn { width:100%; }
-  .pb-balance-chip { font-size:.8rem; padding:6px 14px; }
-  .pb-name { font-size:1.1rem; }
+  .pb-add-btn { width:100%; padding: 14px; }
+  .pb-balance-chip { font-size:0.85rem; padding:8px 16px; }
+  .pb-name { font-size:1.2rem; }
   .col-bal { display:none; }
 }
 </style>
@@ -300,34 +311,36 @@ function openNewTabModal() {
 <div class="container-fluid mt-3 px-2 px-md-4">
   <div class="row align-items-center mb-3">
     <div class="col-6">
-      <h5 class="mb-0" style="color:var(--primary);">
-        <i class="fas fa-address-book me-1 d-none d-md-inline"></i>{{ current_filter|upper }}
+      <h5 class="mb-0 fw-bold" style="color:var(--primary-dark); font-size: 1.3rem;">
+        <i class="fas fa-address-book me-2 d-none d-md-inline"></i>{{ current_filter|upper }}
       </h5>
     </div>
     <div class="col-6 text-end">
-      <a href="/ledger-transaction-details/" class="btn btn-outline-primary btn-sm">
+      <a href="/ledger-transaction-details/" class="btn custom-btn-secondary btn-sm" style="border-radius: 12px; padding: 6px 14px;">
         <i class="fa-solid fa-arrow-left"></i><span class="d-none d-md-inline ms-1">Back</span>
       </a>
-      <a href="/deleted-ledger-transaction/" class="btn btn-outline-danger btn-sm d-none d-md-inline-block ms-1">
+      <a href="/deleted-ledger-transaction/" class="btn btn-outline-danger btn-sm d-none d-md-inline-block ms-1" style="border-radius: 12px; padding: 6px 14px; border-width: 1.5px;">
         <i class="fa-solid fa-trash me-1"></i>Deleted
       </a>
     </div>
   </div>
 
-  <div class="card border-0 shadow-sm mb-3">
-    <div class="card-body p-2 p-md-3">
-      <form method="GET" action="">
-        <div class="row g-2">
-          <div class="col-6 col-md-2">
-            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+  <div class="pb-entry-card mb-4" style="padding: 16px;">
+    <form method="GET" action="">
+      <div class="row g-3">
+        <div class="col-6 col-md-2">
+          <div class="pb-field">
+            <select name="status" class="pb-input" onchange="this.form.submit()">
               <option value="ALL" {% if filters.status == 'ALL' %}selected{% endif %}>All Status</option>
               <option value="PENDING"   {% if filters.status == 'PENDING' %}selected{% endif %}>Pending</option>
               <option value="COMPLETED" {% if filters.status == 'COMPLETED' %}selected{% endif %}>Completed</option>
               <option value="PARTIAL"   {% if filters.status == 'PARTIAL' %}selected{% endif %}>Partial</option>
             </select>
           </div>
-          <div class="col-6 col-md-2">
-            <select name="type" class="form-select form-select-sm" onchange="this.form.submit()">
+        </div>
+        <div class="col-6 col-md-2">
+          <div class="pb-field">
+            <select name="type" class="pb-input" onchange="this.form.submit()">
               <option value="ALL"        {% if filters.type == 'ALL' %}selected{% endif %}>All Types</option>
               <option value="RECEIVABLE" {% if filters.type == 'RECEIVABLE' %}selected{% endif %}>I'll Collect</option>
               <option value="PAYABLE"    {% if filters.type == 'PAYABLE' %}selected{% endif %}>I'll Pay</option>
@@ -335,27 +348,31 @@ function openNewTabModal() {
               <option value="PAID"       {% if filters.type == 'PAID' %}selected{% endif %}>I Gave</option>
             </select>
           </div>
-          <div class="col-8 col-md-3">
-            <input type="text" name="search" class="form-control form-control-sm" placeholder="Search…" value="{{ filters.search }}">
-          </div>
-          <div class="col-4 col-md-2">
-            <button type="submit" class="btn custom-btn-primary btn-sm w-100">Apply</button>
-          </div>
-          <div class="col-12 col-md-3 d-flex gap-1">
-            <input type="date" name="start_date" class="form-control form-control-sm" value="{{ filters.start_date }}" onchange="this.form.submit()">
-            <input type="date" name="end_date" class="form-control form-control-sm" value="{{ filters.end_date }}" onchange="this.form.submit()">
-            <a href="{{ request.path }}" class="btn btn-outline-secondary btn-sm">×</a>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="pb-field">
+            <input type="text" name="search" class="pb-input" placeholder="Search…" value="{{ filters.search }}">
           </div>
         </div>
-      </form>
-    </div>
+        <div class="col-12 col-md-5 d-flex gap-2">
+          <div class="pb-field flex-grow-1">
+            <input type="date" name="start_date" class="pb-input" value="{{ filters.start_date }}" onchange="this.form.submit()">
+          </div>
+          <div class="pb-field flex-grow-1">
+            <input type="date" name="end_date" class="pb-input" value="{{ filters.end_date }}" onchange="this.form.submit()">
+          </div>
+          <button type="submit" class="pb-add-btn px-3" style="border-radius: 12px;"><i class="fas fa-search"></i></button>
+          <a href="{{ request.path }}" class="pb-icon-btn d-flex align-items-center justify-content-center" style="width: 48px; height: 100%; border-radius: 12px; background: rgba(220,38,38,0.05); color: #dc2626; border-color: rgba(220,38,38,0.1);"><i class="fas fa-times"></i></a>
+        </div>
+      </div>
+    </form>
   </div>
 
   <div class="d-flex justify-content-between align-items-center mb-2 px-1">
-    <small class="text-muted">{% if total_count > 0 %}{{ start_index }}–{{ end_index }} of {{ total_count }}{% else %}No results{% endif %}</small>
+    <small class="text-muted fw-bold">{% if total_count > 0 %}{{ start_index }}–{{ end_index }} of {{ total_count }}{% else %}No results{% endif %}</small>
     <form method="GET" class="d-flex align-items-center gap-2">
       {% for k,v in request.GET.items %}{% if k != 'per_page' and k != 'page' %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}{% endfor %}
-      <select name="per_page" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+      <select name="per_page" class="pb-input" style="width:auto; padding: 6px 12px; border-radius: 8px; background: rgba(0,0,0,0.02); border: 1.5px solid rgba(0,0,0,0.05);" onchange="this.form.submit()">
         <option value="25" {% if filters.per_page == 25 %}selected{% endif %}>25</option>
         <option value="50" {% if filters.per_page == 50 %}selected{% endif %}>50</option>
         <option value="100" {% if filters.per_page == 100 %}selected{% endif %}>100</option>
@@ -364,39 +381,48 @@ function openNewTabModal() {
   </div>
 
   {% if transaction_data %}
-  <div class="card border-0 shadow-sm">
+  <div class="pb-table-wrap">
     <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0" style="font-size:.88rem;">
-        <thead class="bg-light">
+      <table class="pb-table">
+        <thead>
           <tr>
-            <th>Type</th><th>Person</th><th>Tab</th><th>Amount</th><th>Status</th><th>Date</th><th>Note</th>
+            <th>Type</th><th>Person</th><th>Tab</th><th class="text-end">Amount</th><th class="text-center">Status</th><th>Date</th><th>Note</th>
           </tr>
         </thead>
         <tbody>
           {% for txn in transaction_data %}
-          <tr>
+          <tr class="pb-row {% if txn.transaction_type == 'PAID' or txn.transaction_type == 'RECEIVABLE' %}row-gave{% else %}row-got{% endif %}">
             <td>
               {% if txn.transaction_type == 'PAID' or txn.transaction_type == 'RECEIVABLE' %}
-                <span class="badge" style="background:rgba(22,163,74,.1);color:#16a34a;border:1px solid #16a34a;">
+                <span class="badge" style="background:rgba(74,124,89,0.1); color:#4A7C59; border:1px solid rgba(74,124,89,0.3); font-size:0.75rem; padding:4px 8px; border-radius:6px;">
                   {% if txn.transaction_type == 'PAID' %}I Gave{% else %}I'll Collect{% endif %}
                 </span>
               {% else %}
-                <span class="badge" style="background:rgba(220,38,38,.1);color:#dc2626;border:1px solid #dc2626;">
+                <span class="badge" style="background:rgba(185,95,95,0.1); color:#B95F5F; border:1px solid rgba(185,95,95,0.3); font-size:0.75rem; padding:4px 8px; border-radius:6px;">
                   {% if txn.transaction_type == 'RECEIVED' %}I Got{% else %}I'll Pay{% endif %}
                 </span>
               {% endif %}
             </td>
-            <td><strong>{{ txn.counterparty }}</strong></td>
-            <td><span class="badge bg-light text-dark border">{{ txn.tab_name }}</span></td>
-            <td><strong>₹{{ txn.amount }}</strong></td>
-            <td>
-              {% if txn.status == 'COMPLETED' %}<span class="badge bg-success">Done</span>
-              {% elif txn.status == 'PARTIAL'  %}<span class="badge bg-info">{{ txn.get_payment_percentage }}%</span>
-              {% elif txn.status == 'CANCELLED'%}<span class="badge bg-secondary">Cancelled</span>
-              {% else %}<span class="badge bg-warning text-dark">Pending</span>{% endif %}
+            <td><strong style="color:var(--primary-dark);">{{ txn.counterparty }}</strong></td>
+            <td><span class="badge" style="background:rgba(0,0,0,0.03); color:var(--text-main); border:1px solid rgba(0,0,0,0.05); font-weight:600; border-radius:6px;">{{ txn.tab_name }}</span></td>
+            <td class="text-end">
+              {% if txn.transaction_type == 'PAID' or txn.transaction_type == 'RECEIVABLE' %}
+                <strong class="amt-gave">₹{{ txn.amount|floatformat:2 }}</strong>
+              {% else %}
+                <strong class="amt-got">₹{{ txn.amount|floatformat:2 }}</strong>
+              {% endif %}
             </td>
-            <td>{{ txn.transaction_date|date:"d M Y" }}</td>
-            <td><span class="text-truncate d-inline-block" style="max-width:180px;">{{ txn.description|default:"—" }}</span></td>
+            <td class="text-center">
+              {% if txn.status == 'COMPLETED' %}<span class="badge" style="background:rgba(74,124,89,0.15); color:#4A7C59; border-radius:6px; padding:4px 8px;">Done</span>
+              {% elif txn.status == 'PARTIAL'  %}<span class="badge" style="background:rgba(59,130,246,0.15); color:#2563eb; border-radius:6px; padding:4px 8px;">{{ txn.get_payment_percentage }}%</span>
+              {% elif txn.status == 'CANCELLED'%}<span class="badge" style="background:rgba(107,114,128,0.15); color:#4b5563; border-radius:6px; padding:4px 8px;">Cancelled</span>
+              {% else %}<span class="pb-pending-badge" style="margin:0;">Pending</span>{% endif %}
+            </td>
+            <td>
+              <span class="pb-date-day" style="font-size:0.95rem;">{{ txn.transaction_date|date:"d" }}</span>
+              <span class="pb-date-mon">{{ txn.transaction_date|date:"M 'y" }}</span>
+            </td>
+            <td><span class="pb-note-text text-truncate d-inline-block" style="max-width:200px;" title="{{ txn.description|default:'' }}">{{ txn.description|default:"—" }}</span></td>
           </tr>
           {% endfor %}
         </tbody>
@@ -405,16 +431,20 @@ function openNewTabModal() {
   </div>
 
   {% if page_obj.paginator.num_pages > 1 %}
-  <nav class="mt-3"><ul class="pagination pagination-sm justify-content-center mb-0">
-    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">‹</a></li>{% endif %}
-    {% for num in page_obj.paginator.page_range %}{% if page_obj.number == num %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>{% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}<li class="page-item"><a class="page-link" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a></li>{% endif %}{% endfor %}
-    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">›</a></li>{% endif %}
+  <nav class="mt-4"><ul class="pagination pagination-sm justify-content-center mb-0" style="gap: 6px;">
+    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" style="border-radius: 8px; border: none; background: rgba(255,255,255,0.7); color: var(--primary-dark); font-weight: 800;" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">‹</a></li>{% endif %}
+    {% for num in page_obj.paginator.page_range %}{% if page_obj.number == num %}<li class="page-item active"><span class="page-link" style="border-radius: 8px; background: var(--primary); border: none; font-weight: 800; color: white; box-shadow: 0 4px 10px rgba(176,163,111,0.3);">{{ num }}</span></li>{% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}<li class="page-item"><a class="page-link" style="border-radius: 8px; border: none; background: rgba(255,255,255,0.7); color: var(--primary-dark); font-weight: 800;" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a></li>{% endif %}{% endfor %}
+    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" style="border-radius: 8px; border: none; background: rgba(255,255,255,0.7); color: var(--primary-dark); font-weight: 800;" href="?{% for k,v in request.GET.items %}{% if k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">›</a></li>{% endif %}
   </ul></nav>
   {% endif %}
 
   {% else %}
-  <div class="text-center py-5 text-muted">
-    <i class="fas fa-file-invoice fa-3x mb-3 opacity-50"></i><h6>No transactions found</h6>
+  <div class="pb-empty" style="background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border-radius: 24px; border: 1px dashed rgba(0,0,0,0.1); margin-top: 24px;">
+    <div style="background: linear-gradient(135deg, rgba(176,163,111,0.1), rgba(176,163,111,0.2)); width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+      <i class="fas fa-file-invoice" style="font-size: 2.2rem; color: var(--primary); margin: 0; opacity: 1;"></i>
+    </div>
+    <h5 style="font-weight: 800; color: var(--primary-dark); margin-bottom: 8px;">No transactions found</h5>
+    <p style="color: var(--text-muted); font-weight: 500; font-size: 0.95rem;">Try adjusting your filters or search terms.</p>
   </div>
   {% endif %}
 </div>
@@ -426,6 +456,6 @@ function openNewTabModal() {
 {% endblock body %}
 
 {% block script %}
-<script src="{% static 'js/ledger.js' %}"></script>
+<script src="{% static 'js/ledger.js' %}?v=2"></script>
 <script src="{% static 'js/utilityFunction.js' %}"></script>
 {% endblock script %}

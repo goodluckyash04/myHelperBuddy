@@ -1,13 +1,13 @@
 <!-- Ledger Transaction Modal — create/edit with clear direction labels -->
 {% load static %}
 <div class="modal fade" id="ledgerModal" tabindex="-1" aria-labelledby="ledgerModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="ledgerModalLabel">
-          <i class="fas fa-receipt me-2"></i> Add Ledger Entry
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);">
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <h5 class="modal-title" id="ledgerModalLabel" style="font-weight: 800; color: var(--primary-dark); font-size: 1.5rem;">
+          <i class="fa-solid fa-book-journal-whills me-2"></i><span>Ledger Entry</span>
         </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close" style="background-color: rgba(0,0,0,0.05); border-radius: 50%; padding: 12px; margin-right: 0;"></button>
       </div>
 
       <div class="modal-body">
@@ -15,119 +15,105 @@
           {% csrf_token %}
           <input type="hidden" id="transaction_id" name="transaction_id">
 
-          <!-- Transaction Direction — 2×2 grid with plain-language labels -->
-          <div class="mb-4">
-            <label class="form-label fw-bold mb-2">What kind of entry is this?</label>
-
-            <!-- Row 1: Pending / future -->
-            <p class="text-muted small mb-1">Pending (to settle later)</p>
-            <div class="row g-2 mb-2">
-              <div class="col-6">
-                <input class="btn-check" type="radio" name="transaction_type" id="receivable" value="RECEIVABLE" required>
-                <label class="btn btn-outline-success w-100 txn-label" for="receivable">
-                  <i class="fas fa-hand-holding-usd d-block mb-1" style="font-size:1.2rem;"></i>
-                  <span class="fw-bold">I'll Collect</span>
-                  <small class="d-block text-muted" style="font-size:.72rem;">They owe me — I'll receive later</small>
-                </label>
-              </div>
-              <div class="col-6">
-                <input class="btn-check" type="radio" name="transaction_type" id="payable" value="PAYABLE">
-                <label class="btn btn-outline-warning w-100 txn-label" for="payable">
-                  <i class="fas fa-money-bill-wave d-block mb-1" style="font-size:1.2rem;"></i>
-                  <span class="fw-bold">I'll Pay</span>
-                  <small class="d-block text-muted" style="font-size:.72rem;">I owe them — I'll pay later</small>
-                </label>
-              </div>
-            </div>
-
-            <!-- Row 2: Completed / already happened -->
-            <p class="text-muted small mb-1">Completed (already happened)</p>
-            <div class="row g-2">
-              <div class="col-6">
-                <input class="btn-check" type="radio" name="transaction_type" id="received" value="RECEIVED">
-                <label class="btn btn-outline-primary w-100 txn-label" for="received">
-                  <i class="fas fa-arrow-circle-down d-block mb-1" style="font-size:1.2rem;"></i>
-                  <span class="fw-bold">I Got</span>
-                  <small class="d-block text-muted" style="font-size:.72rem;">Money came to me from them</small>
-                </label>
-              </div>
-              <div class="col-6">
-                <input class="btn-check" type="radio" name="transaction_type" id="paid" value="PAID">
-                <label class="btn btn-outline-danger w-100 txn-label" for="paid">
-                  <i class="fas fa-arrow-circle-up d-block mb-1" style="font-size:1.2rem;"></i>
-                  <span class="fw-bold">I Gave</span>
-                  <small class="d-block text-muted" style="font-size:.72rem;">Money went from me to them</small>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <!-- Counterparty -->
+          <!-- Transaction Direction — Compact -->
           <div class="mb-3">
-            <label for="counterparty" class="form-label fw-bold">Person <span class="text-danger">*</span></label>
-            <select class="form-select" name="counterparty" id="counterparty" onchange="counterpartyChange()" required>
-              <option value="">— Select Person —</option>
-              {% for cp in counterparties %}
-              <option value="{{ cp }}">{{ cp }}</option>
-              {% endfor %}
-              <option value="other">+ Add New Person</option>
-            </select>
-          </div>
+            <label class="form-label text-muted small fw-bold mb-2"><i class="fa-solid fa-arrows-split-up-and-left me-1"></i> What kind of entry is this?</label>
 
-          <div class="mb-3" id="counterparty_txt_div" style="display:none;">
-            <input type="text" class="form-control" name="counterparty_txt" id="counterparty_txt"
-                   placeholder="Enter new person's name">
-          </div>
-
-          <!-- Tab (sub-ledger) -->
-          <div class="mb-3" id="tab_name_section">
-            <label class="form-label fw-bold">Ledger Tab
-              <span class="text-muted fw-normal small ms-1">(group transactions for the same person)</span>
-            </label>
-            <div class="input-group">
-              <select class="form-select" name="tab_name" id="tab_name_select" onchange="tabSelectChange()">
-                {% if all_tabs %}
-                  {% for tab in all_tabs %}
-                  <option value="{{ tab }}">{{ tab }}</option>
-                  {% endfor %}
-                {% else %}
-                  <option value="General">General</option>
-                {% endif %}
-                <option value="__new__">+ New Tab</option>
-              </select>
+            <!-- Pending -->
+            <div class="d-flex align-items-center mb-2">
+              <span class="text-muted fw-bold me-2" style="font-size: 0.75rem; width: 85px;"><i class="fa-regular fa-clock me-1"></i>Pending</span>
+              <div class="fin-radio-group p-1 flex-grow-1" style="border-radius: 10px;">
+                <div class="fin-radio-option">
+                  <input type="radio" name="transaction_type" id="receivable" value="RECEIVABLE" required>
+                  <label class="fin-radio-label py-1 m-0" for="receivable"><i class="fas fa-hand-holding-usd me-1" style="color: #10b981;"></i> I'll Collect</label>
+                </div>
+                <div class="fin-radio-option">
+                  <input type="radio" name="transaction_type" id="payable" value="PAYABLE">
+                  <label class="fin-radio-label py-1 m-0" for="payable"><i class="fas fa-money-bill-wave me-1" style="color: #f59e0b;"></i> I'll Pay</label>
+                </div>
+              </div>
             </div>
-            <div id="tab_name_new_div" class="mt-2" style="display:none;">
-              <input type="text" class="form-control" id="tab_name_new_input" placeholder="e.g. Loan, Daily, Rent…"
-                     oninput="document.getElementById('tab_name_select').value='__new__'">
-              <input type="hidden" name="tab_name_new" id="tab_name_new_hidden">
+
+            <!-- Completed -->
+            <div class="d-flex align-items-center">
+              <span class="text-muted fw-bold me-2" style="font-size: 0.75rem; width: 85px;"><i class="fa-solid fa-check-circle me-1"></i>Complete</span>
+              <div class="fin-radio-group p-1 flex-grow-1" style="border-radius: 10px;">
+                <div class="fin-radio-option">
+                  <input type="radio" name="transaction_type" id="received" value="RECEIVED">
+                  <label class="fin-radio-label py-1 m-0" for="received"><i class="fas fa-arrow-circle-down me-1" style="color: #3b82f6;"></i> I Got</label>
+                </div>
+                <div class="fin-radio-option">
+                  <input type="radio" name="transaction_type" id="paid" value="PAID">
+                  <label class="fin-radio-label py-1 m-0" for="paid"><i class="fas fa-arrow-circle-up me-1" style="color: #ef4444;"></i> I Gave</label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <!-- Counterparty -->
+            <div class="col-md-6">
+              <label for="counterparty" class="form-label text-muted small fw-bold mb-1"><i class="fa-solid fa-user me-1"></i> Person <span class="text-danger">*</span></label>
+              <select class="form-select fin-form-control" name="counterparty" id="counterparty" onchange="counterpartyChange()" required>
+                <option value="">— Select Person —</option>
+                {% for cp in counterparties %}
+                <option value="{{ cp }}">{{ cp }}</option>
+                {% endfor %}
+                <option value="other">+ Add New Person</option>
+              </select>
+              <div class="mt-2" id="counterparty_txt_div" style="display:none; animation: fadeIn 0.3s ease;">
+                <input type="text" class="form-control fin-form-control" name="counterparty_txt" id="counterparty_txt"
+                       placeholder="New person's name">
+              </div>
+            </div>
+
+            <!-- Tab (sub-ledger) -->
+            <div class="col-md-6" id="tab_name_section">
+              <label class="form-label text-muted small fw-bold mb-1"><i class="fa-solid fa-folder me-1"></i> Ledger Tab
+                <span class="text-muted fw-normal small ms-1" style="font-size: 0.65rem;">(grouping)</span>
+              </label>
+              <div class="input-group">
+                <select class="form-select fin-form-control" style="border-radius: 12px;" name="tab_name" id="tab_name_select" onchange="tabSelectChange()">
+                  {% if all_tabs %}
+                    {% for tab in all_tabs %}
+                    <option value="{{ tab }}">{{ tab }}</option>
+                    {% endfor %}
+                  {% else %}
+                    <option value="General">General</option>
+                  {% endif %}
+                  <option value="__new__">+ New Tab</option>
+                </select>
+              </div>
+              <div id="tab_name_new_div" class="mt-2" style="display:none; animation: fadeIn 0.3s ease;">
+                <input type="text" class="form-control fin-form-control" id="tab_name_new_input" placeholder="e.g. Loan…"
+                       oninput="document.getElementById('tab_name_select').value='__new__'">
+                <input type="hidden" name="tab_name_new" id="tab_name_new_hidden">
+              </div>
             </div>
           </div>
 
           <!-- Date & Amount -->
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label for="transaction_date" class="form-label fw-bold">Date <span class="text-danger">*</span></label>
-              <input type="date" class="form-control" name="transaction_date" id="transaction_date" required>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6 form-floating">
+              <input type="date" class="form-control fin-form-control" name="transaction_date" id="transaction_date" required>
+              <label for="transaction_date" class="text-muted" style="padding-left: 1.5rem;"><i class="fa-solid fa-calendar me-1"></i> Date <span class="text-danger">*</span></label>
             </div>
-            <div class="col-md-6 mb-3">
-              <label for="amount" class="form-label fw-bold">Total Amount (₹) <span class="text-danger">*</span></label>
-              <input type="number" class="form-control" name="amount" id="amount" placeholder="0.00" step="0.01" min="0.01" required>
+            <div class="col-md-6 form-floating">
+              <input type="number" class="form-control fin-form-control" name="amount" id="amount" placeholder="0.00" step="0.01" min="0.01" required>
+              <label for="amount" class="text-muted" style="padding-left: 1.5rem;"><i class="fa-solid fa-indian-rupee-sign me-1"></i> Total Amount <span class="text-danger">*</span></label>
             </div>
           </div>
 
           <!-- Description -->
-          <div class="mb-3">
-            <label for="description" class="form-label fw-bold">Note / Description</label>
-            <textarea class="form-control" name="description" id="description" rows="2"
+          <div class="mb-3 form-floating">
+            <textarea class="form-control fin-form-control" name="description" id="description" style="height: 80px;"
                       placeholder="What is this for?"></textarea>
+            <label for="description" class="text-muted"><i class="fa-solid fa-align-left me-1"></i> Note / Description</label>
           </div>
-
-
-
-          <div class="d-grid">
-            <button type="submit" class="btn custom-btn-primary btn-lg" id="submitButton"
-                    onclick="prepareTabName()">
-              <i class="fas fa-save me-2"></i>Save Entry
+          <!-- Submit Button -->
+          <div class="mt-4">
+            <button id="submitButton" type="submit" class="btn w-100 shadow-sm fin-submit-btn" onclick="prepareTabName()">
+              <i class="fa-solid fa-check-circle me-1"></i> <span id="submitBtnText">Add Ledger Entry</span>
             </button>
           </div>
         </form>
@@ -137,9 +123,71 @@
 </div>
 
 <script>
+const counterpartyTabsMap = {{ counterparty_tabs_json|safe|default:"{}" }};
+
 function counterpartyChange() {
-  const val = document.getElementById('counterparty').value;
-  document.getElementById('counterparty_txt_div').style.display = (val === 'other') ? 'block' : 'none';
+  const select = document.getElementById('counterparty');
+  const textDiv = document.getElementById('counterparty_txt_div');
+  const textInput = document.getElementById('counterparty_txt');
+  const val = select.value;
+  
+  if (val === 'other') {
+    textDiv.style.display = 'block';
+    if (textInput) {
+      textInput.focus();
+      select.removeAttribute('required');
+      textInput.setAttribute('required', 'required');
+    }
+  } else {
+    textDiv.style.display = 'none';
+    if (textInput) {
+      textInput.removeAttribute('required');
+      select.setAttribute('required', 'required');
+    }
+  }
+  
+  // Update Tabs dropdown dynamically based on selected person
+  const tabSelect = document.getElementById('tab_name_select');
+  const currentVal = tabSelect.value;
+  
+  // Clear all options
+  tabSelect.innerHTML = '';
+  
+  if (val && val !== 'other' && counterpartyTabsMap[val] && counterpartyTabsMap[val].length > 0) {
+    const tabs = counterpartyTabsMap[val];
+    tabs.forEach(tab => {
+      const option = document.createElement('option');
+      option.value = tab;
+      option.textContent = tab;
+      tabSelect.appendChild(option);
+    });
+  } else {
+    // Default fallback if no person selected or person has no tabs
+    const option = document.createElement('option');
+    option.value = 'General';
+    option.textContent = 'General';
+    tabSelect.appendChild(option);
+  }
+  
+  // Add "+ New Tab" at the end
+  const newTabOption = document.createElement('option');
+  newTabOption.value = '__new__';
+  newTabOption.textContent = '+ New Tab';
+  tabSelect.appendChild(newTabOption);
+  
+  // Try to keep the old selection if it exists in the new list
+  if (currentVal) {
+    const exists = Array.from(tabSelect.options).some(opt => opt.value === currentVal);
+    if (exists) {
+      tabSelect.value = currentVal;
+    } else {
+      tabSelect.value = tabSelect.options[0].value;
+    }
+  } else {
+    tabSelect.value = tabSelect.options[0].value;
+  }
+  
+  tabSelectChange(); // ensure the new tab input visibility is correct
 }
 
 function tabSelectChange() {
@@ -171,8 +219,79 @@ document.addEventListener('DOMContentLoaded', function() {
 .txn-label {
   padding: .6rem .5rem;
   cursor: pointer;
-  transition: all .18s;
+  transition: all .2s;
   text-align: center;
 }
 .txn-label small { line-height: 1.2; }
+
+/* ── Fin Modal Form Controls (Ledger Edition) ────────────────── */
+.fin-form-control {
+    background-color: rgba(0, 0, 0, 0.02) !important;
+    border: 1.5px solid rgba(0, 0, 0, 0.06) !important;
+    border-radius: 12px !important;
+    font-weight: 600;
+    color: #1f2937 !important;
+    transition: all 0.3s ease !important;
+}
+.fin-form-control:focus {
+    background-color: #fff !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px rgba(176, 163, 111, 0.15) !important;
+}
+.form-floating > label {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+/* ── Ledger Radio Group (Premium) ────────────────────────────── */
+.fin-radio-label-custom {
+    background-color: rgba(0, 0, 0, 0.02);
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    border-radius: 16px;
+}
+.btn-check:checked + .fin-radio-label-custom {
+    background-color: #fff;
+    border-color: var(--primary) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+.fin-radio-label-custom:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* ── Fin Radio Group (Modal) ────────────────────────────── */
+.fin-radio-group {
+    display: flex;
+    background: rgba(0,0,0,0.03);
+    border-radius: 10px;
+    padding: 4px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+.fin-radio-option {
+    flex: 1;
+}
+.fin-radio-option input[type="radio"] {
+    display: none;
+}
+.fin-radio-label {
+    display: block;
+    text-align: center;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+.fin-radio-option input[type="radio"]:checked + .fin-radio-label {
+    background: #fff;
+    color: var(--primary-dark);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(-5px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
 </style>

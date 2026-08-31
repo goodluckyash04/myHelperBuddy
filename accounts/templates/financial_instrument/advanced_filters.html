@@ -1,108 +1,114 @@
-<!-- Advanced Filters for Finance - Themed Version -->
+<!-- Advanced Filters for Finance - Premium Version -->
 <div class="container-fluid px-4 py-3">
-  <div class="card shadow-sm border-0" style="background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%);">
-    <div class="card-body p-4">
-      <!-- Filter Header -->
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 style="color: var(--primary); font-family: 'Dancing Script'; margin: 0;">
-          <i class="fa-solid fa-sliders"></i> Filters
-        </h5>
-        <a href="/finance-details?status=Open" class="btn btn-sm btn-outline-secondary">
-          <i class="fa-solid fa-rotate-right"></i> Reset
-        </a>
-      </div>
+  <div class="fin-toolbar-wrap">
+    <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2" style="border-color: rgba(0,0,0,0.05) !important;">
+      <h6 style="color: var(--primary-dark); font-weight: 800; margin: 0; letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.8rem;">
+        <i class="fa-solid fa-sliders me-1"></i> Filter & Sort
+      </h6>
+      <a href="/finance-details?status=Open" class="btn btn-sm" style="color: #6b7280; font-weight: 600; font-size: 0.8rem;">
+        <i class="fa-solid fa-rotate-right me-1"></i>Reset
+      </a>
+    </div>
 
-      <!-- Filter Controls Row -->
-      <div class="row g-3">
-        <!-- Type Filter Chips -->
-        <div class="col-lg-5">
-          <label class="form-label text-muted small fw-bold mb-2">
-            <i class="fa-solid fa-shapes"></i> Type
-          </label>
-          <div class="btn-group w-100" role="group">
-            <input type="radio" class="btn-check" name="typeFilter" id="typeAll" value="" {% if not request.GET.type %}checked{% endif %} onchange="applyFilters()">
-            <label class="btn btn-outline-secondary btn-sm" for="typeAll">All</label>
-            
-            <input type="radio" class="btn-check" name="typeFilter" id="typeLoan" value="Loan" {% if request.GET.type == 'Loan' %}checked{% endif %} onchange="applyFilters()">
-            <label class="btn btn-sm" for="typeLoan" style="border: 1px solid #8B5CF6; color: #8B5CF6; background: white;">
-              <i class="fa-solid fa-landmark"></i> Loans
-            </label>
-            
-            <input type="radio" class="btn-check" name="typeFilter" id="typeSIP" value="SIP" {% if request.GET.type == 'SIP' %}checked{% endif %} onchange="applyFilters()">
-            <label class="btn btn-outline-success btn-sm" for="typeSIP">
-              <i class="fa-solid fa-chart-line"></i> SIPs
-            </label>
-            
-            <input type="radio" class="btn-check" name="typeFilter" id="typeSplit" value="Split" {% if request.GET.type == 'Split' %}checked{% endif %} onchange="applyFilters()">
-            <label class="btn btn-outline-warning btn-sm" for="typeSplit">
-              <i class="fa-solid fa-bolt"></i> Splits
-            </label>
+    <!-- Filter Controls Row -->
+    <div class="row g-3">
+      <!-- Type Filter Chips -->
+      <div class="col-lg-5">
+        <label class="form-label text-muted small fw-bold mb-2">
+          <i class="fa-solid fa-shapes me-1"></i> Type
+        </label>
+        <div class="fin-pill-group">
+          <div class="fin-pill-option">
+            <input type="radio" name="typeFilter" id="typeAll" value="" {% if not request.GET.type %}checked{% endif %} onchange="applyFilters()">
+            <label class="fin-pill-label" for="typeAll">All</label>
+          </div>
+          <div class="fin-pill-option">
+            <input type="radio" name="typeFilter" id="typeLoan" value="Loan" {% if request.GET.type == 'Loan' %}checked{% endif %} onchange="applyFilters()">
+            <label class="fin-pill-label fin-pill-label--purple" for="typeLoan"><i class="fa-solid fa-landmark me-1"></i> Loans</label>
+          </div>
+          <div class="fin-pill-option">
+            <input type="radio" name="typeFilter" id="typeSIP" value="SIP" {% if request.GET.type == 'SIP' %}checked{% endif %} onchange="applyFilters()">
+            <label class="fin-pill-label fin-pill-label--green" for="typeSIP"><i class="fa-solid fa-chart-line me-1"></i> SIPs</label>
+          </div>
+          <div class="fin-pill-option">
+            <input type="radio" name="typeFilter" id="typeSplit" value="Split" {% if request.GET.type == 'Split' %}checked{% endif %} onchange="applyFilters()">
+            <label class="fin-pill-label fin-pill-label--amber" for="typeSplit"><i class="fa-solid fa-bolt me-1"></i> Splits</label>
           </div>
         </div>
-
-        <!-- Status Filter -->
-        <div class="col-lg-3 col-md-6">
-          <label class="form-label text-muted small fw-bold mb-2">
-            <i class="fa-solid fa-toggle-on"></i> Status
-          </label>
-          <select class="form-select form-select-sm" id="statusFilterSelect" onchange="applyFilters()">
-            <option value="Open" {% if request.GET.status == 'Open' or not request.GET.status %}selected{% endif %}>🟢 Open</option>
-            <option value="Closed" {% if request.GET.status == 'Closed' %}selected{% endif %}>⚪ Closed</option>
-            <option value="" {% if request.GET.status == '' %}selected{% endif %}>All Status</option>
-          </select>
-        </div>
-
-        <!-- Sort Options -->
-        <div class="col-lg-4 col-md-6">
-          <label class="form-label text-muted small fw-bold mb-2">
-            <i class="fa-solid fa-arrow-down-short-wide"></i> Sort By
-          </label>
-          <select class="form-select form-select-sm" id="sortSelect" onchange="applyFilters()">
-            <option value="started_on" {% if request.GET.sort == 'started_on' or not request.GET.sort %}selected{% endif %}>Start Date (Oldest First)</option>
-            <option value="-started_on" {% if request.GET.sort == '-started_on' %}selected{% endif %}>Start Date (Newest First)</option>
-            <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Name (A to Z)</option>
-            <option value="-name" {% if request.GET.sort == '-name' %}selected{% endif %}>Name (Z to A)</option>
-            <option value="amount" {% if request.GET.sort == 'amount' %}selected{% endif %}>Amount (Low to High)</option>
-            <option value="-amount" {% if request.GET.sort == '-amount' %}selected{% endif %}>Amount (High to Low)</option>
-          </select>
-        </div>
       </div>
 
-      <!-- Active Filters & Results Count -->
-      <div class="mt-3 pt-3 border-top">
-        <div class="d-flex justify-content-between align-items-center flex-wrap">
-          <!-- Active Filters -->
-          <div class="d-flex gap-2 flex-wrap align-items-center">
-            {% if request.GET.type or request.GET.status != 'Open' or request.GET.sort %}
-              <small class="text-muted fw-bold">Active:</small>
-              {% if request.GET.type %}
-                <span class="badge px-2 py-1" style="background: {% if request.GET.type == 'Loan' %}#8B5CF6{% elif request.GET.type == 'SIP' %}#10B981{% else %}#F59E0B{% endif %};">
-                  {{ request.GET.type }}
-                  <a href="?status=Open{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="text-white text-decoration-none ms-1">×</a>
-                </span>
-              {% endif %}
-              {% if request.GET.status and request.GET.status != 'Open' %}
-                <span class="badge bg-info text-dark px-2 py-1">
-                  Status: {{ request.GET.status }}
-                  <a href="?status=Open{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="text-dark text-decoration-none ms-1">×</a>
-                </span>
-              {% endif %}
-              {% if request.GET.sort and request.GET.sort != 'started_on' %}
-                <span class="badge bg-secondary px-2 py-1">
-                  Sorted
-                  <a href="?status=Open{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="text-white text-decoration-none ms-1">×</a>
-                </span>
-              {% endif %}
+      <!-- Status Filter -->
+      <div class="col-lg-3 col-md-6">
+        <label class="form-label text-muted small fw-bold mb-2">
+          <i class="fa-solid fa-toggle-on me-1"></i> Status
+        </label>
+        <div class="fin-radio-group">
+            <div class="fin-radio-option">
+                <input type="radio" name="statusFilterSelect" id="statusOpen" value="Open" {% if request.GET.status == 'Open' or 'status' not in request.GET %}checked{% endif %} onchange="applyFiltersRadio('status', this.value)">
+                <label class="fin-radio-label" for="statusOpen">Open</label>
+            </div>
+            <div class="fin-radio-option">
+                <input type="radio" name="statusFilterSelect" id="statusClosed" value="Closed" {% if request.GET.status == 'Closed' %}checked{% endif %} onchange="applyFiltersRadio('status', this.value)">
+                <label class="fin-radio-label" for="statusClosed">Closed</label>
+            </div>
+            <div class="fin-radio-option">
+                <input type="radio" name="statusFilterSelect" id="statusAll" value="" {% if request.GET.status == '' and 'status' in request.GET %}checked{% endif %} onchange="applyFiltersRadio('status', this.value)">
+                <label class="fin-radio-label" for="statusAll">All</label>
+            </div>
+        </div>
+        <input type="hidden" id="statusFilterSelect" value="{% if 'status' in request.GET %}{{ request.GET.status }}{% else %}Open{% endif %}">
+      </div>
+
+      <!-- Sort Options -->
+      <div class="col-lg-4 col-md-6">
+        <label class="form-label text-muted small fw-bold mb-2">
+          <i class="fa-solid fa-arrow-down-short-wide me-1"></i> Sort By
+        </label>
+        <select class="form-select fin-form-select" id="sortSelect" onchange="applyFilters()">
+          <option value="started_on" {% if request.GET.sort == 'started_on' or not request.GET.sort %}selected{% endif %}>Start Date (Oldest First)</option>
+          <option value="-started_on" {% if request.GET.sort == '-started_on' %}selected{% endif %}>Start Date (Newest First)</option>
+          <option value="name" {% if request.GET.sort == 'name' %}selected{% endif %}>Name (A to Z)</option>
+          <option value="-name" {% if request.GET.sort == '-name' %}selected{% endif %}>Name (Z to A)</option>
+          <option value="amount" {% if request.GET.sort == 'amount' %}selected{% endif %}>Amount (Low to High)</option>
+          <option value="-amount" {% if request.GET.sort == '-amount' %}selected{% endif %}>Amount (High to Low)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Active Filters & Results Count -->
+    <div class="mt-3 pt-3 border-top" style="border-color: rgba(0,0,0,0.05) !important;">
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <!-- Active Filters -->
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+          {% if request.GET.type or request.GET.status != 'Open' or request.GET.sort %}
+            <small class="text-muted fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Active:</small>
+            {% if request.GET.type %}
+              <span class="fin-active-badge" style="background: {% if request.GET.type == 'Loan' %}#8B5CF620; color: #8B5CF6; border-color: #8B5CF640;{% elif request.GET.type == 'SIP' %}#10B98120; color: #10B981; border-color: #10B98140;{% else %}#F59E0B20; color: #F59E0B; border-color: #F59E0B40;{% endif %};">
+                {{ request.GET.type }}
+                <a href="?status=Open{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="fin-active-close">×</a>
+              </span>
             {% endif %}
-          </div>
-          
-          <!-- Results Count -->
-          <div>
-            <small class="text-muted">
-              <i class="fa-solid fa-list"></i>
-              <strong style="color: var(--primary);">{{ details|length }}</strong> result{{ details|length|pluralize }}
-            </small>
-          </div>
+            {% if request.GET.status and request.GET.status != 'Open' %}
+              <span class="fin-active-badge" style="background: rgba(59,130,246,0.1); color: #3B82F6; border-color: rgba(59,130,246,0.2);">
+                Status: {{ request.GET.status }}
+                <a href="?status=Open{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.sort %}&sort={{ request.GET.sort }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="fin-active-close">×</a>
+              </span>
+            {% endif %}
+            {% if request.GET.sort and request.GET.sort != 'started_on' %}
+              <span class="fin-active-badge" style="background: rgba(107,114,128,0.1); color: #4B5563; border-color: rgba(107,114,128,0.2);">
+                Sorted
+                <a href="?status=Open{% if request.GET.type %}&type={{ request.GET.type }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="fin-active-close">×</a>
+              </span>
+            {% endif %}
+          {% endif %}
+        </div>
+        
+        <!-- Results Count -->
+        <div>
+          <small class="text-muted" style="font-weight: 600;">
+            <i class="fa-solid fa-list me-1"></i>
+            <strong style="color: var(--primary-dark);">{{ details|length }}</strong> result{{ details|length|pluralize }}
+          </small>
         </div>
       </div>
     </div>
@@ -110,46 +116,146 @@
 </div>
 
 <style>
-/* Active button styles */
-.btn-check:checked + .btn-outline-secondary {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: white;
+/* ── Fin Toolbar Wrapper ─────────────────────────────────── */
+.fin-toolbar-wrap {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(15px);
+    border-radius: 18px;
+    box-shadow: 0 4px 20px rgba(32, 27, 5, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    padding: 16px 20px;
 }
 
-.btn-check:checked + .btn-outline-success {
-  background: #10B981;
-  border-color: #10B981;
-  color: white;
+/* ── Fin Pill Group (Type Filter) ────────────────────────── */
+.fin-pill-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.fin-pill-option {
+    position: relative;
+}
+.fin-pill-option input[type="radio"] {
+    display: none;
+}
+.fin-pill-label {
+    display: inline-block;
+    padding: 8px 16px;
+    background: rgba(0,0,0,0.03);
+    color: #6b7280;
+    border: 1.5px solid transparent;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+.fin-pill-option input[type="radio"]:checked + .fin-pill-label {
+    background: rgba(176,163,111,0.1);
+    color: var(--primary-dark);
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(176,163,111,0.15);
+}
+.fin-pill-option input[type="radio"]:checked + .fin-pill-label--purple {
+    background: rgba(139,92,246,0.1);
+    color: #6d28d9;
+    border-color: #8B5CF6;
+    box-shadow: 0 4px 12px rgba(139,92,246,0.15);
+}
+.fin-pill-option input[type="radio"]:checked + .fin-pill-label--green {
+    background: rgba(16,185,129,0.1);
+    color: #047857;
+    border-color: #10B981;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.15);
+}
+.fin-pill-option input[type="radio"]:checked + .fin-pill-label--amber {
+    background: rgba(245,158,11,0.1);
+    color: #b45309;
+    border-color: #F59E0B;
+    box-shadow: 0 4px 12px rgba(245,158,11,0.15);
 }
 
-.btn-check:checked + .btn-outline-warning {
-  background: #F59E0B;
-  border-color: #F59E0B;
-  color: white;
+/* ── Fin Radio Group (Status) ────────────────────────────── */
+.fin-radio-group {
+    display: flex;
+    background: rgba(0,0,0,0.03);
+    border-radius: 10px;
+    padding: 4px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+.fin-radio-option {
+    flex: 1;
+}
+.fin-radio-option input[type="radio"] {
+    display: none;
+}
+.fin-radio-label {
+    display: block;
+    text-align: center;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+.fin-radio-option input[type="radio"]:checked + .fin-radio-label {
+    background: #fff;
+    color: var(--primary-dark);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
-.btn-check:checked + label[style*="#8B5CF6"] {
-  background: #8B5CF6 !important;
-  color: white !important;
+/* ── Fin Form Select (Sort By) ───────────────────────────── */
+.fin-form-select {
+    border: 1.5px solid rgba(0,0,0,0.08);
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+    padding: 8px 12px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    transition: all 0.2s;
+}
+.fin-form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(176, 163, 111, 0.2);
 }
 
-/* Form controls */
-.form-select-sm, .form-select {
-  border-color: #DEE2E6;
-  transition: border-color 0.15s ease-in-out;
+/* ── Active Filter Badges ────────────────────────────────── */
+.fin-active-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid transparent;
 }
-
-.form-select-sm:focus, .form-select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
+.fin-active-close {
+    margin-left: 6px;
+    font-size: 1rem;
+    line-height: 1;
+    opacity: 0.7;
+    text-decoration: none !important;
+    color: inherit;
 }
+.fin-active-close:hover { opacity: 1; }
 </style>
 
 <script>
+function applyFiltersRadio(type, val) {
+    if (type === 'status') {
+        document.getElementById('statusFilterSelect').value = val;
+    }
+    applyFilters();
+}
+
 function applyFilters() {
   const type = document.querySelector('input[name="typeFilter"]:checked').value;
-  const status = document.getElementById('statusFilterSelect').value || 'Open';  // Default to Open
+  const status = document.getElementById('statusFilterSelect').value;
   const sort = document.getElementById('sortSelect').value;
   const search = new URLSearchParams(window.location.search).get('search') || '';
   
@@ -157,7 +263,7 @@ function applyFilters() {
   const params = [];
   
   if (type) params.push(`type=${type}`);
-  params.push(`status=${status}`);  // Always include status
+  params.push(`status=${status}`);
   if (sort) params.push(`sort=${sort}`);
   if (search) params.push(`search=${search}`);
   

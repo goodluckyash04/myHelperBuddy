@@ -72,11 +72,11 @@
      <!-- Web Manifest -->
      <link rel="manifest" href="{% static 'manifest.json' %}">
 
-     <!-- Add Service Worker -->
+     <!-- Add Service Worker (registered at root so scope = entire origin) -->
      <script>
          if ("serviceWorker" in navigator) {
-             navigator.serviceWorker.register("/static/service-worker.js")
-                 .then(reg => console.log("Service Worker Registered!", reg))
+             navigator.serviceWorker.register("/service-worker.js", { scope: "/" })
+                 .then(reg => console.log("Service Worker Registered!", reg.scope))
                  .catch(err => console.log("Service Worker Registration Failed!", err));
          }
      </script>
@@ -88,10 +88,16 @@
 
       {% endblock authbody %}
 
-  <footer class="footer text-center" style="color: var(--primary)">
-    <hr />
-    <p>© 2025 myHelperBuddy. All rights reserved.</p>
+  {% block footer %}
+  <footer class="footer text-center mt-auto">
+    <div class="container">
+      <hr style="border-color: rgba(176, 163, 111, 0.3); margin-bottom: 1.5rem;" />
+      <p style="color: var(--primary-dark); font-weight: 500; font-size: 0.9rem;">
+        © 2025 <span style="font-family: 'Rubik Vinyl', cursive;">myHelperBuddy</span>. All rights reserved.
+      </p>
+    </div>
   </footer>
+  {% endblock footer %}
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script>

@@ -3,229 +3,305 @@
 
 {% block body %}
 <style>
-    /* Using app's existing theme colors from style.css */
-    .glass-card {
-        background: rgba(255, 255, 255, 0.95);
-        border: 1px solid #e0e0e0;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+    /* ── Animated Banner ────────────────────────────────────── */
+    .txn-page-banner {
+        background: linear-gradient(-45deg, var(--primary-dark), #9a8855, var(--primary), #a69550);
+        background-size: 400% 400%;
+        animation: gradientBG 15s ease infinite;
+        padding: 40px 32px 60px;
+        margin-bottom: -40px; /* Overlap with content */
+        position: relative;
+        overflow: hidden;
+        border-radius: 0 0 32px 32px;
+        box-shadow: 0 10px 30px rgba(32, 27, 5, 0.15);
+    }
+    @keyframes gradientBG {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    .txn-page-banner::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 250px; height: 250px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(10px);
+    }
+    .txn-page-banner::after {
+        content: '';
+        position: absolute;
+        bottom: -60px; left: 20%;
+        width: 200px; height: 200px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+    }
+    .txn-banner-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        z-index: 1;
+    }
+    .txn-banner-title {
+        color: #fff;
+        margin: 0 0 6px;
+        letter-spacing: -0.01em;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        font-size: 2rem;
+        font-family: 'Dancing Script', cursive;
+        font-weight: 700;
+        line-height: 1.1;
+    }
+    .txn-banner-subtitle {
+        color: rgba(255,255,255,0.85);
+        font-size: 0.78rem;
+        opacity: 0.65;
+        margin-top: 4px;
     }
 
+    /* ── Glass Cards & Overrides ────────────────────────────── */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,1);
+        border-radius: 24px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+        padding: 1.75rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        z-index: 2;
+    }
+    
     .profile-header {
         text-align: center;
-        padding: 2rem;
+        padding: 2.5rem 2rem;
+    }
+
+    .profile-avatar-wrap {
         position: relative;
+        display: inline-block;
+        margin-bottom: 1.5rem;
     }
 
     .profile-avatar {
-        width: 120px;
-        height: 120px;
+        width: 140px;
+        height: 140px;
         border-radius: 50%;
-        border: 4px solid var(--primary);
-        box-shadow: 0 8px 20px rgba(176, 163, 111, 0.3);
-        margin-bottom: 1rem;
+        border: 4px solid #fff;
+        box-shadow: 0 10px 30px rgba(176, 163, 111, 0.35);
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+    
+    .profile-avatar-wrap:hover .profile-avatar {
+        transform: scale(1.02);
     }
 
     .profile-badge {
-        display: inline-block;
-        padding: 0.25rem 0.75rem;
-        background: var(--primary);
-        color: white;
-        border-radius: 20px;
-        font-size: 0.875rem;
-        margin-top: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 14px;
+        background: rgba(176,163,111,0.1);
+        color: var(--primary-dark);
+        border: 1px solid rgba(176,163,111,0.3);
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-top: 0.75rem;
     }
 
+    /* ── Fin Stat Cards (Mirrored from Dashboard) ───────────── */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1.25rem;
         margin-bottom: 1.5rem;
     }
-
-    .stat-card {
-        background: linear-gradient(135deg, rgba(176, 163, 111, 0.1), rgba(154, 130, 23, 0.05));
-        border-radius: 12px;
-        padding: 1.25rem;
+    
+    .fin-stat-card {
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid rgba(0,0,0,0.04);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+    .fin-stat-card:hover {
+        transform: translateY(-6px);
+    }
+    .fin-stat-inner {
+        padding: 1.5rem;
         text-align: center;
-        border: 1px solid var(--primary-light);
-        transition: transform 0.2s, box-shadow 0.2s;
     }
-
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(176, 163, 111, 0.15);
+    .fin-stat-card--blue:hover { box-shadow: 0 12px 24px rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.1); }
+    .fin-stat-card--purple:hover { box-shadow: 0 12px 24px rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.1); }
+    .fin-stat-card--amber:hover { box-shadow: 0 12px 24px rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.1); }
+    
+    .stat-val {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #1f2937;
+        margin: 0.5rem 0 0.25rem;
+        letter-spacing: -0.02em;
     }
-
-    .stat-card i {
-        font-size: 2rem;
-        color: var(--primary);
-        margin-bottom: 0.5rem;
-    }
-
-    .stat-card h3 {
-        font-size: 1.75rem;
-        font-weight: bold;
-        color: var(--primary-dark);
-        margin: 0.5rem 0 0.25rem 0;
-    }
-
-    .stat-card p {
-        font-size: 0.875rem;
+    .stat-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
         color: #6b7280;
+        letter-spacing: 0.05em;
         margin: 0;
     }
 
-    .module-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .module-card {
-        background: white;
-        border: 1px solid #e0e0e0;
-        border-radius: 12px;
-        padding: 1rem;
-        text-align: center;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-    .module-card:hover {
-        background: rgba(176, 163, 111, 0.05);
-        border-color: var(--primary);
-        transform: translateY(-4px);
-        box-shadow: 0 6px 16px rgba(176, 163, 111, 0.2);
-    }
-
-    .module-card i {
-        font-size: 2rem;
-        color: var(--primary);
-        margin-bottom: 0.5rem;
-    }
-
-    .module-card h6 {
-        font-size: 0.875rem;
-        font-weight: 600;
-        margin-bottom: 0.25rem;
-        color: var(--primary-dark);
-    }
-
-    .module-card .badge {
-        font-size: 0.7rem;
-        padding: 0.2rem 0.5rem;
-        background-color: var(--primary);
-        border: none;
-    }
-
+    /* ── Typography & Forms ──────────────────────────────────── */
     .section-title {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-weight: 600;
-        margin-bottom: 1rem;
-        color: var(--primary-dark);
+        margin-bottom: 1.25rem;
+        color: #1f2937;
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
     }
-
     .section-title i {
         color: var(--primary);
     }
 
-    .action-btn {
-        background: var(--primary);
-        color: white;
+    .fin-action-btn {
+        background: rgba(0,0,0,0.03);
+        color: #4b5563;
         border: none;
         padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 500;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .fin-action-btn:hover {
+        background: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(176,163,111,0.25);
+    }
+    .fin-action-btn--danger {
+        background: rgba(239,68,68,0.1);
+        color: #ef4444;
+    }
+    .fin-action-btn--danger:hover {
+        background: #ef4444;
+        color: white;
+        box-shadow: 0 6px 16px rgba(239,68,68,0.25);
+    }
+
+    .fin-form-control {
+        background-color: rgba(0, 0, 0, 0.02) !important;
+        border: 1.5px solid rgba(0, 0, 0, 0.06) !important;
+        border-radius: 12px !important;
+        font-weight: 600;
+        color: #1f2937 !important;
+        transition: all 0.3s ease !important;
+    }
+    .fin-form-control:focus {
+        background-color: #fff !important;
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 4px rgba(176, 163, 111, 0.15) !important;
+    }
+    
+    .fin-submit-btn {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        padding: 12px;
+        font-weight: 800;
+        font-size: 1rem;
         transition: all 0.3s ease;
     }
-
-    .action-btn:hover {
-        background: var(--primary-dark-secondary);
+    .fin-submit-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(176, 163, 111, 0.3);
-        color: white;
-    }
-
-    .danger-btn {
-        background: #dc3545;
-    }
-
-    .danger-btn:hover {
-        background: #c82333;
-        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        box-shadow: 0 8px 20px rgba(176, 163, 111, 0.3) !important;
+        color: #fff;
     }
 
     @media (max-width: 768px) {
-        .profile-avatar {
-            width: 100px;
-            height: 100px;
-        }
-
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .module-grid {
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        }
+        .profile-avatar { width: 110px; height: 110px; }
+        .stats-grid { grid-template-columns: 1fr; }
+        .txn-page-banner { padding: 30px 20px 50px; }
     }
 </style>
 
-<div class="container mt-4 mb-5">
+<!-- Animated Page Banner -->
+<div class="txn-page-banner">
+    <div class="txn-banner-content">
+        <div>
+            <h1 class="txn-banner-title">
+                <i class="fa-solid fa-user-circle me-2"></i>My Profile
+            </h1>
+            <p class="txn-banner-subtitle">Manage your personal details and account settings</p>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5" style="position: relative; margin-top: -20px;">
     <div class="row g-4">
         <!-- Left Column: Profile Card -->
         <div class="col-lg-4">
             <div class="glass-card profile-header">
                 <!-- Profile Picture with Upload Overlay -->
-                <div style="position: relative; display: inline-block;">
-                    {% if user.profile_picture %}
-                        <img src="{{ user.profile_picture.url }}" class="profile-avatar" alt="Profile Picture" id="profileImage">
-                    {% else %}
-                        <img src="{% static 'image/user_m.jpg' %}" class="profile-avatar" alt="Profile Picture" id="profileImage">
-                    {% endif %}
-                    <!--
-                    <label for="profilePictureInput" style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                <div class="profile-avatar-wrap">
+                    {% with profile=user.profile|default:None %}
+                        {% if profile and profile.profile_picture %}
+                            <img src="{{ profile.profile_picture.url }}" class="profile-avatar" alt="Profile Picture" id="profileImage">
+                        {% else %}
+                            <img src="{% static 'image/user_m.jpg' %}" class="profile-avatar" alt="Profile Picture" id="profileImage">
+                        {% endif %}
+                    {% endwith %}
+                    <label for="profilePictureInput" style="position: absolute; bottom: 5px; right: 5px; background: var(--primary); color: white; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: transform 0.2s;">
                         <i class="fa-solid fa-camera"></i>
                     </label>
-                    -->
                     <input type="file" id="profilePictureInput" accept="image/*" style="display: none;">
                 </div>
                 
                 <!-- Editable Name -->
-                <div id="nameDisplay" style="margin-top: 1rem;">
-                    <h3 style="color: var(--primary-dark); margin-bottom: 0.25rem;">{{user.first_name}} {{user.last_name}}</h3>
-                    <button onclick="editName()" class="btn btn-sm" style="background: none; border: none; color: var(--primary); padding: 0.25rem 0.5rem;">
-                        <i class="fa-solid fa-pen"></i> Edit
+                <div id="nameDisplay" style="margin-top: 0.5rem; transition: opacity 0.2s;">
+                    <h3 style="color: #1f2937; margin-bottom: 0.25rem; font-weight: 800; font-size: 1.75rem;">{{user.first_name}} {{user.last_name}}</h3>
+                    <button onclick="editName()" class="btn btn-sm" style="background: none; border: none; color: var(--primary); padding: 0.25rem 0.5rem; font-weight: 700; opacity: 0.8;">
+                        <i class="fa-solid fa-pen me-1"></i> Edit Name
                     </button>
                 </div>
                 
-                <div id="nameEdit" style="display: none; margin-top: 1rem; width: 100%;">
-                    <input type="text" id="nameInput" value="{{user.first_name}} {{user.last_name}}" class="form-control mb-2" style="text-align: center;">
-                    <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                        <button onclick="saveName()" class="btn btn-sm action-btn">
+                <div id="nameEdit" style="display: none; margin-top: 0.5rem; width: 100%; animation: fadeIn 0.3s ease;">
+                    <div class="form-floating mb-3">
+                        <input type="text" id="nameInput" value="{{user.first_name}} {{user.last_name}}" class="form-control fin-form-control" style="text-align: center;">
+                        <label for="nameInput" class="text-muted text-center" style="width: 100%;">Full Name</label>
+                    </div>
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button onclick="saveName()" class="fin-submit-btn py-2 px-4" style="border-radius: 10px;">
                             <i class="fa-solid fa-check"></i> Save
                         </button>
-                        <button onclick="cancelEdit()" class="btn btn-sm btn-secondary">
+                        <button onclick="cancelEdit()" class="fin-action-btn py-2 px-4" style="border-radius: 10px;">
                             <i class="fa-solid fa-xmark"></i> Cancel
                         </button>
                     </div>
                 </div>
                 
-                <p style="color: #6b7280; margin: 0.5rem 0;">@{{user.username}}</p>
-                <p class="text-muted small mb-2">{{user.email}}</p>
-                <span class="profile-badge">
-                    <i class="fa-solid fa-circle-check"></i> Verified Member
-                </span>
-                <p class="text-muted small mt-3" style="font-size: 0.875rem;">
-                    <i class="fa-solid fa-calendar-days"></i> Joined {{user.date_joined|date:'M d, Y'}}
-                </p>
+                <div class="mt-4 pt-3 border-top" style="border-color: rgba(0,0,0,0.05) !important;">
+                    <p style="color: #4b5563; margin: 0.5rem 0; font-weight: 700; font-size: 0.95rem;">@{{user.username}}</p>
+                    <p class="text-muted small mb-2" style="font-weight: 500;">{{user.email}}</p>
+                    <span class="profile-badge">
+                        <i class="fa-solid fa-circle-check me-2"></i> Verified Member
+                    </span>
+                    <p class="text-muted mt-3 mb-0" style="font-size: 0.8rem; font-weight: 600;">
+                        <i class="fa-solid fa-calendar-days me-1"></i> Joined {{user.date_joined|date:'M d, Y'}}
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -234,40 +310,30 @@
             <!-- Stats Dashboard -->
             <div class="glass-card">
                 <h5 class="section-title">
-                    <i class="fa-solid fa-chart-line"></i> Account Overview
+                    <i class="fa-solid fa-chart-pie"></i> Account Overview
                 </h5>
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <i class="fa-solid fa-calendar-days"></i>
-                        <h3>{{account_age}}</h3>
-                        <p>Days Active</p>
+                    <div class="fin-stat-card fin-stat-card--blue">
+                        <div class="fin-stat-inner" style="background: linear-gradient(135deg, rgba(59,130,246,0.05) 0%, rgba(59,130,246,0.01) 100%);">
+                            <i class="fa-solid fa-calendar-days fa-2x mb-2" style="color: #3B82F6;"></i>
+                            <h3 class="stat-val">{{account_age}}</h3>
+                            <p class="stat-label">Days Active</p>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <i class="fa-solid fa-receipt"></i>
-                        <h3>{{total_transactions}}</h3>
-                        <p>Transactions</p>
+                    <div class="fin-stat-card fin-stat-card--purple">
+                        <div class="fin-stat-inner" style="background: linear-gradient(135deg, rgba(139,92,246,0.05) 0%, rgba(139,92,246,0.01) 100%);">
+                            <i class="fa-solid fa-receipt fa-2x mb-2" style="color: #8B5CF6;"></i>
+                            <h3 class="stat-val">{{total_transactions}}</h3>
+                            <p class="stat-label">Transactions</p>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <i class="fa-solid fa-cubes"></i>
-                        <h3>{{accessible_modules|length}}</h3>
-                        <p>Active Modules</p>
+                    <div class="fin-stat-card fin-stat-card--amber">
+                        <div class="fin-stat-inner" style="background: linear-gradient(135deg, rgba(245,158,11,0.05) 0%, rgba(245,158,11,0.01) 100%);">
+                            <i class="fa-solid fa-cubes fa-2x mb-2" style="color: #F59E0B;"></i>
+                            <h3 class="stat-val">{{accessible_modules|length}}</h3>
+                            <p class="stat-label">Active Modules</p>
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Module Access -->
-            <div class="glass-card">
-                <h5 class="section-title">
-                    <i class="fa-solid fa-grid-2"></i> Module Access
-                </h5>
-                <div class="module-grid">
-                    {% for module in accessible_modules %}
-                    <div class="module-card">
-                        <i class="fa-solid {{ module.icon }}"></i>
-                        <h6>{{ module.title }}</h6>
-                        <span class="badge">Active</span>
-                    </div>
-                    {% endfor %}
                 </div>
             </div>
 
@@ -278,19 +344,19 @@
                 </h5>
                 
                 <!-- Email Preference -->
-                <div class="mb-3">
-                    <label class="form-label" style="font-weight: 500;">
-                        <i class="fa-solid fa-envelope"></i> Email Notifications
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-bold mb-2">
+                        <i class="fa-solid fa-envelope me-1"></i> Email Notifications
                     </label>
-                    <select disabled class="form-select">
+                    <select disabled class="form-select fin-form-control">
                         <option>Enabled</option>
                         <option selected>Disabled</option>
                     </select>
                 </div>
 
                 <!-- Change Password -->
-                <h6 class="mt-4 mb-3" style="font-weight: 600;">
-                    <i class="fa-solid fa-lock"></i> Change Password
+                <h6 class="mt-4 mb-3" style="font-weight: 700; color: #374151;">
+                    <i class="fa-solid fa-lock me-1"></i> Change Password
                 </h6>
                 {% include 'auth/changePassword.html' %}
             </div>
@@ -300,14 +366,14 @@
                 <h5 class="section-title">
                     <i class="fa-solid fa-key"></i> Token Management
                 </h5>
-                <p class="text-muted small">
-                    Last token generated: {{ last_genration | default:"N/A" }}
+                <p class="text-muted small fw-bold">
+                    Last token generated: <span style="color: #1f2937;">{{ last_genration | default:"N/A" }}</span>
                 </p>
-                    <div class="d-flex justify-content-end mt-3">
-                        <button class="btn action-btn" onclick="getGoogleAuth()">
-                            <i class="fa-solid fa-plus"></i> Generate Token
-                        </button>
-                    </div>
+                <div class="d-flex justify-content-end mt-3">
+                    <button class="fin-action-btn" onclick="getGoogleAuth()">
+                        <i class="fa-solid fa-plus"></i> Generate Token
+                    </button>
+                </div>
             </div>
 
             <!-- Database Backup (Admin Only) -->
@@ -316,16 +382,16 @@
                     <i class="fa-solid fa-database"></i> Database Backup
                 </h5>
                 <p class="text-muted small">
-                    Manually trigger database backup.
+                    Manually trigger database backup to secure cloud storage.
                 </p>
                 <div class="d-flex justify-content-end mt-3 gap-2">
-                    <button class="btn action-btn" onclick="triggerBackup()" id="backupButton">
+                    <button class="fin-action-btn" onclick="triggerBackup()" id="backupButton" style="background: rgba(16,185,129,0.1); color: #059669;">
                         <i class="fa-solid fa-cloud-arrow-up"></i> Run Backup
                     </button>
                 </div>
                 <div id="backupStatus" class="mt-3" style="display: none;">
-                    <div class="alert alert-info mb-0">
-                        <i class="fa-solid fa-spinner fa-spin"></i> Backup in progress...
+                    <div class="alert alert-info mb-0" style="border-radius: 12px; font-weight: 600;">
+                        <i class="fa-solid fa-spinner fa-spin me-2"></i> Backup in progress...
                     </div>
                 </div>
             </div>
@@ -333,14 +399,14 @@
 
             <!-- Account Management -->
             <div class="glass-card">
-                <h5 class="section-title">
-                    <i class="fa-solid fa-user-gear"></i> Account Management
+                <h5 class="section-title" style="color: #ef4444;">
+                    <i class="fa-solid fa-user-xmark"></i> Danger Zone
                 </h5>
-                <p class="text-muted">
+                <p class="text-muted" style="font-size: 0.9rem;">
                     If you no longer wish to use your account, you can permanently delete it. This action cannot be undone.
                 </p>
                 <div class="d-flex justify-content-end mt-3">
-                    <button class="btn action-btn danger-btn" onclick="confirmDeletion()">
+                    <button class="fin-action-btn fin-action-btn--danger" onclick="confirmDeletion()">
                         <i class="fa-solid fa-trash-can"></i> Delete Account
                     </button>
                 </div>
@@ -356,14 +422,12 @@
     document.getElementById('profilePictureInput').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
-            // Show preview immediately
             const reader = new FileReader();
             reader.onload = function(event) {
                 document.getElementById('profileImage').src = event.target.result;
             };
             reader.readAsDataURL(file);
             
-            // Upload to server
             const formData =  new FormData();
             formData.append('profile_picture', file);
             formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
@@ -422,7 +486,6 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Update display
                 document.querySelector('#nameDisplay h3').textContent = newName;
                 cancelEdit();
             } else {
@@ -452,11 +515,10 @@
         const button = document.getElementById('backupButton');
         const statusDiv = document.getElementById('backupStatus');
         
-        // Disable button and show loading
         button.disabled = true;
         button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Running...';
         statusDiv.style.display = 'block';
-        statusDiv.innerHTML = '<div class="alert alert-info mb-0"><i class="fa-solid fa-spinner fa-spin"></i> Backup in progress... This may take a few moments.</div>';
+        statusDiv.innerHTML = '<div class="alert alert-info mb-0" style="border-radius: 12px; font-weight: 600;"><i class="fa-solid fa-spinner fa-spin me-2"></i> Backup in progress...</div>';
         
         fetch('/manual-backup/', {
             method: 'GET',
@@ -468,23 +530,21 @@
         .then(response => response.json())
         .then(data => {
             if (data.status === 'success') {
-                statusDiv.innerHTML = '<div class="alert alert-success mb-0"><i class="fa-solid fa-check-circle"></i> ' + data.message + '</div>';
+                statusDiv.innerHTML = '<div class="alert alert-success mb-0" style="border-radius: 12px; font-weight: 600;"><i class="fa-solid fa-check-circle me-2"></i> ' + data.message + '</div>';
             } else {
-                statusDiv.innerHTML = '<div class="alert alert-danger mb-0"><i class="fa-solid fa-exclamation-circle"></i> ' + data.message + '</div>';
+                statusDiv.innerHTML = '<div class="alert alert-danger mb-0" style="border-radius: 12px; font-weight: 600;"><i class="fa-solid fa-exclamation-circle me-2"></i> ' + data.message + '</div>';
             }
             
-            // Re-enable button
             button.disabled = false;
             button.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Run Backup';
             
-            // Hide status after 5 seconds
             setTimeout(() => {
                 statusDiv.style.display = 'none';
             }, 5000);
         })
         .catch(error => {
             console.error('Error:', error);
-            statusDiv.innerHTML = '<div class="alert alert-danger mb-0"><i class="fa-solid fa-exclamation-circle"></i> An error occurred while running backup.</div>';
+            statusDiv.innerHTML = '<div class="alert alert-danger mb-0" style="border-radius: 12px; font-weight: 600;"><i class="fa-solid fa-exclamation-circle me-2"></i> An error occurred while running backup.</div>';
             
             button.disabled = false;
             button.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Run Backup';
@@ -493,9 +553,9 @@
 
     function confirmDeletion() {
         if (confirm('⚠️ WARNING: This will permanently delete your account and all associated data. This action cannot be undone.\n\nAre you absolutely sure you want to proceed?')) {
-            // Add actual deletion logic here
             alert('We have received your request. We will process it as soon as possible.');
         }
     }
 </script>
 {% endblock script %}
+```

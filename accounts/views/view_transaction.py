@@ -89,8 +89,6 @@ def create_transaction(request: HttpRequest) -> HttpResponse:
         amount = float(request.POST.get("amount", 0.0))
         description = request.POST.get("description", "")
         status = request.POST.get("status", "Completed")
-        mode = request.POST.get("mode", "Online")
-        mode_detail = request.POST.get("mode_detail")
         
         # Validate amount
         if amount <= 0:
@@ -100,8 +98,6 @@ def create_transaction(request: HttpRequest) -> HttpResponse:
         if transaction_type == 'Income':
             beneficiary = 'Self'
             status = "Completed"
-            mode = None
-            mode_detail = None
         
         # Check for duplicate transaction
         try:
@@ -113,8 +109,6 @@ def create_transaction(request: HttpRequest) -> HttpResponse:
                 beneficiary=beneficiary,
                 description=description,
                 status=status,
-                mode=mode,
-                mode_detail=mode_detail,
                 created_by=user,
                 is_deleted=False
             )
@@ -132,8 +126,6 @@ def create_transaction(request: HttpRequest) -> HttpResponse:
             beneficiary=beneficiary,
             description=description,
             status=status,
-            mode=mode,
-            mode_detail=mode_detail,
             created_by=user,
         )
         
@@ -183,8 +175,6 @@ def update_transaction(request: HttpRequest, id: int) -> HttpResponse:
                 "amount": entry.amount,
                 "description": entry.description,
                 "beneficiary": entry.beneficiary,
-                "mode_detail": entry.mode_detail,
-                "mode": entry.mode,
                 "status": entry.status
             })
         
@@ -194,14 +184,6 @@ def update_transaction(request: HttpRequest, id: int) -> HttpResponse:
         entry.amount = request.POST.get("amount", entry.amount)
         entry.description = request.POST.get("description", entry.description)
         entry.beneficiary = request.POST.get("beneficiary", entry.beneficiary).title()
-        
-        # Handle mode_detail
-        mode_detail = request.POST.get("mode_detail", entry.mode_detail)
-        entry.mode_detail = mode_detail.title() if mode_detail else mode_detail
-        
-        # Handle mode (can be None)
-        mode = request.POST.get("mode", entry.mode)
-        entry.mode = mode.title() if mode else mode
         
         entry.save()
         
@@ -257,7 +239,6 @@ def transaction_detail(request: HttpRequest) -> HttpResponse:
         category = request.GET.get('category', '')
         beneficiary = request.GET.get('beneficiary', '')
         daterange = request.GET.get('daterange', '')
-        mode = request.GET.get('mode', '')
         status = request.GET.get('status', '')
         search_query = request.GET.get("search", '').strip()
         
@@ -285,8 +266,6 @@ def transaction_detail(request: HttpRequest) -> HttpResponse:
             filter_data &= Q(type__in=type_filter)
         if category:
             filter_data &= Q(category=category)
-        if mode:
-            filter_data &= Q(mode=mode)
         if status:
             filter_data &= Q(status=status)
         
@@ -300,7 +279,7 @@ def transaction_detail(request: HttpRequest) -> HttpResponse:
             filter_data &= Q(date__gte=start_date, date__lte=end_date)
         
         # Default: Current month if no filters applied
-        if not any([search_query, beneficiary, type_filter, category, mode, status, daterange]):
+        if not any([search_query, beneficiary, type_filter, category, status, daterange]):
             search_query = datetime.now().strftime("%B %Y")
             now = datetime.now()
             filter_data &= Q(date__year=now.year, date__month=now.month)
@@ -358,7 +337,6 @@ def transaction_detail(request: HttpRequest) -> HttpResponse:
                 "category": category,
                 "beneficiary": beneficiary,
                 "daterange": daterange,
-                "mode": mode,
                 "status": status,
                 "key": search_query,
             },

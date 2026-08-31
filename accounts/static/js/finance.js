@@ -10,9 +10,9 @@ function openModalAndGetInstrument(Id) {
       document.getElementById(
         "financeModalLabel"
       ).textContent = `Edit ${data.type}`;
-      document.getElementById(
-        "submitButton"
-      ).textContent = `Update ${data.type}`;
+      
+      let submitBtn = document.getElementById("submitButton");
+      submitBtn.innerHTML = `<i class="fa-solid fa-check-circle me-1"></i> Update ${data.type}`;
 
       // type
       if (data.type == "Loan") {

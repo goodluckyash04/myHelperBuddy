@@ -37,7 +37,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 from accounts.models import UserProfile
 from accounts.services.email_services import EmailService
-from accounts.services.google_services import GoogleDriveService
+from accounts.services.google_services import GoogleDriveService, get_drive_service
 from accounts.services.security_services import security_service
 from ..utilitie_functions import mask_email, validate_password
 
@@ -271,9 +271,13 @@ def forgotPassword(request: HttpRequest) -> HttpResponse:  # now sends reset lin
         return redirect('login')
 
     except User.DoesNotExist:
-        return render(request, "auth/forgotPassword.html", {
-            "msg": "No account found with that username or email."
-        })
+        # Always redirect with the same message regardless of whether the account exists.
+        # Returning a different message for missing accounts allows user enumeration
+        # — an attacker could probe usernames to find valid accounts.
+        request.session['forgot_password_msg'] = (
+            "If an account exists with that username or email, a reset link has been sent."
+        )
+        return redirect('login')
     except Exception as e:
         import traceback
         traceback.print_exc()
@@ -471,9 +475,12 @@ def send_otp(request: HttpRequest) -> JsonResponse:
 
         # Send OTP email
         email_service = EmailService()
+        # Send OTP only to the user's own email.
+        # DO NOT include ADMIN_EMAIL — sending live OTPs to the admin is a security risk:
+        # it exposes user authentication codes and breaks OTP secrecy.
         email_sent = email_service.send_email(
             subject="Email Verification - OTP Code",
-            recipient_list=[email, settings.ADMIN_EMAIL],
+            recipient_list=[email],
             template_name="email_templates/otp_verification.html",
             context={"otp": otp},
             is_html=True,
@@ -604,50 +611,53 @@ def check_email(request: HttpRequest) -> JsonResponse:
 def generate_refresh_token(request: HttpRequest) -> HttpResponse:
     """
     Generate Google OAuth refresh token for Google Drive API access.
-    
+
     Admin-only endpoint for managing Google Drive service integration.
-    
-    GET: Return authorization URL or clear existing token
+
+    GET: Return authorization URL or clear existing token.
+         NOTE: This does NOT initialise a Drive service — it only builds the
+         redirect URL, so no token refresh happens on a plain GET.
     POST: Exchange authorization code for refresh token
-    
+
     Args:
         request: HTTP request object
-        
+
     Returns:
         HttpResponse: JSON response with auth URL or redirect to profile
     """
     user = request.user
-    
+
     # Restrict to superusers only
     if not user.is_superuser:
         messages.error(request, "Access denied. Admin privileges required.")
         return redirect('profile')
-    
-    google_service = GoogleDriveService()
-    
+
     if request.method == "GET":
         # Check if clearing existing token
         if request.session.get("token"):
             del request.session["token"]
             return redirect("profile")
-        
-        # Return Google OAuth authorization URL
-        auth_url = google_service.get_authentication_code()
+
+        # Build the OAuth URL without initialising the full Drive service.
+        # `get_authentication_code()` only reads settings — no token fetch needed.
+        auth_url = GoogleDriveService.get_authentication_code_url()
         return JsonResponse({"auth_url": auth_url})
-    
-    # POST: Exchange code for refresh token
+
+    # POST: Exchange authorization code for a refresh token.
+    # We intentionally bypass `__init__` (and its token fetch) because the
+    # refresh token doesn’t exist yet; only `get_refresh_token()` is needed.
     try:
         data = json.loads(request.body)
         code = data.get("code", "")
-        
-        if google_service.get_refresh_token(code, user):
+
+        if GoogleDriveService.exchange_code_for_refresh_token(code, user):
             request.session["token_generation"] = datetime.datetime.now().strftime("%d %b %Y %H:%M")
             messages.success(request, "Refresh token generated successfully!")
         else:
             messages.error(request, "Failed to generate refresh token.")
-            
+
         return redirect("profile")
-        
+
     except Exception as e:
         traceback.print_exc()
         messages.error(request, "An error occurred while generating token.")

@@ -12,6 +12,7 @@ Features:
 - Soft delete functionality
 """
 
+import calendar
 import datetime
 import decimal
 import traceback
@@ -21,6 +22,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db import transaction as db_transaction
 from django.db.models import F, Q, Sum
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -36,32 +38,40 @@ from accounts.models import FinancialProduct, Transaction
 def desired_date(start_date: str, months_offset: int) -> str:
     """
     Calculate a date N months from the start date.
-    
-    Handles month/year rollovers properly. Used for calculating
-    EMI/installment due dates.
-    
+
+    Handles month/year rollovers and day-of-month clamping. If the original
+    day does not exist in the target month (e.g. Jan 31 + 1 month), the day
+    is clamped to the last valid day of that month (Feb 28 or 29).
+
+    Used for calculating EMI/installment due dates.
+
     Args:
         start_date: Start date in YYYY-MM-DD format
         months_offset: Number of months to add
-        
+
     Returns:
         str: Calculated date in YYYY-MM-DD format
-        
+
     Example:
         >>> desired_date("2024-01-31", 1)
-        "2024-02-29"  # Handles month boundaries
+        "2024-02-29"  # Clamped to last day of February (leap year)
+        >>> desired_date("2024-01-31", 3)
+        "2024-04-30"  # Clamped to last day of April
     """
     payment_date = datetime.datetime.strptime(start_date, "%Y-%m-%d")
-    current_month = payment_date.month
-    current_year = payment_date.year
     current_day = payment_date.day
-    
-    desired_month = current_month + months_offset
-    desired_year = current_year + (desired_month - 1) // 12
+
+    desired_month = payment_date.month + months_offset
+    desired_year = payment_date.year + (desired_month - 1) // 12
     desired_month = (desired_month - 1) % 12 + 1
-    
-    desired_date_obj = datetime.datetime(desired_year, desired_month, current_day)
-    return desired_date_obj.strftime('%Y-%m-%d')
+
+    # Clamp day to the last valid day of the target month.
+    # This prevents ValueError when e.g. a loan starts on the 31st
+    # and the target month only has 28, 29, or 30 days.
+    max_day = calendar.monthrange(desired_year, desired_month)[1]
+    clamped_day = min(current_day, max_day)
+
+    return datetime.datetime(desired_year, desired_month, clamped_day).strftime('%Y-%m-%d')
 
 
 def calculate_finance_stats(user):
@@ -218,46 +228,51 @@ def create_finance(request: HttpRequest) -> HttpResponse:
         except ObjectDoesNotExist:
             pass  # Product doesn't exist, proceed with creation
         
-        # Create financial product
-        new_product = FinancialProduct.objects.create(
-            name=name,
-            type=product_type,
-            amount=amount,
-            no_of_installments=no_of_installments,
-            started_on=started_on,
-            created_by=user
-        )
-        
-        # Calculate installment amount
-        emi_amount = round((amount / no_of_installments), 2)
-        
-        # Determine category and description based on type
+        # Determine category and description based on type before entering atomic block
         if product_type == 'Loan':
             category = "EMI"
             sub_label = "EMI"
         elif product_type == "Split":
             sub_label = product_type
-            # category remains as provided
+            # category remains as provided by the form
         else:  # SIP or other
             category = "Investment"
             sub_label = product_type
-        
-        # Generate installment transactions
-        for i in range(no_of_installments):
-            Transaction.objects.create(
-                type="Expense",
-                category=category,
-                date=desired_date(started_on, i),
-                amount=emi_amount,
-                beneficiary='Self',
-                description=f'{name} {sub_label} {i + 1}',
-                status="Pending",
-                mode="Online",
-                mode_detail=product_type,
-                created_by=user,
-                source=new_product
+
+        # Calculate installment amount
+        emi_amount = round((amount / no_of_installments), 2)
+
+        # Wrap product creation + all installments in a single atomic transaction.
+        # If any installment fails to insert, the FinancialProduct row is also
+        # rolled back — no orphaned/partially-instantiated products in the DB.
+        with db_transaction.atomic():
+            new_product = FinancialProduct.objects.create(
+                name=name,
+                type=product_type,
+                amount=amount,
+                no_of_installments=no_of_installments,
+                started_on=started_on,
+                created_by=user
             )
-        
+
+            # Build all installment objects in memory first, then insert in one query.
+            # This is both faster (1 INSERT vs N INSERTs) and atomic with the product.
+            installments = [
+                Transaction(
+                    type="Expense",
+                    category=category,
+                    date=desired_date(started_on, i),
+                    amount=emi_amount,
+                    beneficiary='Self',
+                    description=f'{name} {sub_label} {i + 1}',
+                    status="Pending",
+                    created_by=user,
+                    source=new_product
+                )
+                for i in range(no_of_installments)
+            ]
+            Transaction.objects.bulk_create(installments)
+
         messages.success(request, f'{product_type} "{name}" added successfully')
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
         
@@ -301,7 +316,7 @@ def finance_details(request: HttpRequest) -> HttpResponse:
         # Get filter parameters
         search_query = request.GET.get('search', '').strip()
         type_filter = request.GET.get('type', '').strip()
-        status_filter = request.GET.get('status', '').strip()
+        status_filter = request.GET.get('status', 'Open').strip()
         sort_option = request.GET.get('sort', 'started_on').strip()
         
         # Base query
@@ -437,206 +452,219 @@ def update_finance_detail(request: HttpRequest, id: int) -> HttpResponse:
         amount = decimal.Decimal(request.POST.get("amount", 0))
         no_of_installments = int(request.POST.get("no_of_installments", 1))
         category = request.POST.get("category", "")
-        
+
         if no_of_installments < 1:
             raise ValueError('Number of installments cannot be zero')
-        
+
         sub_label = 'EMI' if i_type == 'Loan' else i_type
         transactions = Transaction.objects.filter(
             created_by=user,
             source_id=id,
             is_deleted=False
         )
-        
-        # ====================================================================
-        # Update Name
-        # ====================================================================
-        
-        details.name = name
-        for index, trn in enumerate(transactions, 1):
-            trn.description = f'{name} {sub_label} {index}'
-            trn.save()
-        
-        # ====================================================================
-        # Update Type
-        # ====================================================================
-        
-        if i_type != details.type:
-            details.type = i_type
-            
-            # Determine category based on new type
-            if i_type == 'Loan':
-                category = "EMI"
-            elif i_type == "Split":
-                # Keep provided category
-                pass
-            else:
-                category = "Investment"
-            
+
+        # Wrap the entire multi-step update in a single atomic transaction.
+        # The update touches the product row, potentially dozens of installment rows,
+        # and may create or delete rows. Without atomicity, a crash partway through
+        # leaves the product in an inconsistent state with no way to recover.
+        with db_transaction.atomic():
+
+            # ================================================================
+            # Update Name
+            # ================================================================
+
+            details.name = name
             for index, trn in enumerate(transactions, 1):
-                trn.category = category
-                trn.mode_detail = i_type
                 trn.description = f'{name} {sub_label} {index}'
                 trn.save()
-        
-        # ====================================================================
-        # Update Start Date
-        # ====================================================================
-        
-        new_start_date = datetime.datetime.strptime(started_on, "%Y-%m-%d").date()
-        if new_start_date != details.started_on:
-            no_of_paid_installments = sum(
-                1 if trn.status == "Completed" else 0 for trn in transactions
-            )
-            paid_dates = [trn.date for trn in transactions if trn.status == "Completed"]
-            
-            # Validate: new start date can't be after any paid installment date
-            if paid_dates:
-                for date in paid_dates:
-                    if date >= new_start_date:
-                        raise ValueError(f'Start date cannot be before paid installment date: {date}')
-            
-            # Update start date if all pending
-            if not no_of_paid_installments:
-                details.started_on = started_on
-            
-            # Recalculate dates for pending transactions
-            for i, trn in enumerate(transactions):
-                if i >= no_of_paid_installments:
-                    offset = i - no_of_paid_installments
-                    trn.date = desired_date(started_on, offset)
+
+            # ================================================================
+            # Update Type
+            # ================================================================
+
+            if i_type != details.type:
+                details.type = i_type
+
+                # Determine category based on new type
+                if i_type == 'Loan':
+                    category = "EMI"
+                elif i_type == "Split":
+                    # Keep provided category
+                    pass
+                else:
+                    category = "Investment"
+
+                for index, trn in enumerate(transactions, 1):
+                    trn.category = category
+                    trn.description = f'{name} {sub_label} {index}'
                     trn.save()
-        
-        # ====================================================================
-        # Update Amount or Installments
-        # ====================================================================
-        
-        if amount != details.amount or no_of_installments != details.no_of_installments:
-            previous_installments = details.no_of_installments
-            completed_count = sum(1 if x.status == 'Completed' else 0 for x in transactions)
-            
-            # If there are completed transactions
-            if completed_count:
-                paid_amount = sum(
-                    x.amount if x.status == 'Completed' else 0 for x in transactions
+
+            # ================================================================
+            # Update Start Date
+            # ================================================================
+
+            new_start_date = datetime.datetime.strptime(started_on, "%Y-%m-%d").date()
+            if new_start_date != details.started_on:
+                no_of_paid_installments = sum(
+                    1 if trn.status == "Completed" else 0 for trn in transactions
                 )
-                
-                # Validate changes
-                if amount < paid_amount:
-                    raise ValueError(
-                        f'Amount cannot be less than total paid amount: {paid_amount}'
+                paid_dates = [trn.date for trn in transactions if trn.status == "Completed"]
+
+                # Validate: new start date can't be after any paid installment date
+                if paid_dates:
+                    for paid_date in paid_dates:
+                        if paid_date >= new_start_date:
+                            raise ValueError(
+                                f'Start date cannot be before paid installment date: {paid_date}'
+                            )
+
+                # Update start date only if no installments have been paid yet
+                if not no_of_paid_installments:
+                    details.started_on = started_on
+
+                # Recalculate dates for pending transactions
+                for i, trn in enumerate(transactions):
+                    if i >= no_of_paid_installments:
+                        offset = i - no_of_paid_installments
+                        trn.date = desired_date(started_on, offset)
+                        trn.save()
+
+            # ================================================================
+            # Update Amount or Installments
+            # ================================================================
+
+            if amount != details.amount or no_of_installments != details.no_of_installments:
+                previous_installments = details.no_of_installments
+                completed_count = sum(1 if x.status == 'Completed' else 0 for x in transactions)
+
+                # If there are completed transactions
+                if completed_count:
+                    paid_amount = sum(
+                        x.amount if x.status == 'Completed' else 0 for x in transactions
                     )
-                
-                if no_of_installments < completed_count:
-                    raise ValueError(
-                        f'Installments cannot be less than completed count: {completed_count}'
-                    )
-                
-                if amount > paid_amount and no_of_installments == completed_count:
-                    raise ValueError(
-                        f'Installments cannot be less than {completed_count + 1}'
-                    )
-                
-                # Recalculate remaining installment amount
-                remaining_amount = amount - paid_amount
-                remaining_installments = no_of_installments - completed_count
-                emi_amount = round(
-                    (remaining_amount / remaining_installments), 2
-                ) if remaining_installments else 0
-                
-                details.amount = amount
-                details.no_of_installments = no_of_installments
-                
-                # Add new installments
-                if no_of_installments > previous_installments:
-                    new_trn_count = no_of_installments - previous_installments
-                    
-                    # Update existing pending transactions
-                    for trn in transactions:
-                        if trn.status != 'Completed':
-                            trn.amount = emi_amount
-                            trn.save()
-                    
-                    # Create new transactions
-                    last_trn = transactions.last()
-                    for i in range(previous_installments, previous_installments + new_trn_count):
-                        Transaction.objects.create(
-                            type=last_trn.type,
-                            category=last_trn.category,
-                            date=desired_date(last_trn.date.strftime("%Y-%m-%d"), 1),
-                            amount=emi_amount,
-                            beneficiary='Self',
-                            description=f'{name} {sub_label} {i + 1}',
-                            status="Pending",
-                            mode="Online",
-                            mode_detail=details.type,
-                            created_by=user,
-                            source=details
+
+                    # Validate changes
+                    if amount < paid_amount:
+                        raise ValueError(
+                            f'Amount cannot be less than total paid amount: {paid_amount}'
                         )
-                
-                # Remove extra installments
-                elif no_of_installments < previous_installments:
-                    for index, trn in enumerate(transactions, 1):
-                        if index <= no_of_installments:
+
+                    if no_of_installments < completed_count:
+                        raise ValueError(
+                            f'Installments cannot be less than completed count: {completed_count}'
+                        )
+
+                    if amount > paid_amount and no_of_installments == completed_count:
+                        raise ValueError(
+                            f'Installments cannot be less than {completed_count + 1}'
+                        )
+
+                    # Recalculate remaining installment amount
+                    remaining_amount = amount - paid_amount
+                    remaining_installments = no_of_installments - completed_count
+                    emi_amount = round(
+                        (remaining_amount / remaining_installments), 2
+                    ) if remaining_installments else 0
+
+                    details.amount = amount
+                    details.no_of_installments = no_of_installments
+
+                    # Add new installments
+                    if no_of_installments > previous_installments:
+                        new_trn_count = no_of_installments - previous_installments
+
+                        # Update existing pending transactions
+                        for trn in transactions:
                             if trn.status != 'Completed':
                                 trn.amount = emi_amount
                                 trn.save()
-                        else:
-                            trn.delete()
-                
-                # Same number of installments, update amounts
+
+                        # Create new transactions anchored from the ORIGINAL start date
+                        # using the absolute installment index as the month offset.
+                        # This mirrors the creation logic and ensures that per-month
+                        # day clamping is recalculated independently (e.g. Oct 31 start:
+                        # installment 4 → Feb 28, installment 5 → Mar 31, not Mar 28).
+                        last_trn = transactions.last()
+                        for i in range(previous_installments, previous_installments + new_trn_count):
+                            Transaction.objects.create(
+                                type=last_trn.type,
+                                category=last_trn.category,
+                                date=desired_date(started_on, i),
+                                amount=emi_amount,
+                                beneficiary='Self',
+                                description=f'{name} {sub_label} {i + 1}',
+                                status="Pending",
+                                created_by=user,
+                                source=details
+                            )
+
+                    # Remove extra installments
+                    elif no_of_installments < previous_installments:
+                        for index, trn in enumerate(transactions, 1):
+                            if index <= no_of_installments:
+                                if trn.status != 'Completed':
+                                    trn.amount = emi_amount
+                                    trn.save()
+                            else:
+                                trn.delete()
+
+                    # Same number of installments, just update amounts
+                    else:
+                        for trn in transactions:
+                            if trn.status != 'Completed':
+                                trn.amount = emi_amount
+                                trn.save()
+
+                # All transactions are pending
                 else:
-                    for trn in transactions:
-                        if trn.status != 'Completed':
+                    details.amount = amount
+                    details.no_of_installments = no_of_installments
+                    emi_amount = round((amount / no_of_installments), 2)
+
+                    # Add new installments
+                    if no_of_installments > previous_installments:
+                        new_trn_count = no_of_installments - previous_installments
+
+                        for trn in transactions:
                             trn.amount = emi_amount
                             trn.save()
-            
-            # All transactions are pending
-            else:
-                details.amount = amount
-                details.no_of_installments = no_of_installments
-                emi_amount = round((amount / no_of_installments), 2)
-                
-                # Add new installments
-                if no_of_installments > previous_installments:
-                    new_trn_count = no_of_installments - previous_installments
-                    
-                    for trn in transactions:
-                        trn.amount = emi_amount
-                        trn.save()
-                    
-                    last_trn = transactions.last()
-                    for i in range(previous_installments, previous_installments + new_trn_count):
-                        Transaction.objects.create(
-                            type=last_trn.type,
-                            category=last_trn.category,
-                            date=desired_date(last_trn.date.strftime("%Y-%m-%d"), 1),
-                            amount=emi_amount,
-                            beneficiary='Self',
-                            description=f'{name} {sub_label} {i + 1}',
-                            status="Pending",
-                            mode="Online",
-                            mode_detail=details.type,
-                            created_by=user,
-                            source=details
-                        )
-                
-                # Remove extra installments
-                elif no_of_installments < previous_installments:
-                    for index, trn in enumerate(transactions, 1):
-                        if index <= no_of_installments:
+
+                        # Create new transactions anchored from the ORIGINAL start date
+                        # using the absolute installment index as the month offset.
+                        # This mirrors the creation logic and ensures that per-month
+                        # day clamping is recalculated independently (e.g. Oct 31 start:
+                        # installment 4 → Feb 28, installment 5 → Mar 31, not Mar 28).
+                        last_trn = transactions.last()
+                        for i in range(previous_installments, previous_installments + new_trn_count):
+                            Transaction.objects.create(
+                                type=last_trn.type,
+                                category=last_trn.category,
+                                date=desired_date(started_on, i),
+                                amount=emi_amount,
+                                beneficiary='Self',
+                                description=f'{name} {sub_label} {i + 1}',
+                                status="Pending",
+                                created_by=user,
+                                source=details
+                            )
+
+                    # Remove extra installments
+                    elif no_of_installments < previous_installments:
+                        for index, trn in enumerate(transactions, 1):
+                            if index <= no_of_installments:
+                                trn.amount = emi_amount
+                                trn.save()
+                            else:
+                                trn.delete()
+
+                    # Update all amounts
+                    else:
+                        for trn in transactions:
                             trn.amount = emi_amount
                             trn.save()
-                        else:
-                            trn.delete()
-                
-                # Update all amounts
-                else:
-                    for trn in transactions:
-                        trn.amount = emi_amount
-                        trn.save()
-        
-        details.save()
+
+            details.save()
+
         messages.success(request, f'"{name}" updated successfully')
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
         

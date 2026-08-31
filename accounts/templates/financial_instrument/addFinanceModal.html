@@ -1,184 +1,184 @@
-<!-- Add Finance Modal -->
-<div
-  class="modal fade"
-  id="financeModal"
-  tabindex="-1"
-  aria-labelledby="financeModalLabel"
-  aria-hidden="true"
->
+<!-- Add/Edit Finance Modal -->
+<div class="modal fade" id="financeModal" tabindex="-1" aria-labelledby="financeModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title fs-5" id="financeModalLabel">Finance</h5>
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="modal"
-          aria-label="Close"
-        ></button>
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);">
+      <div class="modal-header border-0 pb-0 pt-4 px-4">
+        <h5 class="modal-title" style="font-weight: 800; color: var(--primary-dark); font-size: 1.5rem;">
+          <i class="fa-solid fa-landmark me-2"></i><span id="financeModalLabel">Finance</span>
+        </h5>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close" style="background-color: rgba(0,0,0,0.05); border-radius: 50%; padding: 12px; margin-right: 0;"></button>
       </div>
-      <div class="modal-body">
+      <div class="modal-body px-4 pb-4 pt-3">
         <!-- Finance Form -->
         <form action="/create-finance/" id="myFinanceForm" method="post">
           {% csrf_token %}
 
           <!-- Finance Type Selection -->
-          <div class="row mb-4">
-            <label class="col-form-label col-12">Select Type</label>
-            <div class="col-4">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="radio"
-                  name="type"
-                  id="loan"
-                  value="Loan"
-                  onchange="splitCategory()"
-                  required
-                />
-                <label class="form-check-label" for="loan">Loan</label>
+          <div class="mb-4">
+            <label class="form-label text-muted small fw-bold mb-2">
+              <i class="fa-solid fa-shapes me-1"></i> Select Type
+            </label>
+            <div class="fin-radio-group p-1" style="border-radius: 12px;">
+              <div class="fin-radio-option">
+                <input type="radio" name="type" id="loan" value="Loan" onchange="splitCategory()" required />
+                <label class="fin-radio-label py-2" for="loan"><i class="fa-solid fa-landmark me-1"></i> Loan</label>
               </div>
-            </div>
-            <div class="col-4">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="radio"
-                  name="type"
-                  id="split"
-                  value="Split"
-                  onchange="splitCategory()"
-                  required
-                />
-                <label class="form-check-label" for="split">Split</label>
+              <div class="fin-radio-option">
+                <input type="radio" name="type" id="split" value="Split" onchange="splitCategory()" required />
+                <label class="fin-radio-label py-2" for="split"><i class="fa-solid fa-bolt me-1"></i> Split</label>
               </div>
-            </div>
-            <div class="col-4">
-              <div class="form-check">
-                <input
-                  class="form-check-input"
-                  type="radio"
-                  name="type"
-                  id="sip"
-                  onchange="splitCategory()"
-                  value="SIP"
-                />
-                <label class="form-check-label" for="sip">SIP</label>
+              <div class="fin-radio-option">
+                <input type="radio" name="type" id="sip" value="SIP" onchange="splitCategory()" required />
+                <label class="fin-radio-label py-2" for="sip"><i class="fa-solid fa-chart-line me-1"></i> SIP</label>
               </div>
             </div>
           </div>
 
-          <div class="mb-3">
-            <select
-              class="form-select shadow-sm"
-              id="sp_category"
-              name="category"
-              aria-label="Select Category"
-              style="display: none;"
-            >
-              <option value="" disabled selected>
-                -- Select Category --
-              </option>
-              <!-- Categories will be populated dynamically -->
+          <!-- Category (Only for Split) -->
+          <div class="mb-3" id="categoryContainer" style="display: none; animation: fadeIn 0.3s ease;">
+            <label class="form-label text-muted small fw-bold mb-2"><i class="fa-solid fa-tags me-1"></i> Category</label>
+            <select class="form-select fin-form-control" id="sp_category" name="category" aria-label="Select Category">
+              <option value="" disabled selected>-- Select Category --</option>
+              <!-- Categories populated dynamically -->
             </select>
           </div>
 
           <!-- Instrument Name -->
-          <div class="mb-3">
-            <label for="name" class="form-label">Instrument Name</label>
-            <input
-              type="text"
-              class="form-control shadow-sm"
-              id="name"
-              name="name"
-              placeholder="Enter Instrument Name"
-              required
-            />
+          <div class="mb-3 form-floating">
+            <input type="text" class="form-control fin-form-control" id="name" name="name" placeholder="Instrument Name" required />
+            <label for="name" class="text-muted"><i class="fa-solid fa-signature me-1"></i> Instrument Name</label>
           </div>
 
-          <!-- Start Date -->
-          <div class="mb-3">
-            <label for="started_on" class="form-label">Start Date</label>
-            <input
-              type="date"
-              class="form-control shadow-sm"
-              name="started_on"
-              id="started_on"
-              required
-            />
-          </div>
-
-          <!-- Total Amount -->
-          <div class="mb-3">
-            <label for="amount" class="form-label">Total Amount (₹)</label>
-            <input
-              type="number"
-              class="form-control shadow-sm"
-              name="amount"
-              id="amount"
-              placeholder="Enter Total Amount"
-              required
-            />
+          <!-- Start Date & Total Amount Row -->
+          <div class="row g-3 mb-3">
+            <div class="col-6">
+              <div class="form-floating">
+                <input type="date" class="form-control fin-form-control" name="started_on" id="started_on" required />
+                <label for="started_on" class="text-muted"><i class="fa-solid fa-calendar me-1"></i> Start Date</label>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="form-floating">
+                <input type="number" class="form-control fin-form-control" name="amount" id="amount" placeholder="Total Amount" required />
+                <label for="amount" class="text-muted"><i class="fa-solid fa-indian-rupee-sign me-1"></i> Amount (₹)</label>
+              </div>
+            </div>
           </div>
 
           <!-- No of Installments -->
-          <div class="mb-3">
-            <label for="installments" class="form-label"
-              >No of Installments</label
-            >
-            <input
-              type="number"
-              class="form-control shadow-sm"
-              name="no_of_installments"
-              id="installments"
-              placeholder="Enter Number of Installments"
-              required
-            />
+          <div class="mb-4 form-floating">
+            <input type="number" class="form-control fin-form-control" name="no_of_installments" id="installments" placeholder="No of Installments" required />
+            <label for="installments" class="text-muted"><i class="fa-solid fa-layer-group me-1"></i> Installments</label>
           </div>
 
           <!-- Submit Button -->
-          <div class="d-flex justify-content-center">
-            <button
-              id="submitButton"
-              type="submit"
-              class="btn custom-btn-primary w-100 shadow-sm"
-            >
-              <i class="fa-solid fa-plus-circle"></i> Add Finance
-            </button>
-          </div>
+          <button id="submitButton" type="submit" class="btn w-100 shadow-sm fin-submit-btn">
+            <i class="fa-solid fa-check-circle me-1"></i> <span id="submitBtnText">Add Finance</span>
+          </button>
         </form>
       </div>
     </div>
   </div>
 </div>
 
+<style>
+/* ── Fin Modal Form Controls ──────────────────────────────── */
+.fin-form-control {
+    background-color: rgba(0, 0, 0, 0.02) !important;
+    border: 1.5px solid rgba(0, 0, 0, 0.06) !important;
+    border-radius: 12px !important;
+    font-weight: 600;
+    color: #1f2937 !important;
+    transition: all 0.3s ease !important;
+}
+.fin-form-control:focus {
+    background-color: #fff !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 4px rgba(176, 163, 111, 0.15) !important;
+}
+.form-floating > label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding-left: 1rem;
+}
+.fin-submit-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 12px;
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    transition: all 0.3s ease;
+}
+.fin-submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(176, 163, 111, 0.3) !important;
+    color: #fff;
+}
+/* ── Fin Radio Group (Modal) ────────────────────────────── */
+.fin-radio-group {
+    display: flex;
+    background: rgba(0,0,0,0.03);
+    border-radius: 10px;
+    padding: 4px;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+.fin-radio-option {
+    flex: 1;
+}
+.fin-radio-option input[type="radio"] {
+    display: none;
+}
+.fin-radio-label {
+    display: block;
+    text-align: center;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #6b7280;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+.fin-radio-option input[type="radio"]:checked + .fin-radio-label {
+    background: #fff;
+    color: var(--primary-dark);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+</style>
+
 <script>
   document.getElementById("started_on").value = new Date().toISOString().split("T")[0];
   var CATEGORIES = [
-  "Shopping",
-  "Food",
-  "Investment",
-  "Utilities",
-  "Groceries",
-  "Medical",
-  "General",
-  "Gifts",
-  "Entertainment",
-  "EMI",
-  "Other",
-];
+    "Shopping", "Food", "Investment", "Utilities", "Groceries",
+    "Medical", "General", "Gifts", "Entertainment", "EMI", "Other"
+  ];
 
-function splitCategory() {
-  let categorySelect = document.getElementById("sp_category");
-  let splitCheckbox = document.getElementById("split");
-  
-  if (splitCheckbox.checked) {
-    categorySelect.style.display = "";
-    categorySelect.innerHTML = CATEGORIES.map(function (category) {
-      return `<option value="${category}">${category}</option>`;
-    }).join("");
-  } else {
-    categorySelect.style.display = "none";
+  function splitCategory() {
+    let categorySelect = document.getElementById("sp_category");
+    let categoryContainer = document.getElementById("categoryContainer");
+    let splitCheckbox = document.getElementById("split");
+    
+    if (splitCheckbox.checked) {
+      categoryContainer.style.display = "block";
+      categorySelect.innerHTML = '<option value="" disabled selected>-- Select Category --</option>' + 
+        CATEGORIES.map(category => `<option value="${category}">${category}</option>`).join("");
+      categorySelect.setAttribute("required", "required");
+    } else {
+      categoryContainer.style.display = "none";
+      categorySelect.removeAttribute("required");
+    }
   }
-}
+  
+  // Ensure the modal resets when closed so it can be used for "Add" again
+  document.getElementById('financeModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById("myFinanceForm").reset();
+    document.getElementById("myFinanceForm").action = "/create-finance/";
+    document.getElementById("financeModalLabel").textContent = "Finance";
+    document.getElementById("submitButton").innerHTML = '<i class="fa-solid fa-check-circle me-1"></i> Add Finance';
+    document.getElementById("started_on").value = new Date().toISOString().split("T")[0];
+    splitCategory();
+  });
 </script>

@@ -1,94 +1,45 @@
 # ============================================================================
 # myHelperBuddy - Python Package Requirements
-# Django 4.2.7 | Python 3.12+
+# Django 4.2.x | Python 3.12+
+# Last reviewed: 2026-08-21
+#
+# Only DIRECT dependencies are listed here.
+# Transitive dependencies are resolved automatically by pip.
 # ============================================================================
 
 # Core Django Framework
 Django==4.2.7
 asgiref==3.7.2
 
-# Database
-# SQLite is built-in with Python, PostgreSQL adapter if needed:
-# psycopg2-binary==2.9.9
-
 # Environment Configuration
+# Used in: mysite/settings.py via decouple.config()
 python-decouple==3.8
 
 # Authentication & Authorization
+# Used in: settings.py INSTALLED_APPS (allauth, allauth.account, etc.)
+# NOTE: PyPI package name is "django-allauth", imports as "allauth"
 django-allauth==0.57.0
 
 # Google Services Integration
+# Used in: accounts/services/google_services.py
+#   - google.auth.exceptions
+#   - google.oauth2.service_account, google.oauth2.credentials
+#   - googleapiclient.discovery.build, googleapiclient.http.*
 google-auth==2.23.4
-google-auth-oauthlib==1.1.0
-google-auth-httplib2==0.1.1
 google-api-python-client==2.108.0
 
 # HTTP Requests
+# Used in: accounts/services/google_services.py (requests.post to Google token endpoint)
 requests==2.31.0
-urllib3==2.1.0
 
 # Security & Cryptography
+# Used in: accounts/management/commands/backup_db.py (cryptography.fernet.Fernet)
 cryptography==41.0.7
-cffi==1.16.0
-pycparser==2.21
 
-# Image Processing (for PWA icons, file uploads)
-Pillow==10.1.0
+# Image Processing
+# Required by Django ImageField (accounts/models.py - UserProfile.profile_picture)
+Pillow
 
 # Date & Time Utilities
+# Used in: accounts/views/views.py (dateutil.relativedelta.relativedelta)
 python-dateutil==2.8.2
-pytz==2023.3
-
-# Static File Management
-django-compressor==4.4
-rcssmin==1.1.1
-rjsmin==1.2.1
-
-# Email
-# Django uses built-in SMTP, but if using advanced features:
-# django-ses==3.5.0
-
-# Security Utilities
-itsdangerous==2.1.2
-
-# Character Encoding
-charset-normalizer==3.3.2
-idna==3.6
-
-# CLI Utilities & Color Output
-click==8.1.7
-colorama==0.4.6
-
-# OAuth2 Dependencies
-oauthlib==3.2.2
-requests-oauthlib==1.3.1
-
-# Protocol Buffers (for Google APIs)
-protobuf==4.25.1
-
-# RSA Cryptography
-rsa==4.9
-pyasn1==0.5.1
-pyasn1-modules==0.3.0
-
-# Caching
-cachetools==5.3.2
-
-# HTTP Parsing
-httplib2==0.22.0
-pyparsing==3.1.1
-
-# JSON Web Tokens (if needed for API authentication)
-PyJWT==2.8.0
-
-# Six (Python 2/3 compatibility - required by some dependencies)
-six==1.16.0
-
-# ============================================================================
-# Development Dependencies (Optional - install with: pip install -r requirements-dev.txt)
-# ============================================================================
-# black==23.12.0              # Code formatting
-# flake8==6.1.0               # Linting
-# mypy==1.7.1                 # Type checking
-# django-debug-toolbar==4.2.0 # Debug toolbar
-# ipython==8.18.1             # Enhanced Python shell

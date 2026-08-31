@@ -2,54 +2,129 @@
 {% load static %}
 {% block header %}
 
-<nav class="navbar navbar-expand-lg navbar-light shadow p-2 mb-2 fixed-top" style="background: var(--primary); z-index: 999; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px">
-  <div class="container-fluid nav-text">
+<style>
+/* ── Premium Floating Pill Navbar ───────────────────────────── */
+.nav-pill-premium {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    margin: 1.5rem auto;
+    max-width: 900px;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+    z-index: 1050; /* Above everything */
+}
+
+.nav-pill-premium .navbar-brand {
+    font-weight: 700;
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+}
+
+.nav-pill-premium .nav-link {
+    font-weight: 700;
+    padding: 0.5rem 1.2rem !important;
+    border-radius: 20px;
+    transition: all 0.2s ease;
+    margin: 0 0.2rem;
+    color: var(--primary-dark);
+}
+
+.nav-pill-premium .nav-text-gradient {
+    background: linear-gradient(135deg, var(--primary) 0%, #9a8855 50%, var(--primary-dark) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+}
+
+.nav-pill-premium .nav-link:hover,
+.nav-pill-premium .nav-link:focus {
+    background: rgba(176, 163, 111, 0.15);
+}
+
+.nav-pill-premium .navbar-toggler {
+    border: none;
+    padding: 0.5rem;
+}
+
+.nav-pill-premium .navbar-toggler:focus {
+    box-shadow: none;
+    outline: none;
+}
+
+/* Mobile specific overrides */
+@media (max-width: 991px) {
+    .nav-pill-premium {
+        margin: 1rem 1rem;
+        max-width: calc(100% - 2rem);
+        border-radius: 24px;
+        padding: 0.75rem 1rem;
+    }
+    .nav-pill-premium .navbar-collapse {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        margin-top: 1rem;
+        padding: 1rem;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    .nav-pill-premium .nav-link {
+        padding: 0.8rem 1rem !important;
+        margin: 0.2rem 0;
+    }
+}
+</style>
+
+<nav class="navbar navbar-expand-lg fixed-top nav-pill-premium">
+  <div class="container-fluid">
     <!-- Logo -->
-    <a class="navbar-brand " href="/dashboard/">
-      <img src="{% static 'image/myHelperBuddyLogo.png' %}" alt="Logo" style="height:35px; width: auto;">
-      &nbsp;myHelperBuddy
+    <a class="navbar-brand" href="/dashboard/">
+      <img src="{% static 'image/myHelperBuddyLogo.png' %}" alt="Logo" style="height:32px; width: auto;">
+      <span class="nav-text-gradient fs-5 ms-1">myHelperBuddy</span>
     </a>
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <i class="fa-solid fa-bars" style="color: var(--secondary)"></i>
+    
+    <!-- Mobile Toggle Button -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <i class="fa-solid fa-bars fs-4 text-dark"></i>
     </button>
+    
+    <!-- Nav Links -->
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
+      <ul class="navbar-nav mx-auto">
         <li class="nav-item">
-          <a class="nav-link " href="/dashboard/">Home</a>
+          <a class="nav-link" href="/dashboard/"><i class="bi bi-house me-1 d-lg-none nav-text-gradient"></i> <span class="nav-text-gradient">Home</span></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link " href="/utilities/">Utils</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link " href="/about/">About</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link " href="/profile/"> {{ user.first_name }} {{ user.last_name }}</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link " href="/logout/"> <i class="fa-solid fa-right-from-bracket"></i></a></a>
+          <a class="nav-link" href="/utilities/"><i class="bi bi-tools me-1 d-lg-none nav-text-gradient"></i> <span class="nav-text-gradient">Utils</span></a>
         </li>
       </ul>
-      <!-- <ul class="navbar-nav">
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle " href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            {{ user.name }}
+      
+      <!-- Right Side (Profile & Logout) -->
+      <ul class="navbar-nav ms-auto d-flex flex-lg-row flex-column gap-2 mt-2 mt-lg-0">
+        <li class="nav-item">
+          <a class="nav-link text-nowrap" href="/profile/">
+            <i class="bi bi-person-circle me-1 d-lg-none nav-text-gradient"></i> <span class="d-none d-lg-inline nav-text-gradient">{{ user.first_name }} {{ user.last_name }}</span><span class="d-lg-none nav-text-gradient">Profile</span>
           </a>
-          <ul class="dropdown-menu dropdown-menu-end profile" aria-labelledby="userDropdown">
-            <li><a class="dropdown-item"  href="#"><i class="fa-solid fa-user" style="color:var(--primary-dark)"></i> {{user.username}}</a></li>
-            <li><a class="dropdown-item" href="#"><i class="fa-solid fa-envelope" style="color:var(--primary-dark)"></i> {{user.email}}</a></li>
-            <li><a class="dropdown-item" href="/changePassword/"><i class="fa-solid fa-key" style="color:var(--primary-dark)"></i> Change Password</a></li>
-            <li><a class="dropdown-item" href="/logout/"><i class="fa-solid fa-right-from-bracket" style="color:var(--primary-dark)"></i> Logout</a></li>
-          </ul>
         </li>
-      </ul> -->
+        <li class="nav-item">
+          <a class="nav-link text-danger" href="/logout/" title="Logout">
+            <i class="fa-solid fa-right-from-bracket me-1"></i> <span class="d-lg-none">Logout</span>
+          </a>
+        </li>
+      </ul>
     </div>
   </div>
 </nav>
 
+{% include "messages.html" %}
+{% endblock header %}
 
-  {% include "messages.html" %}
-  {% endblock header %}
-  {% block script %}
-
-  {% endblock script %}
+{% block script %}
+{% endblock script %}
